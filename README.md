@@ -35,7 +35,7 @@
 
 1. **Clone the repository**:
 ```bash
-git clone https://github.com/yourusername/BondTrader.git
+git clone https://github.com/SafetyMP/BondTrader.git
 cd BondTrader
 ```
 
@@ -297,9 +297,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/BondTrader/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/BondTrader/discussions)
-- **Email**: [Your Email]
+- **Issues**: [GitHub Issues](https://github.com/SafetyMP/BondTrader/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/SafetyMP/BondTrader/discussions)
+- **Repository**: https://github.com/SafetyMP/BondTrader
 
 ## 🗺️ Roadmap
 
