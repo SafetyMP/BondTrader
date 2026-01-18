@@ -103,7 +103,7 @@ class BondDatabase:
         try:
             cursor.execute(
                 """
-                INSERT OR REPLACE INTO bonds 
+                INSERT OR REPLACE INTO bonds
                 (bond_id, bond_type, face_value, coupon_rate, maturity_date,
                  issue_date, current_price, credit_rating, issuer, frequency,
                  callable, convertible, updated_at)

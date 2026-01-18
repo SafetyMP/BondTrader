@@ -159,7 +159,7 @@ class TrainingDataGenerator:
         if abs(train_split + validation_split + test_split - 1.0) > 1e-6:
             raise ValueError("Splits must sum to 1.0")
 
-        print(f"Generating comprehensive training dataset...")
+        print("Generating comprehensive training dataset...")
         print(f"  Total bonds: {total_bonds}")
         print(f"  Time periods: {time_periods}")
         print(f"  Bonds per period: {bonds_per_period}")
@@ -778,9 +778,9 @@ if __name__ == "__main__":
     print(f"Test size: {dataset['dataset_metadata']['test_size']}")
     print(f"Number of features: {dataset['dataset_metadata']['num_features']}")
     print(f"Regimes represented: {', '.join(dataset['dataset_metadata']['regimes_represented'])}")
-    print(
-        f"Date range: {dataset['dataset_metadata']['date_range']['start']} to {dataset['dataset_metadata']['date_range']['end']}"
-    )
+    date_start = dataset["dataset_metadata"]["date_range"]["start"]
+    date_end = dataset["dataset_metadata"]["date_range"]["end"]
+    print(f"Date range: {date_start} to {date_end}")
 
     print("\n" + "=" * 60)
     print("DATA QUALITY REPORT")

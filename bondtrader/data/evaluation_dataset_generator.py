@@ -319,20 +319,20 @@ class EvaluationDatasetGenerator:
 
         # Generate benchmark comparisons
         if include_benchmarks:
-            print(f"\n[3/6] Generating benchmark comparisons...")
+            print("\n[3/6] Generating benchmark comparisons...")
             benchmark_data = self._generate_benchmark_comparisons(evaluation_bonds)
             evaluation_results["benchmarks"] = benchmark_data
 
         # Quality validation
-        print(f"\n[4/6] Validating data quality...")
+        print("\n[4/6] Validating data quality...")
         quality_report = self._validate_evaluation_data_quality(evaluation_results)
 
         # Generate metadata and audit trail
-        print(f"\n[5/6] Generating metadata and audit trail...")
+        print("\n[5/6] Generating metadata and audit trail...")
         metadata = self._generate_evaluation_metadata(evaluation_results, scenarios, date_range, point_in_time)
 
         # Calculate summary statistics
-        print(f"\n[6/6] Calculating summary statistics...")
+        print("\n[6/6] Calculating summary statistics...")
         summary_stats = self._calculate_summary_statistics(evaluation_results)
 
         print("\n" + "=" * 70)
@@ -619,8 +619,8 @@ class EvaluationDatasetGenerator:
             if "bonds" not in scenario_data or not scenario_data["bonds"]:
                 error_msg = (
                     f"Scenario '{sc_name}' is missing 'bonds' key. "
-                    f"This usually means the evaluation dataset was saved before the fix. "
-                    f"Please regenerate the dataset with generate_new=True"
+                    "This usually means the evaluation dataset was saved before the fix. "
+                    "Please regenerate the dataset with generate_new=True"
                 )
                 raise KeyError(error_msg)
 
@@ -996,7 +996,7 @@ if __name__ == "__main__":
     print("=" * 70)
     print(f"Total scenarios: {evaluation_dataset['summary_statistics']['total_scenarios']}")
     print(f"Total bonds: {evaluation_dataset['summary_statistics']['total_bonds']}")
-    print(f"\nScenarios:")
+    print("\nScenarios:")
     for sc_name, sc_summary in evaluation_dataset["summary_statistics"]["scenario_summary"].items():
         print(f"  - {sc_name}: {sc_summary['num_bonds']} bonds ({sc_summary['scenario_type']})")
 
