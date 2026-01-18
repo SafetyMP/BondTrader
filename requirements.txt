@@ -74,8 +74,7 @@ fastapi>=0.104.0
 uvicorn>=0.24.0
 
 # Visualization enhancements
-# mplfinance>=0.12.0  # 0.12.0 stable not available - use 0.12.9b7 or later if needed
-mplfinance>=0.12.9b0; python_version < "3.12"  # Beta version for older Python
+# mplfinance>=0.12.0  # Optional - not used in current codebase, 0.12.0 stable not available
 seaborn>=0.13.0
 
 # Additional data sources
