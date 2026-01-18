@@ -10,6 +10,19 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 from scipy.optimize import brentq
 
+# Optional Numba for JIT compilation
+try:
+    from numba import jit
+    from bondtrader.utils.numba_helpers import (
+        binomial_tree_backward_step,
+        binomial_tree_discount,
+        HAS_NUMBA as HAS_NUMBA_HELPERS,
+    )
+
+    HAS_NUMBA = HAS_NUMBA_HELPERS
+except ImportError:
+    HAS_NUMBA = False
+
 from bondtrader.core.bond_models import Bond, BondType
 from bondtrader.core.bond_valuation import BondValuator
 from bondtrader.utils.utils import logger

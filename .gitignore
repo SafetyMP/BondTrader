@@ -193,3 +193,7 @@ dmypy.json
 
 # Pre-commit
 .pre-commit-cache/
+
+# Test databases
+test.db
+*.db

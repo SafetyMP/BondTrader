@@ -145,8 +145,7 @@ def calculate_yield_to_maturity(self, bond: Bond, ...) -> float:
 tests/
 ├── conftest.py              # Shared fixtures
 ├── test_bond_valuation.py   # Existing
-├── test_arbitrage.py        # Existing
-├── test_arbitrage_detector.py  # New
+├── test_arbitrage_detector.py  # Comprehensive arbitrage tests
 └── test_config.py           # New
 ```
 

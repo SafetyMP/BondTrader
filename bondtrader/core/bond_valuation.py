@@ -10,18 +10,24 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 
 from bondtrader.core.bond_models import Bond, BondType
+from bondtrader.core.quantlib_integration import get_quantlib_integration, is_quantlib_available
 from bondtrader.utils.utils import logger
 
 
 class BondValuator:
     """Core bond valuation engine"""
 
-    def __init__(self, risk_free_rate: float = 0.03):
+    def __init__(self, risk_free_rate: float = 0.03, use_quantlib: bool = False):
         """
         Initialize valuator with risk-free rate (default 3%)
-        risk_free_rate: Annual risk-free rate as decimal (e.g., 0.03 for 3%)
+        
+        Args:
+            risk_free_rate: Annual risk-free rate as decimal (e.g., 0.03 for 3%)
+            use_quantlib: Use QuantLib for calculations if available (default: False)
         """
         self.risk_free_rate = risk_free_rate
+        self.use_quantlib = use_quantlib and is_quantlib_available()
+        self.quantlib = get_quantlib_integration() if self.use_quantlib else None
 
     def calculate_yield_to_maturity(
         self, bond: Bond, market_price: Optional[float] = None, tolerance: float = 1e-6, max_iterations: int = 100
@@ -118,6 +124,18 @@ class BondValuator:
         Returns:
             Fair value of the bond
         """
+        # Try QuantLib first if enabled
+        if self.use_quantlib and self.quantlib:
+            rf_rate = risk_free_rate if risk_free_rate is not None else self.risk_free_rate
+            if required_yield is None:
+                spread = self._get_credit_spread(bond.credit_rating)
+                required_yield = rf_rate + spread
+            
+            ql_price = self.quantlib.calculate_bond_price_quantlib(bond, required_yield)
+            if ql_price is not None:
+                return ql_price
+
+        # Fallback to standard implementation
         rf_rate = risk_free_rate if risk_free_rate is not None else self.risk_free_rate
         time_to_maturity = bond.time_to_maturity
 

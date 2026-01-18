@@ -10,6 +10,13 @@ import numpy as np
 from scipy.linalg import inv, pinv
 from scipy.optimize import minimize
 
+# Optional CVXPY for convex optimization
+try:
+    import cvxpy as cp
+    HAS_CVXPY = True
+except ImportError:
+    HAS_CVXPY = False
+
 from bondtrader.core.bond_models import Bond
 from bondtrader.core.bond_valuation import BondValuator
 from bondtrader.utils.utils import logger
@@ -93,6 +100,7 @@ class PortfolioOptimizer:
         target_return: Optional[float] = None,
         risk_aversion: float = 1.0,
         constraints: Optional[Dict] = None,
+        use_cvxpy: bool = False,
     ) -> Dict:
         """
         Markowitz mean-variance optimization
@@ -105,6 +113,7 @@ class PortfolioOptimizer:
             target_return: Target portfolio return (if None, maximizes Sharpe)
             risk_aversion: Risk aversion parameter (λ)
             constraints: Additional constraints
+            use_cvxpy: Use CVXPY for optimization (more robust for convex problems)
 
         Returns:
             Optimal portfolio weights and metrics
@@ -112,6 +121,11 @@ class PortfolioOptimizer:
         n = len(bonds)
         expected_returns, covariance = self.calculate_returns_and_covariance(bonds)
 
+        # Try CVXPY if requested and available
+        if use_cvxpy and HAS_CVXPY:
+            return self._markowitz_optimization_cvxpy(expected_returns, covariance, target_return, risk_aversion)
+
+        # Fallback to scipy.optimize
         # Objective function: minimize negative utility
         def objective(weights):
             portfolio_return = np.dot(weights, expected_returns)
@@ -152,6 +166,68 @@ class PortfolioOptimizer:
             "sharpe_ratio": sharpe_ratio,
             "optimization_success": result.success,
             "method": "Markowitz",
+        }
+
+    def _markowitz_optimization_cvxpy(
+        self, expected_returns: np.ndarray, covariance: np.ndarray, target_return: Optional[float], risk_aversion: float
+    ) -> Dict:
+        """Markowitz optimization using CVXPY (convex optimization)"""
+        if not HAS_CVXPY:
+            raise ImportError("CVXPY not installed. Install with: pip install cvxpy")
+
+        n = len(expected_returns)
+
+        # Decision variable
+        w = cp.Variable(n)
+
+        # Portfolio return and risk
+        portfolio_return = w.T @ expected_returns
+        portfolio_variance = cp.quad_form(w, covariance)
+        portfolio_std = cp.sqrt(portfolio_variance)
+
+        # Objective: maximize utility (return - risk_aversion * variance)
+        objective = cp.Maximize(portfolio_return - risk_aversion * portfolio_variance)
+
+        # Constraints
+        constraints = [cp.sum(w) == 1, w >= 0, w <= 1]  # Weights sum to 1, long-only, bounded
+
+        if target_return is not None:
+            constraints.append(portfolio_return >= target_return)
+
+        # Solve problem
+        problem = cp.Problem(objective, constraints)
+
+        try:
+            problem.solve(solver=cp.ECOS, verbose=False)
+            if problem.status in ["infeasible", "unbounded"]:
+                logger.warning(f"CVXPY optimization status: {problem.status}, falling back to equal weights")
+                weights = np.ones(n) / n
+                optimization_success = False
+            else:
+                weights = w.value
+                if weights is None:
+                    weights = np.ones(n) / n
+                    optimization_success = False
+                else:
+                    optimization_success = True
+        except Exception as e:
+            logger.warning(f"CVXPY optimization error: {e}, falling back to equal weights")
+            weights = np.ones(n) / n
+            optimization_success = False
+
+        # Calculate portfolio metrics
+        portfolio_return_val = np.dot(weights, expected_returns)
+        portfolio_variance_val = np.dot(weights, np.dot(covariance, weights))
+        portfolio_std_val = np.sqrt(portfolio_variance_val)
+        sharpe_ratio = portfolio_return_val / portfolio_std_val if portfolio_std_val > 0 else 0
+
+        return {
+            "weights": weights.tolist(),
+            "portfolio_return": portfolio_return_val,
+            "portfolio_volatility": portfolio_std_val,
+            "sharpe_ratio": sharpe_ratio,
+            "optimization_success": optimization_success,
+            "method": "Markowitz (CVXPY)",
         }
 
     def black_litterman_optimization(

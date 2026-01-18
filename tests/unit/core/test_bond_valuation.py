@@ -8,6 +8,8 @@ from datetime import datetime, timedelta
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

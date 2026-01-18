@@ -13,6 +13,25 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
+# Optional ML libraries
+try:
+    from xgboost import XGBRegressor
+    HAS_XGBOOST = True
+except ImportError:
+    HAS_XGBOOST = False
+
+try:
+    from lightgbm import LGBMRegressor
+    HAS_LIGHTGBM = True
+except ImportError:
+    HAS_LIGHTGBM = False
+
+try:
+    from catboost import CatBoostRegressor
+    HAS_CATBOOST = True
+except ImportError:
+    HAS_CATBOOST = False
+
 from bondtrader.core.bond_models import Bond
 from bondtrader.core.bond_valuation import BondValuator
 
@@ -28,13 +47,27 @@ class MLBondAdjuster:
         Initialize ML adjuster
 
         Args:
-            model_type: 'random_forest' or 'gradient_boosting'
+            model_type: 'random_forest', 'gradient_boosting', 'xgboost', 'lightgbm', or 'catboost'
         """
         self.model_type = model_type
         self.model = None
         self.scaler = StandardScaler()
         self.is_trained = False
         self.valuator = BondValuator()
+
+        # Validate model type
+        available_models = ["random_forest", "gradient_boosting"]
+        if HAS_XGBOOST:
+            available_models.append("xgboost")
+        if HAS_LIGHTGBM:
+            available_models.append("lightgbm")
+        if HAS_CATBOOST:
+            available_models.append("catboost")
+
+        if model_type not in available_models:
+            raise ValueError(
+                f"Model type '{model_type}' not available. Available models: {', '.join(available_models)}"
+            )
 
     def _create_features(self, bonds: List[Bond], fair_values: List[float]) -> np.ndarray:
         """Create feature matrix from bonds"""
@@ -142,8 +175,40 @@ class MLBondAdjuster:
                 subsample=0.9,
                 random_state=random_state,
             )
+        elif self.model_type == "xgboost" and HAS_XGBOOST:
+            self.model = XGBRegressor(
+                n_estimators=200,
+                max_depth=6,
+                learning_rate=0.1,
+                subsample=0.9,
+                colsample_bytree=0.9,
+                random_state=random_state,
+                n_jobs=-1,
+                verbosity=0,
+            )
+        elif self.model_type == "lightgbm" and HAS_LIGHTGBM:
+            self.model = LGBMRegressor(
+                n_estimators=200,
+                max_depth=6,
+                learning_rate=0.1,
+                subsample=0.9,
+                colsample_bytree=0.9,
+                random_state=random_state,
+                n_jobs=-1,
+                verbose=-1,
+            )
+        elif self.model_type == "catboost" and HAS_CATBOOST:
+            self.model = CatBoostRegressor(
+                iterations=200,
+                depth=6,
+                learning_rate=0.1,
+                random_state=random_state,
+                verbose=False,
+            )
         else:
-            raise ValueError(f"Unknown model type: {self.model_type}")
+            raise ValueError(
+                f"Model type '{self.model_type}' not available. Please install required package or use 'random_forest' or 'gradient_boosting'"
+            )
 
         self.model.fit(X_train_scaled, y_train)
 

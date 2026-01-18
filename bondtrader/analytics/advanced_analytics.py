@@ -9,6 +9,13 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 from scipy.optimize import minimize
 
+# Optional statsmodels for enhanced yield curve fitting
+try:
+    from statsmodels.tsa.vector_ar.var_model import VAR
+    HAS_STATSMODELS = True
+except ImportError:
+    HAS_STATSMODELS = False
+
 from bondtrader.core.bond_models import Bond
 from bondtrader.core.bond_valuation import BondValuator
 
@@ -20,13 +27,14 @@ class AdvancedAnalytics:
         """Initialize advanced analytics"""
         self.valuator = valuator if valuator else BondValuator()
 
-    def fit_yield_curve(self, bonds: List[Bond], method: str = "nelson_siegel") -> Dict:
+    def fit_yield_curve(self, bonds: List[Bond], method: str = "nelson_siegel", use_statsmodels: bool = False) -> Dict:
         """
         Fit yield curve to bond data
 
         Args:
             bonds: List of bonds to fit curve to
             method: 'nelson_siegel' or 'svensson'
+            use_statsmodels: Use statsmodels for enhanced fitting (if available)
 
         Returns:
             Dictionary with curve parameters and fitted yields

@@ -6,6 +6,21 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
+## 📑 Table of Contents
+
+- [Features](#-features)
+- [Quick Start](#-quick-start)
+  - [Installation](#installation)
+  - [Usage](#usage)
+- [Project Structure](#-project-structure)
+- [Configuration](#-configuration)
+- [Documentation](#-documentation)
+- [Testing](#-testing)
+- [Contributing](#-contributing)
+- [Security](#-security)
+- [License](#-license)
+- [Support](#-support)
+
 ## ✨ Features
 
 ### 🎯 Core Functionality
@@ -120,10 +135,26 @@ pytest tests/ -v --cov=bondtrader --cov-report=html
 BondTrader/
 ├── bondtrader/                     # Main package
 │   ├── core/                       # Core bond trading modules
+│   │   ├── bond_models.py         # Bond data models
+│   │   ├── bond_valuation.py      # Valuation engine
+│   │   ├── arbitrage_detector.py  # Arbitrage detection
+│   │   └── quantlib_integration.py # QuantLib integration
 │   ├── ml/                         # Machine Learning modules
+│   │   ├── ml_adjuster.py         # Basic ML adjuster
+│   │   ├── ml_adjuster_enhanced.py # Enhanced ML with tuning
+│   │   ├── ml_advanced.py         # Advanced ensemble methods
+│   │   └── automl.py              # AutoML integration
 │   ├── risk/                       # Risk management modules
+│   │   ├── risk_management.py     # Core risk metrics
+│   │   ├── credit_risk_enhanced.py # Credit risk analysis
+│   │   └── liquidity_risk_enhanced.py # Liquidity risk
 │   ├── analytics/                  # Analytics and advanced features
+│   │   ├── portfolio_optimization.py # Portfolio optimization
+│   │   ├── backtesting.py         # Backtesting engine
+│   │   └── factor_models.py       # Factor analysis
 │   ├── data/                       # Data handling modules
+│   │   ├── data_persistence_enhanced.py # Database layer
+│   │   └── training_data_generator.py # Training data
 │   ├── utils/                      # Utility functions
 │   └── config.py                   # Configuration management
 │
@@ -132,21 +163,29 @@ BondTrader/
 │   ├── train_all_models.py         # Model training
 │   └── evaluate_models.py          # Model evaluation
 │
-├── tests/                          # Unit tests
-│   ├── conftest.py                 # Shared fixtures
-│   ├── test_bond_valuation.py
-│   ├── test_arbitrage.py
-│   ├── test_arbitrage_detector.py
-│   └── test_config.py
+├── tests/                          # Test suite
+│   ├── unit/                       # Unit tests (organized by module)
+│   │   ├── core/                  # Core module tests
+│   │   ├── ml/                    # ML module tests
+│   │   ├── risk/                  # Risk module tests
+│   │   ├── analytics/             # Analytics tests
+│   │   └── data/                  # Data module tests
+│   ├── integration/                # Integration tests
+│   └── smoke/                      # Smoke tests
 │
 ├── docs/                           # Documentation
 │   ├── guides/                     # User guides
 │   ├── api/                        # API documentation
-│   └── development/                # Development docs
+│   ├── development/                # Development docs
+│   ├── implementation/             # Implementation docs
+│   └── status/                     # Status tracking
 │
 ├── requirements.txt                # Python dependencies
 ├── setup.py                        # Package setup
 ├── LICENSE                         # License file
+├── CHANGELOG.md                    # Version history
+├── CONTRIBUTING.md                 # Contribution guidelines
+├── ROADMAP.md                      # Project roadmap
 └── README.md                       # This file
 ```
 
@@ -189,10 +228,25 @@ custom_config = Config(
 
 ## 📖 Documentation
 
-- **[User Guide](docs/guides/USER_GUIDE.md)** - Getting started and usage
+Comprehensive documentation is available in the [`docs/`](docs/) directory:
+
+### User Documentation
+- **[Quick Start Guide](docs/guides/QUICK_START_GUIDE.md)** - Quick introduction and setup
+- **[User Guide](docs/guides/USER_GUIDE.md)** - Complete usage guide
+- **[Training Data Guide](docs/guides/TRAINING_DATA.md)** - Generating training datasets
+- **[Evaluation Dataset Guide](docs/guides/EVALUATION_DATASET.md)** - Creating evaluation datasets
+
+### Developer Documentation
 - **[API Reference](docs/api/API_REFERENCE.md)** - Complete API documentation
-- **[Development Guide](docs/development/DEVELOPMENT.md)** - Contributing and development
 - **[Architecture](docs/development/ARCHITECTURE.md)** - System architecture overview
+- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute
+- **[Codebase Organization](docs/ORGANIZATION.md)** - Project structure
+
+### Additional Resources
+- **[Changelog](CHANGELOG.md)** - Version history and changes
+- **[Roadmap](ROADMAP.md)** - Planned features and improvements
+
+For a complete overview, see the [Documentation Index](docs/README.md).
 
 ## 🧪 Testing
 
@@ -213,19 +267,17 @@ pytest tests/test_bond_valuation.py -v
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-### Quick Contribution Checklist
+**Quick start:**
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes and add tests
+4. Ensure all tests pass (`pytest tests/`)
+5. Run code formatters (`black bondtrader/` and `isort bondtrader/`)
+6. Submit a Pull Request
 
-- [ ] Fork the repository
-- [ ] Create a feature branch (`git checkout -b feature/amazing-feature`)
-- [ ] Make your changes
-- [ ] Add tests for new functionality
-- [ ] Ensure all tests pass (`pytest tests/`)
-- [ ] Run code formatters (`black bondtrader/` and `isort bondtrader/`)
-- [ ] Commit your changes (`git commit -m 'Add amazing feature'`)
-- [ ] Push to the branch (`git push origin feature/amazing-feature`)
-- [ ] Open a Pull Request
+For more information, see [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## 📊 Features Overview
 
@@ -268,11 +320,15 @@ Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for gui
 
 ## 🔒 Security
 
-This is a demonstration/training system using synthetic data. For production use:
+**Reporting Security Issues**: Please report security vulnerabilities by emailing the maintainers. See [SECURITY.md](SECURITY.md) for more information.
+
+**Security Considerations**: This is a demonstration/training system using synthetic data. For production use:
 - Integrate with real market data feeds
 - Implement proper authentication and authorization
 - Add audit trails and compliance features
 - Review and secure all API endpoints
+
+For security policy details, see [SECURITY.md](SECURITY.md).
 
 ## ⚠️ Disclaimer
 

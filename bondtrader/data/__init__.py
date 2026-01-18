@@ -1,6 +1,10 @@
 """Data handling and generation modules"""
 
 from bondtrader.data.data_generator import BondDataGenerator
+from bondtrader.data.data_persistence_enhanced import (
+    BondDatabase,
+    EnhancedBondDatabase,
+)
 from bondtrader.data.evaluation_dataset_generator import (
     EvaluationDatasetGenerator,
     EvaluationMetrics,
@@ -30,4 +34,6 @@ __all__ = [
     "save_evaluation_dataset",
     "load_evaluation_dataset",
     "EvaluationMetrics",
+    "BondDatabase",  # EnhancedBondDatabase is the default implementation
+    "EnhancedBondDatabase",
 ]

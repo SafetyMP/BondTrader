@@ -16,7 +16,7 @@ This document outlines what testing infrastructure exists and what steps are sti
 - ✅ **Pytest framework** installed (`pytest>=7.4.0`, `pytest-cov>=4.1.0`)
 - ✅ **2 unit test files**:
   - `tests/test_bond_valuation.py` - Tests for bond valuation calculations
-  - `tests/test_arbitrage.py` - Tests for arbitrage detection
+  - `tests/unit/core/test_arbitrage_detector.py` - Tests for arbitrage detection
 - ✅ **Basic test fixtures** using pytest fixtures
 - ✅ **Manual system test script** (`test_system.py`)
 
@@ -264,7 +264,7 @@ tests/
 │
 ├── unit/                              # Unit tests (fast, isolated)
 │   ├── test_bond_valuation.py        ✅ Exists
-│   ├── test_arbitrage.py             ✅ Exists
+│   ├── test_arbitrage_detector.py    ✅ Exists
 │   ├── test_ml_adjuster.py           ❌ Missing
 │   ├── test_risk_management.py       ❌ Missing
 │   ├── test_portfolio_optimization.py ❌ Missing

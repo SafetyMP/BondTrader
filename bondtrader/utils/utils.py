@@ -6,22 +6,35 @@ Includes caching, logging, validation, and parallel processing
 import hashlib
 import json
 import logging
-
-# Configure logging
 import os
 from datetime import datetime
-from functools import lru_cache
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict
 
-log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "logs")
-os.makedirs(log_dir, exist_ok=True)
-log_file = os.path.join(log_dir, "bond_trading.log")
+# Import config lazily to avoid circular imports
+def _get_log_config():
+    """Get log configuration from config module"""
+    try:
+        from bondtrader.config import get_config
+        config = get_config()
+        return config.logs_dir, config.log_file, config.log_level
+    except Exception:
+        # Fallback if config not available
+        log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "logs")
+        return log_dir, "bond_trading.log", "INFO"
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler(log_file), logging.StreamHandler()],
-)
+# Configure logging once
+_log_dir, _log_file, _log_level = _get_log_config()
+os.makedirs(_log_dir, exist_ok=True)
+_log_path = os.path.join(_log_dir, _log_file)
+
+# Only configure if not already configured
+if not logging.getLogger().handlers:
+    logging.basicConfig(
+        level=getattr(logging, _log_level.upper(), logging.INFO),
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[logging.FileHandler(_log_path), logging.StreamHandler()],
+    )
+
 logger = logging.getLogger(__name__)
 
 

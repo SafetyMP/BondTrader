@@ -8,6 +8,8 @@ from datetime import datetime, timedelta
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from bondtrader.analytics.transaction_costs import TransactionCostCalculator
@@ -105,12 +107,35 @@ def test_empty_bond_list(detector):
     assert opportunities == []
 
 
-def test_relative_arbitrage(sample_bonds, detector):
-    """Test relative arbitrage detection between bonds"""
-    relative_opps = detector.find_relative_arbitrage(sample_bonds)
+def test_arbitrage_with_ml(sample_bonds, detector):
+    """Test arbitrage detection with and without ML"""
+    # Test without ML
+    opportunities1 = detector.find_arbitrage_opportunities(sample_bonds, use_ml=False)
+    
+    # Test with ML (if available)
+    opportunities2 = detector.find_arbitrage_opportunities(sample_bonds, use_ml=True)
+    
+    assert isinstance(opportunities1, list)
+    assert isinstance(opportunities2, list)
 
-    assert isinstance(relative_opps, list)
-    # Should return list even if no opportunities found
+
+def test_transaction_costs_calculator():
+    """Test transaction cost calculator directly"""
+    calculator = TransactionCostCalculator()
+    bond = Bond(
+        bond_id="TEST",
+        bond_type=BondType.CORPORATE,
+        face_value=1000,
+        coupon_rate=5.0,
+        maturity_date=datetime.now() + timedelta(days=1825),
+        issue_date=datetime.now() - timedelta(days=365),
+        current_price=950,
+        credit_rating="BBB",
+    )
+
+    costs = calculator.calculate_trading_cost(bond, quantity=1.0, is_buy=True)
+    assert "total_cost" in costs
+    assert costs["total_cost"] > 0
 
 
 if __name__ == "__main__":

@@ -178,30 +178,9 @@ class CreditRiskEnhanced:
 
     def _get_recovery_rate(self, rating: str) -> float:
         """Get recovery rate based on credit rating"""
-        recovery_map = {
-            "AAA": 0.60,
-            "AA": 0.58,
-            "AA+": 0.58,
-            "AA-": 0.56,
-            "A+": 0.56,
-            "A": 0.54,
-            "A-": 0.52,
-            "BBB+": 0.50,
-            "BBB": 0.48,
-            "BBB-": 0.46,
-            "BB+": 0.44,
-            "BB": 0.42,
-            "BB-": 0.40,
-            "B+": 0.38,
-            "B": 0.36,
-            "B-": 0.34,
-            "CCC+": 0.32,
-            "CCC": 0.30,
-            "CCC-": 0.28,
-            "D": 0.20,
-            "NR": 0.40,
-        }
-        return recovery_map.get(rating.upper(), 0.40)
+        from bondtrader.utils.constants import get_recovery_rate_enhanced
+
+        return get_recovery_rate_enhanced(rating)
 
     def credit_migration_analysis(self, bond: Bond, time_horizon: float = 1.0, num_scenarios: int = 10000) -> Dict:
         """

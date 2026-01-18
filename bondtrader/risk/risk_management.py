@@ -9,6 +9,19 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 from scipy import stats
 
+# Optional Numba JIT for performance
+try:
+    from numba import jit, prange
+    HAS_NUMBA = True
+except ImportError:
+    HAS_NUMBA = False
+    # Fallback decorator
+    def jit(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
+    prange = range
+
 from bondtrader.core.bond_models import Bond
 from bondtrader.core.bond_valuation import BondValuator
 
@@ -203,58 +216,15 @@ class RiskManager:
 
     def _get_default_probability(self, rating: str) -> float:
         """Get default probability based on credit rating (annual)"""
-        default_map = {
-            "AAA": 0.0002,
-            "AA+": 0.0005,
-            "AA": 0.001,
-            "AA-": 0.002,
-            "A+": 0.003,
-            "A": 0.005,
-            "A-": 0.008,
-            "BBB+": 0.012,
-            "BBB": 0.020,
-            "BBB-": 0.035,
-            "BB+": 0.050,
-            "BB": 0.080,
-            "BB-": 0.120,
-            "B+": 0.180,
-            "B": 0.250,
-            "B-": 0.350,
-            "CCC+": 0.450,
-            "CCC": 0.550,
-            "CCC-": 0.650,
-            "D": 1.000,
-            "NR": 0.020,
-        }
-        return default_map.get(rating.upper(), 0.020)
+        from bondtrader.utils.constants import get_default_probability
+
+        return get_default_probability(rating)
 
     def _get_recovery_rate(self, rating: str) -> float:
         """Get recovery rate based on credit rating"""
-        # Higher rated bonds have higher recovery rates
-        rating_to_recovery = {
-            "AAA": 0.60,
-            "AA+": 0.58,
-            "AA": 0.56,
-            "AA-": 0.54,
-            "A+": 0.52,
-            "A": 0.50,
-            "A-": 0.48,
-            "BBB+": 0.46,
-            "BBB": 0.44,
-            "BBB-": 0.42,
-            "BB+": 0.40,
-            "BB": 0.38,
-            "BB-": 0.36,
-            "B+": 0.34,
-            "B": 0.32,
-            "B-": 0.30,
-            "CCC+": 0.28,
-            "CCC": 0.26,
-            "CCC-": 0.24,
-            "D": 0.20,
-            "NR": 0.40,
-        }
-        return rating_to_recovery.get(rating.upper(), 0.40)
+        from bondtrader.utils.constants import get_recovery_rate_standard
+
+        return get_recovery_rate_standard(rating)
 
     def calculate_interest_rate_sensitivity(self, bond: Bond, rate_change: float = 0.01) -> Dict:  # 1% change
         """

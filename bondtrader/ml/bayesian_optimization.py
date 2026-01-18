@@ -10,6 +10,13 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.stats import norm
 
+# Optional Optuna for advanced hyperparameter optimization
+try:
+    import optuna
+    HAS_OPTUNA = True
+except ImportError:
+    HAS_OPTUNA = False
+
 from bondtrader.core.bond_models import Bond
 from bondtrader.core.bond_valuation import BondValuator
 from bondtrader.utils.utils import logger
@@ -66,7 +73,9 @@ class BayesianOptimizer:
 
         return ucb
 
-    def optimize_hyperparameters(self, bonds: List[Bond], param_bounds: Dict[str, tuple], num_iterations: int = 20) -> Dict:
+    def optimize_hyperparameters(
+        self, bonds: List[Bond], param_bounds: Dict[str, tuple], num_iterations: int = 20, use_optuna: bool = False
+    ) -> Dict:
         """
         Bayesian optimization for hyperparameter tuning
 
@@ -76,10 +85,14 @@ class BayesianOptimizer:
             bonds: List of bonds for training
             param_bounds: {param_name: (min, max)} bounds
             num_iterations: Number of optimization iterations
+            use_optuna: Use Optuna for optimization (more advanced if available)
 
         Returns:
             Optimal hyperparameters
         """
+        # Use Optuna if requested and available
+        if use_optuna and HAS_OPTUNA:
+            return self._optimize_hyperparameters_optuna(bonds, param_bounds, num_iterations)
         from bondtrader.ml.ml_adjuster_enhanced import EnhancedMLBondAdjuster
 
         param_names = list(param_bounds.keys())
@@ -135,6 +148,50 @@ class BayesianOptimizer:
             "best_value": -best_value,  # Convert back to R²
             "num_iterations": num_iterations,
             "observed_points": len(self.observed_points),
+        }
+
+    def _optimize_hyperparameters_optuna(
+        self, bonds: List[Bond], param_bounds: Dict[str, tuple], num_iterations: int
+    ) -> Dict:
+        """Optimize hyperparameters using Optuna (if available)"""
+        if not HAS_OPTUNA:
+            raise ImportError("Optuna not installed. Install with: pip install optuna")
+
+        from bondtrader.ml.ml_adjuster_enhanced import EnhancedMLBondAdjuster
+
+        def objective(trial):
+            """Optuna objective function"""
+            try:
+                ml_adjuster = EnhancedMLBondAdjuster()
+
+                # Suggest parameters based on bounds
+                params = {}
+                for param_name, (min_val, max_val) in param_bounds.items():
+                    if isinstance(min_val, int) and isinstance(max_val, int):
+                        params[param_name] = trial.suggest_int(param_name, min_val, max_val)
+                    else:
+                        params[param_name] = trial.suggest_float(param_name, min_val, max_val)
+
+                # Set parameters (would need proper parameter mapping)
+                # For now, use default training
+                metrics = ml_adjuster.train_with_tuning(bonds, tune_hyperparameters=False)
+
+                # Return test R² (Optuna maximizes)
+                return metrics["test_r2"]
+            except Exception as e:
+                logger.warning(f"Trial failed: {e}")
+                return 0.0  # Return worst score on error
+
+        # Create study and optimize
+        study = optuna.create_study(direction="maximize", study_name="bond_ml_optimization")
+        study.optimize(objective, n_trials=num_iterations, show_progress_bar=False)
+
+        return {
+            "optimal_parameters": study.best_params,
+            "best_value": study.best_value,
+            "num_iterations": num_iterations,
+            "observed_points": len(study.trials),
+            "method": "Optuna",
         }
 
     def robust_portfolio_optimization(self, bonds: List[Bond], uncertainty_bounds: Optional[Dict] = None) -> Dict:

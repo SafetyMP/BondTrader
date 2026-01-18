@@ -13,7 +13,6 @@ Follows financial industry best practices:
 import copy
 import fcntl  # For file locking (Unix)
 import glob
-import logging
 import multiprocessing as mp
 import os
 import sys
@@ -26,9 +25,8 @@ from typing import Dict, List, Optional
 import joblib
 import numpy as np
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Use centralized logger from utils
+from bondtrader.utils import logger
 
 try:
     from tqdm import tqdm

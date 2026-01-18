@@ -16,22 +16,22 @@ This document provides guidelines and instructions for contributing to the proje
 
 ## Code of Conduct
 
-### Our Pledge
+This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md) to ensure a welcoming and inclusive environment for all contributors. By participating, you are expected to uphold this code.
 
-We are committed to providing a welcoming and inspiring community for all. Please be respectful and considerate of others.
-
-### Expected Behavior
+### Quick Summary
 
 - Be respectful and inclusive
 - Welcome newcomers and help them get started
 - Give constructive feedback
 - Focus on what is best for the community
 
+Please read the [full Code of Conduct](CODE_OF_CONDUCT.md) for details.
+
 ## How Can I Contribute?
 
 ### Reporting Bugs
 
-Before creating bug reports, please check the [issue tracker](https://github.com/yourusername/BondTrader/issues) to ensure the bug hasn't already been reported.
+Before creating bug reports, please check the [issue tracker](https://github.com/SafetyMP/BondTrader/issues) to ensure the bug hasn't already been reported.
 
 **Good bug reports include:**
 - Clear, descriptive title
@@ -42,7 +42,7 @@ Before creating bug reports, please check the [issue tracker](https://github.com
 
 ### Suggesting Enhancements
 
-Enhancement suggestions are tracked as [GitHub issues](https://github.com/yourusername/BondTrader/issues). When creating an enhancement suggestion:
+Enhancement suggestions are tracked as [GitHub issues](https://github.com/SafetyMP/BondTrader/issues). When creating an enhancement suggestion:
 
 - Use a clear and descriptive title
 - Provide detailed explanation of the proposed enhancement
@@ -70,7 +70,7 @@ Enhancement suggestions are tracked as [GitHub issues](https://github.com/yourus
 
 1. **Fork and clone the repository**:
 ```bash
-git clone https://github.com/yourusername/BondTrader.git
+git clone https://github.com/SafetyMP/BondTrader.git
 cd BondTrader
 ```
 

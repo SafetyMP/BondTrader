@@ -150,7 +150,7 @@ This document outlines all the improvements made to the Bond Trading & Arbitrage
 
 **Unit Tests**
 - `test_bond_valuation.py`: Comprehensive valuation tests
-- `test_arbitrage.py`: Arbitrage detection tests
+- `test_arbitrage_detector.py`: Comprehensive arbitrage detection tests
 - pytest fixtures for reusable test data
 - Coverage for edge cases
 
@@ -187,7 +187,7 @@ BondTrader/
 ├── dashboard.py             # Streamlit dashboard
 ├── tests/                   # Unit tests
 │   ├── test_bond_valuation.py
-│   └── test_arbitrage.py
+│   └── test_arbitrage_detector.py
 └── requirements.txt         # Updated dependencies
 ```
 

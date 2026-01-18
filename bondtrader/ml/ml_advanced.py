@@ -4,7 +4,6 @@ Deep learning, ensemble methods, explainable AI - Beyond industry standards
 """
 
 import copy
-import logging
 import os
 import warnings
 from datetime import datetime
@@ -23,9 +22,8 @@ from bondtrader.core.bond_valuation import BondValuator
 
 warnings.filterwarnings("ignore")
 
-# Set up logging
-logging.basicConfig(level=logging.WARNING)
-logger = logging.getLogger(__name__)
+# Use centralized logger from utils
+from bondtrader.utils import logger
 
 # Try to import advanced ML libraries (graceful fallback if not available)
 try:
