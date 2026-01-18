@@ -49,11 +49,11 @@ def test_config_from_environment():
     # Note: Config reads environment at class definition time, so this test
     # may not work if env vars were set before import. Test structure instead.
     config = Config()
-    
+
     # Test that config can be created with environment variables set
     # (actual env var testing requires restart of Python process)
-    assert hasattr(config, 'default_risk_free_rate')
-    assert hasattr(config, 'ml_model_type')
+    assert hasattr(config, "default_risk_free_rate")
+    assert hasattr(config, "ml_model_type")
     assert config.default_risk_free_rate > 0
 
 

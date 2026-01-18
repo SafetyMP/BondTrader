@@ -13,6 +13,7 @@ from scipy.stats import norm
 # Optional Optuna for advanced hyperparameter optimization
 try:
     import optuna
+
     HAS_OPTUNA = True
 except ImportError:
     HAS_OPTUNA = False
@@ -150,9 +151,7 @@ class BayesianOptimizer:
             "observed_points": len(self.observed_points),
         }
 
-    def _optimize_hyperparameters_optuna(
-        self, bonds: List[Bond], param_bounds: Dict[str, tuple], num_iterations: int
-    ) -> Dict:
+    def _optimize_hyperparameters_optuna(self, bonds: List[Bond], param_bounds: Dict[str, tuple], num_iterations: int) -> Dict:
         """Optimize hyperparameters using Optuna (if available)"""
         if not HAS_OPTUNA:
             raise ImportError("Optuna not installed. Install with: pip install optuna")

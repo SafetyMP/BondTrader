@@ -13,6 +13,7 @@ from scipy.optimize import minimize
 # Optional CVXPY for convex optimization
 try:
     import cvxpy as cp
+
     HAS_CVXPY = True
 except ImportError:
     HAS_CVXPY = False

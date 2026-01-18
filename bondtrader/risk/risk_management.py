@@ -12,14 +12,18 @@ from scipy import stats
 # Optional Numba JIT for performance
 try:
     from numba import jit, prange
+
     HAS_NUMBA = True
 except ImportError:
     HAS_NUMBA = False
+
     # Fallback decorator
     def jit(*args, **kwargs):
         def decorator(func):
             return func
+
         return decorator
+
     prange = range
 
 from bondtrader.core.bond_models import Bond

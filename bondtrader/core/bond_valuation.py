@@ -20,7 +20,7 @@ class BondValuator:
     def __init__(self, risk_free_rate: float = 0.03, use_quantlib: bool = False):
         """
         Initialize valuator with risk-free rate (default 3%)
-        
+
         Args:
             risk_free_rate: Annual risk-free rate as decimal (e.g., 0.03 for 3%)
             use_quantlib: Use QuantLib for calculations if available (default: False)
@@ -130,7 +130,7 @@ class BondValuator:
             if required_yield is None:
                 spread = self._get_credit_spread(bond.credit_rating)
                 required_yield = rf_rate + spread
-            
+
             ql_price = self.quantlib.calculate_bond_price_quantlib(bond, required_yield)
             if ql_price is not None:
                 return ql_price

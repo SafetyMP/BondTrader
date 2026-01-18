@@ -16,18 +16,21 @@ from sklearn.preprocessing import StandardScaler
 # Optional ML libraries
 try:
     from xgboost import XGBRegressor
+
     HAS_XGBOOST = True
 except ImportError:
     HAS_XGBOOST = False
 
 try:
     from lightgbm import LGBMRegressor
+
     HAS_LIGHTGBM = True
 except ImportError:
     HAS_LIGHTGBM = False
 
 try:
     from catboost import CatBoostRegressor
+
     HAS_CATBOOST = True
 except ImportError:
     HAS_CATBOOST = False
@@ -65,9 +68,7 @@ class MLBondAdjuster:
             available_models.append("catboost")
 
         if model_type not in available_models:
-            raise ValueError(
-                f"Model type '{model_type}' not available. Available models: {', '.join(available_models)}"
-            )
+            raise ValueError(f"Model type '{model_type}' not available. Available models: {', '.join(available_models)}")
 
     def _create_features(self, bonds: List[Bond], fair_values: List[float]) -> np.ndarray:
         """Create feature matrix from bonds"""

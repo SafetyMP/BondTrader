@@ -8,14 +8,18 @@ import numpy as np
 # Optional Numba for JIT compilation
 try:
     from numba import jit, prange
+
     HAS_NUMBA = True
 except ImportError:
     HAS_NUMBA = False
+
     # Fallback decorator
     def jit(*args, **kwargs):
         def decorator(func):
             return func
+
         return decorator
+
     prange = range
 
 
@@ -29,16 +33,16 @@ def monte_carlo_price_simulation(
 ) -> float:
     """
     JIT-compiled helper for Monte Carlo price simulation
-    
+
     Calculates new bond price given yield change using duration and convexity
-    
+
     Args:
         current_price: Current bond price
         duration: Bond duration
         convexity: Bond convexity
         yield_change: Yield change (as decimal)
         face_value: Face value
-        
+
     Returns:
         New bond price
     """
@@ -56,12 +60,12 @@ def binomial_tree_discount(
 ) -> float:
     """
     JIT-compiled discount factor calculation
-    
+
     Args:
         value: Future value
         rate: Discount rate
         dt: Time step
-        
+
     Returns:
         Present value
     """
@@ -80,7 +84,7 @@ def binomial_tree_backward_step(
 ) -> float:
     """
     JIT-compiled binomial tree backward induction step
-    
+
     Args:
         up_value: Value if rates go up
         down_value: Value if rates go down
@@ -88,7 +92,7 @@ def binomial_tree_backward_step(
         rate: Current discount rate
         dt: Time step
         prob_up: Probability of up move (default 0.5)
-        
+
     Returns:
         Discounted expected value
     """
@@ -108,26 +112,26 @@ def vectorized_coupon_pv(
 ) -> float:
     """
     JIT-compiled present value of coupon payments (vectorized)
-    
+
     Args:
         coupon_payment: Coupon payment per period
         periods: Number of periods
         ytm: Yield to maturity
         frequency: Payment frequency
-        
+
     Returns:
         Present value of all coupon payments
     """
     if periods == 0:
         return 0.0
-    
+
     total = 0.0
     rate = 1.0 + ytm / frequency
-    
+
     for i in range(1, periods + 1):
-        discount = rate ** i
+        discount = rate**i
         total += coupon_payment / discount
-    
+
     return total
 
 
@@ -140,38 +144,38 @@ def vectorized_coupon_derivative(
 ) -> float:
     """
     JIT-compiled derivative of coupon PV for Newton-Raphson
-    
+
     Args:
         coupon_payment: Coupon payment per period
         periods: Number of periods
         ytm: Yield to maturity
         frequency: Payment frequency
-        
+
     Returns:
         Derivative of coupon present value
     """
     if periods == 0:
         return 0.0
-    
+
     total = 0.0
     rate = 1.0 + ytm / frequency
-    
+
     for i in range(1, periods + 1):
         derivative_term = i / (frequency * (rate ** (i + 1)))
         total += coupon_payment * derivative_term
-    
+
     return -total
 
 
 def enable_numba_jit(func):
     """
     Decorator to conditionally enable Numba JIT compilation
-    
+
     Usage:
         @enable_numba_jit
         def my_function(...):
             ...
-    
+
     If Numba is not available, function runs normally
     """
     if HAS_NUMBA:

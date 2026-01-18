@@ -15,16 +15,17 @@ from typing import Optional
 # Optional Pydantic for validation
 try:
     from pydantic import BaseModel, Field, field_validator, model_validator
+
     HAS_PYDANTIC = True
 except ImportError:
     HAS_PYDANTIC = False
+
     # Fallback to simple BaseModel
     class BaseModel:
         pass
 
 
 from bondtrader.core.bond_models import Bond, BondType
-
 
 if HAS_PYDANTIC:
 

@@ -15,6 +15,7 @@ from typing import Dict, Optional
 # Optional Pydantic for validation
 try:
     from pydantic import BaseModel, Field, field_validator
+
     HAS_PYDANTIC = True
 except ImportError:
     HAS_PYDANTIC = False

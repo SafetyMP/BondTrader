@@ -8,8 +8,10 @@ from typing import List
 
 # Optional Hypothesis for property-based testing
 try:
-    from hypothesis import given, strategies as st
+    from hypothesis import given
+    from hypothesis import strategies as st
     from hypothesis.extra.numpy import arrays
+
     HAS_HYPOTHESIS = True
 except ImportError:
     HAS_HYPOTHESIS = False
@@ -17,7 +19,6 @@ except ImportError:
 import numpy as np
 
 from bondtrader.core.bond_models import Bond, BondType
-
 
 if HAS_HYPOTHESIS:
 
@@ -67,7 +68,7 @@ if HAS_HYPOTHESIS:
         # Generate symmetric positive semi-definite matrix
         return st.builds(
             lambda x: np.dot(x, x.T),
-            arrays(np.float64, (n, n), elements=st.floats(min_value=-1, max_value=1, allow_nan=False))
+            arrays(np.float64, (n, n), elements=st.floats(min_value=-1, max_value=1, allow_nan=False)),
         )
 
 else:
@@ -104,39 +105,40 @@ else:
 def test_bond_properties(bond: Bond) -> bool:
     """
     Test basic properties that all bonds should satisfy
-    
+
     This function can be used with property-based testing to validate
     that bond calculations maintain certain invariants
-    
+
     Args:
         bond: Bond object to test
-        
+
     Returns:
         True if all properties satisfied
     """
     # Property 1: Price must be positive
     assert bond.current_price > 0, "Price must be positive"
-    
+
     # Property 2: Face value must be positive
     assert bond.face_value > 0, "Face value must be positive"
-    
+
     # Property 3: Maturity must be after issue date
     assert bond.maturity_date > bond.issue_date, "Maturity must be after issue date"
-    
+
     # Property 4: Time to maturity must be non-negative
     assert bond.time_to_maturity >= 0, "Time to maturity must be non-negative"
-    
+
     # Property 5: Frequency must be positive
     assert bond.frequency > 0, "Frequency must be positive"
-    
+
     # Property 6: Zero coupon bonds must have coupon_rate=0
     if bond.bond_type == BondType.ZERO_COUPON:
         assert bond.coupon_rate == 0, "Zero coupon bonds must have coupon_rate=0"
-    
+
     return True
 
 
 if HAS_HYPOTHESIS:
+
     @given(bond_strategy())
     def test_bond_properties_hypothesis(bond: Bond):
         """Property-based test for bond properties"""

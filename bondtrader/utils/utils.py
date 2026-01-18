@@ -10,17 +10,20 @@ import os
 from datetime import datetime
 from typing import Any, Callable, Dict
 
+
 # Import config lazily to avoid circular imports
 def _get_log_config():
     """Get log configuration from config module"""
     try:
         from bondtrader.config import get_config
+
         config = get_config()
         return config.logs_dir, config.log_file, config.log_level
     except Exception:
         # Fallback if config not available
         log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "logs")
         return log_dir, "bond_trading.log", "INFO"
+
 
 # Configure logging once
 _log_dir, _log_file, _log_level = _get_log_config()

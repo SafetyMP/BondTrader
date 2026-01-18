@@ -12,6 +12,7 @@ from scipy.optimize import minimize
 # Optional statsmodels for enhanced yield curve fitting
 try:
     from statsmodels.tsa.vector_ar.var_model import VAR
+
     HAS_STATSMODELS = True
 except ImportError:
     HAS_STATSMODELS = False

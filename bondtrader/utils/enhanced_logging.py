@@ -10,12 +10,14 @@ from typing import Any, Dict, Optional
 # Optional structured logging libraries
 try:
     import structlog
+
     HAS_STRUCTLOG = True
 except ImportError:
     HAS_STRUCTLOG = False
 
 try:
     from loguru import logger as loguru_logger
+
     HAS_LOGURU = True
 except ImportError:
     HAS_LOGURU = False
@@ -24,12 +26,12 @@ except ImportError:
 def setup_structured_logging(use_structlog: bool = True, use_loguru: bool = False, log_level: str = "INFO") -> Any:
     """
     Setup structured logging with optional structlog or loguru
-    
+
     Args:
         use_structlog: Use structlog for structured logging
         use_loguru: Use loguru for enhanced logging
         log_level: Logging level
-        
+
     Returns:
         Logger instance
     """
@@ -50,7 +52,7 @@ def setup_structured_logging(use_structlog: bool = True, use_loguru: bool = Fals
             format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
         )
         return loguru_logger
-    
+
     elif use_structlog and HAS_STRUCTLOG:
         # Configure structlog
         structlog.configure(
@@ -71,7 +73,7 @@ def setup_structured_logging(use_structlog: bool = True, use_loguru: bool = Fals
             cache_logger_on_first_use=True,
         )
         return structlog.get_logger()
-    
+
     else:
         # Fallback to standard logging
         logging.basicConfig(
@@ -85,11 +87,11 @@ def setup_structured_logging(use_structlog: bool = True, use_loguru: bool = Fals
 def get_logger(name: str = __name__, use_enhanced: bool = True) -> Any:
     """
     Get logger instance with optional enhanced logging
-    
+
     Args:
         name: Logger name
         use_enhanced: Use enhanced logging (structlog/loguru) if available
-        
+
     Returns:
         Logger instance
     """
@@ -103,11 +105,11 @@ def get_logger(name: str = __name__, use_enhanced: bool = True) -> Any:
 
 class LoggerMixin:
     """Mixin class to add logging capabilities to any class"""
-    
+
     @property
     def logger(self):
         """Get logger instance for this class"""
-        if not hasattr(self, '_logger'):
+        if not hasattr(self, "_logger"):
             class_name = self.__class__.__name__
             self._logger = get_logger(f"bondtrader.{class_name}")
         return self._logger
@@ -116,25 +118,26 @@ class LoggerMixin:
 def log_performance(func_name: str = None):
     """
     Decorator to log function performance
-    
+
     Args:
         func_name: Optional function name (defaults to function.__name__)
-        
+
     Usage:
         @log_performance()
         def my_function():
             ...
     """
+
     def decorator(func):
         from functools import wraps
         from time import time
-        
+
         @wraps(func)
         def wrapper(*args, **kwargs):
             logger = get_logger(func.__module__)
             name = func_name or func.__name__
             start_time = time()
-            
+
             try:
                 result = func(*args, **kwargs)
                 duration = time() - start_time
@@ -144,28 +147,31 @@ def log_performance(func_name: str = None):
                 duration = time() - start_time
                 logger.error(f"{name} failed", duration_seconds=duration, error=str(e), status="error")
                 raise
-        
+
         return wrapper
+
     return decorator
 
 
 def log_with_context(**context):
     """
     Decorator to add context to logging
-    
+
     Usage:
         @log_with_context(bond_id="BOND-001", model="xgboost")
         def my_function():
             ...
     """
+
     def decorator(func):
         from functools import wraps
-        
+
         @wraps(func)
         def wrapper(*args, **kwargs):
             logger = get_logger(func.__module__)
             logger = logger.bind(**context)
             return func(*args, **kwargs)
-        
+
         return wrapper
+
     return decorator

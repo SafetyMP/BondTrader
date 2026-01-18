@@ -11,8 +11,9 @@ pytestmark = pytest.mark.unit
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from bondtrader.ml.automl import AutoMLBondAdjuster
 from fixtures.bond_factory import create_multiple_bonds
+
+from bondtrader.ml.automl import AutoMLBondAdjuster
 
 
 @pytest.fixture
@@ -38,7 +39,7 @@ def test_automl_adjuster_initialization():
 def test_automated_model_selection_insufficient_bonds(automl_adjuster):
     """Test AutoML with insufficient bonds"""
     bonds = create_multiple_bonds(count=10)
-    
+
     with pytest.raises(ValueError, match="Need at least 20 bonds"):
         automl_adjuster.automated_model_selection(bonds)
 
@@ -49,9 +50,9 @@ def test_automated_model_selection_basic(training_bonds, automl_adjuster):
     result = automl_adjuster.automated_model_selection(
         training_bonds,
         candidate_models=["random_forest"],  # Test with one model only
-        max_evaluation_time=10  # Short timeout for tests
+        max_evaluation_time=10,  # Short timeout for tests
     )
-    
+
     assert "best_model" in result
     assert "automl_success" in result
     assert result["best_model"] in ["random_forest", "gradient_boosting", "neural_network", "ensemble"]

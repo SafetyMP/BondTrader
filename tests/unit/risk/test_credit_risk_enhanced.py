@@ -11,9 +11,10 @@ pytestmark = pytest.mark.unit
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from bondtrader.risk.credit_risk_enhanced import CreditRiskEnhanced
+from fixtures.bond_factory import create_multiple_bonds, create_test_bond
+
 from bondtrader.core.bond_valuation import BondValuator
-from fixtures.bond_factory import create_test_bond, create_multiple_bonds
+from bondtrader.risk.credit_risk_enhanced import CreditRiskEnhanced
 
 
 @pytest.fixture
@@ -39,9 +40,9 @@ def test_credit_risk_enhanced_with_valuator():
 def test_merton_structural_model(credit_risk_enhanced):
     """Test Merton structural model"""
     bond = create_test_bond(credit_rating="BBB")
-    
+
     result = credit_risk_enhanced.merton_structural_model(bond)
-    
+
     assert "default_probability" in result
     assert "distance_to_default" in result
     assert "recovery_rate" in result
@@ -52,9 +53,9 @@ def test_merton_structural_model(credit_risk_enhanced):
 def test_credit_migration_analysis(credit_risk_enhanced):
     """Test credit migration analysis"""
     bond = create_test_bond(credit_rating="BBB")
-    
+
     result = credit_risk_enhanced.credit_migration_analysis(bond, time_horizon=1.0, num_scenarios=100)
-    
+
     assert "value_distribution" in result
     assert "mean_value" in result
     assert "migration_probabilities" in result
@@ -65,6 +66,6 @@ def test_get_recovery_rate_enhanced(credit_risk_enhanced):
     """Test recovery rate lookup"""
     rate_aaa = credit_risk_enhanced._get_recovery_rate("AAA")
     rate_bbb = credit_risk_enhanced._get_recovery_rate("BBB")
-    
+
     assert rate_aaa > rate_bbb
     assert 0 < rate_aaa <= 1

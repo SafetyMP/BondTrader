@@ -9,6 +9,7 @@ from typing import List, Optional
 # Optional pandas-market-calendars for market calendars
 try:
     import pandas_market_calendars as mcal
+
     HAS_MARKET_CALENDARS = True
 except ImportError:
     HAS_MARKET_CALENDARS = False
@@ -50,7 +51,9 @@ class BusinessDayCalculator:
         """Add business days to a date"""
         if self.calendar:
             # Use market calendar
-            valid_days = self.calendar.valid_days(start_date=start_date.date(), end_date=start_date.date() + timedelta(days=days * 2))
+            valid_days = self.calendar.valid_days(
+                start_date=start_date.date(), end_date=start_date.date() + timedelta(days=days * 2)
+            )
             if len(valid_days) >= days:
                 return datetime.combine(valid_days[days - 1], datetime.min.time())
             # Fallback if not enough days

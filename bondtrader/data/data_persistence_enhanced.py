@@ -230,9 +230,7 @@ class EnhancedBondDatabase:
                 .limit(limit)
                 .all()
             )
-            return [
-                {"price": h.price, "fair_value": h.fair_value, "timestamp": h.timestamp} for h in histories
-            ]
+            return [{"price": h.price, "fair_value": h.fair_value, "timestamp": h.timestamp} for h in histories]
         finally:
             session.close()
 

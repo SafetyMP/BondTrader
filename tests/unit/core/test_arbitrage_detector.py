@@ -111,10 +111,10 @@ def test_arbitrage_with_ml(sample_bonds, detector):
     """Test arbitrage detection with and without ML"""
     # Test without ML
     opportunities1 = detector.find_arbitrage_opportunities(sample_bonds, use_ml=False)
-    
+
     # Test with ML (if available)
     opportunities2 = detector.find_arbitrage_opportunities(sample_bonds, use_ml=True)
-    
+
     assert isinstance(opportunities1, list)
     assert isinstance(opportunities2, list)
 

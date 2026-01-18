@@ -10,6 +10,7 @@ from typing import Dict, List, Optional, Tuple
 # Optional QuantLib-Python for industry-standard calculations
 try:
     import QuantLib as ql
+
     HAS_QUANTLIB = True
 except ImportError:
     HAS_QUANTLIB = False
@@ -22,7 +23,7 @@ from bondtrader.utils.utils import logger
 class QuantLibIntegration:
     """
     QuantLib integration wrapper for bond calculations
-    
+
     Provides industry-standard fixed income calculations when QuantLib is available.
     Falls back to standard implementations if QuantLib not installed.
     """
@@ -60,11 +61,11 @@ class QuantLibIntegration:
     def calculate_bond_price_quantlib(self, bond: Bond, yield_rate: float) -> Optional[float]:
         """
         Calculate bond price using QuantLib
-        
+
         Args:
             bond: Bond object
             yield_rate: Yield rate (as decimal, e.g., 0.05 for 5%)
-            
+
         Returns:
             Bond price calculated with QuantLib, or None if QuantLib not available
         """
@@ -122,11 +123,11 @@ class QuantLibIntegration:
     def calculate_ytm_quantlib(self, bond: Bond, market_price: float) -> Optional[float]:
         """
         Calculate yield to maturity using QuantLib
-        
+
         Args:
             bond: Bond object
             market_price: Current market price
-            
+
         Returns:
             YTM (as decimal), or None if QuantLib not available
         """
@@ -180,10 +181,10 @@ class QuantLibIntegration:
     def calculate_accrued_interest(self, bond: Bond) -> Optional[float]:
         """
         Calculate accrued interest using QuantLib day count conventions
-        
+
         Args:
             bond: Bond object
-            
+
         Returns:
             Accrued interest, or None if QuantLib not available
         """
@@ -228,12 +229,12 @@ class QuantLibIntegration:
     ) -> Optional[Dict]:
         """
         Build yield curve using QuantLib
-        
+
         Args:
             maturities: List of maturities (in years)
             rates: List of rates (as decimals)
             interpolation: Interpolation method ('linear', 'cubic', 'log')
-            
+
         Returns:
             Dictionary with curve information, or None if QuantLib not available
         """
@@ -274,12 +275,12 @@ class QuantLibIntegration:
     def get_day_count_fraction(self, start_date: datetime, end_date: datetime, convention: str = "ACT/365") -> Optional[float]:
         """
         Calculate day count fraction using QuantLib conventions
-        
+
         Args:
             start_date: Start date
             end_date: End date
             convention: Day count convention ('ACT/365', 'ACT/360', '30/360', 'ACT/ACT')
-            
+
         Returns:
             Day count fraction, or None if QuantLib not available
         """

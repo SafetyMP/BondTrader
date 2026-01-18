@@ -11,8 +11,9 @@ pytestmark = pytest.mark.unit
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from bondtrader.analytics.correlation_analysis import CorrelationAnalyzer
 from fixtures.bond_factory import create_multiple_bonds
+
+from bondtrader.analytics.correlation_analysis import CorrelationAnalyzer
 
 
 @pytest.fixture
@@ -36,7 +37,7 @@ def test_correlation_analyzer_initialization():
 def test_calculate_correlation_matrix(correlation_analyzer, portfolio_bonds):
     """Test correlation matrix calculation"""
     result = correlation_analyzer.calculate_correlation_matrix(portfolio_bonds)
-    
+
     assert "correlation_matrix" in result
     assert "bond_ids" in result
     matrix = result["correlation_matrix"]
@@ -47,6 +48,6 @@ def test_calculate_correlation_matrix(correlation_analyzer, portfolio_bonds):
 def test_calculate_covariance_matrix(correlation_analyzer, portfolio_bonds):
     """Test covariance matrix calculation"""
     result = correlation_analyzer.calculate_covariance_matrix(portfolio_bonds)
-    
+
     assert "covariance_matrix" in result
     assert len(result["covariance_matrix"]) == len(portfolio_bonds)

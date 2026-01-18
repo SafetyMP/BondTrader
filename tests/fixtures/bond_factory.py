@@ -12,13 +12,13 @@ from bondtrader.core.bond_models import Bond, BondType
 def create_test_bond(**overrides) -> Bond:
     """
     Factory to create test bonds with sensible defaults
-    
+
     Args:
         **overrides: Any bond parameters to override defaults
-        
+
     Returns:
         Bond instance with specified or default parameters
-        
+
     Example:
         >>> bond = create_test_bond(bond_id="CUSTOM-001", coupon_rate=6.0)
         >>> assert bond.coupon_rate == 6.0
@@ -42,11 +42,11 @@ def create_test_bond(**overrides) -> Bond:
 def create_multiple_bonds(count: int = 5, bond_type: Optional[BondType] = None) -> List[Bond]:
     """
     Create multiple test bonds with varied characteristics
-    
+
     Args:
         count: Number of bonds to create
         bond_type: Optional bond type (if None, varies by index)
-        
+
     Returns:
         List of Bond instances
     """
