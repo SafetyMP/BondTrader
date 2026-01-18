@@ -64,11 +64,11 @@ jobs:
     
     - name: Check code formatting with black
       run: |
-        black --check bondtrader/ scripts/ tests/
+        black --check bondtrader/ scripts/ tests/ --line-length=127
     
     - name: Check import sorting with isort
       run: |
-        isort --check-only bondtrader/ scripts/ tests/
+        isort --check-only bondtrader/ scripts/ tests/ --profile=black --line-length=127
     
     - name: Lint with flake8
       run: |
