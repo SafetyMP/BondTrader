@@ -2,10 +2,11 @@
 Unit tests for bond valuation module
 """
 
-import pytest
-from datetime import datetime, timedelta
-import sys
 import os
+import sys
+from datetime import datetime, timedelta
+
+import pytest
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -27,7 +28,7 @@ def sample_bond():
         current_price=950,
         credit_rating="BBB",
         issuer="Test Corp",
-        frequency=2
+        frequency=2,
     )
 
 
@@ -68,10 +69,10 @@ def test_convexity_calculation(sample_bond, valuator):
 def test_price_mismatch(sample_bond, valuator):
     """Test price mismatch calculation"""
     mismatch = valuator.calculate_price_mismatch(sample_bond)
-    assert 'fair_value' in mismatch
-    assert 'market_price' in mismatch
-    assert 'mismatch_percentage' in mismatch
-    assert mismatch['market_price'] == sample_bond.current_price
+    assert "fair_value" in mismatch
+    assert "market_price" in mismatch
+    assert "mismatch_percentage" in mismatch
+    assert mismatch["market_price"] == sample_bond.current_price
 
 
 def test_zero_coupon_bond():
@@ -84,13 +85,13 @@ def test_zero_coupon_bond():
         maturity_date=datetime.now() + timedelta(days=1825),
         issue_date=datetime.now() - timedelta(days=365),
         current_price=800,
-        credit_rating="AAA"
+        credit_rating="AAA",
     )
-    
+
     valuator = BondValuator()
     fair_value = valuator.calculate_fair_value(zero_coupon)
     ytm = valuator.calculate_yield_to_maturity(zero_coupon)
-    
+
     assert fair_value > 0
     assert ytm > 0
 
@@ -105,9 +106,9 @@ def test_matured_bond(sample_bond, valuator):
         maturity_date=datetime.now() - timedelta(days=1),
         issue_date=datetime.now() - timedelta(days=3650),
         current_price=1000,
-        credit_rating="BBB"
+        credit_rating="BBB",
     )
-    
+
     fair_value = valuator.calculate_fair_value(matured_bond)
     assert fair_value == matured_bond.face_value
 

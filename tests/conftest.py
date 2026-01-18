@@ -2,16 +2,17 @@
 Pytest configuration and shared fixtures
 """
 
-import pytest
-from datetime import datetime, timedelta
-import sys
 import os
+import sys
+from datetime import datetime, timedelta
+
+import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from bondtrader.core.arbitrage_detector import ArbitrageDetector
 from bondtrader.core.bond_models import Bond, BondType
 from bondtrader.core.bond_valuation import BondValuator
-from bondtrader.core.arbitrage_detector import ArbitrageDetector
 
 
 @pytest.fixture(scope="session")
@@ -27,7 +28,7 @@ def sample_bond():
         current_price=950,
         credit_rating="BBB",
         issuer="Test Corp",
-        frequency=2
+        frequency=2,
     )
 
 
@@ -52,7 +53,7 @@ def sample_bonds():
             current_price=950 + (i * 10),
             credit_rating=["AAA", "AA", "A", "BBB", "BB"][i % 5],
             issuer=f"Test Corp {i}",
-            frequency=2
+            frequency=2,
         )
         for i in range(5)
     ]
