@@ -17,7 +17,10 @@ tqdm>=4.66.0
 numba>=0.58.0
 
 # Financial & quantitative libraries
-QuantLib-Python>=1.32
+# QuantLib-Python is optional - requires system dependencies
+# Install manually with: pip install QuantLib-Python (if needed)
+# Version 1.32+ may not be available - check PyPI for latest version
+# QuantLib-Python>=1.31  # Commented out - install manually if needed
 pandas-market-calendars>=4.3.0
 arch>=6.2.0
 statsmodels>=0.14.0
@@ -71,7 +74,8 @@ fastapi>=0.104.0
 uvicorn>=0.24.0
 
 # Visualization enhancements
-mplfinance>=0.12.0
+# mplfinance>=0.12.0  # 0.12.0 stable not available - use 0.12.9b7 or later if needed
+mplfinance>=0.12.9b0; python_version < "3.12"  # Beta version for older Python
 seaborn>=0.13.0
 
 # Additional data sources
