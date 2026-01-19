@@ -43,15 +43,27 @@ if _otel_available and BatchSpanProcessor:
         def __init__(self, span_exporter, *args, **kwargs):
             super().__init__(span_exporter, *args, **kwargs)
             self._export_error_logged = False
+            self._shutdown_called = False
 
         def force_flush(self, timeout_millis: int = 30000):
             """Override to catch export errors"""
+            if hasattr(self, '_shutdown_called') and self._shutdown_called:
+                return None
             try:
                 return super().force_flush(timeout_millis)
+            except (ValueError, IOError, OSError) as e:
+                # Handle I/O errors (closed files, etc.) gracefully
+                if not self._export_error_logged and "closed" not in str(e).lower():
+                    logger.debug(
+                        f"Trace export failed (collector may be unavailable): {e}. "
+                        "Set OTEL_USE_CONSOLE_EXPORTER=true or OTEL_TRACING_DISABLED=true to avoid this."
+                    )
+                    self._export_error_logged = True
+                return None
             except Exception as e:
                 if not self._export_error_logged:
                     logger.debug(
-                        f"Trace export failed (collector may be unavailable): {e}. "
+                        f"Trace export failed: {e}. "
                         "Set OTEL_USE_CONSOLE_EXPORTER=true or OTEL_TRACING_DISABLED=true to avoid this."
                     )
                     self._export_error_logged = True
@@ -59,10 +71,14 @@ if _otel_available and BatchSpanProcessor:
 
         def shutdown(self, timeout_millis: int = 30000):
             """Override to catch export errors during shutdown"""
+            self._shutdown_called = True
             try:
                 return super().shutdown(timeout_millis)
+            except (ValueError, IOError, OSError):
+                # Silently ignore I/O errors during shutdown (file may be closed)
+                return None
             except Exception:
-                # Silently ignore shutdown errors
+                # Silently ignore other shutdown errors
                 return None
 
 else:

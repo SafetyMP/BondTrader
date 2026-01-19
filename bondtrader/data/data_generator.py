@@ -149,12 +149,21 @@ class BondDataGenerator:
         Returns:
             List of bonds with adjusted prices
         """
+        import copy
+        
+        # Create deep copies to avoid modifying original bonds
+        bonds_copy = [copy.deepcopy(bond) for bond in bonds]
+        
+        # If noise level is zero, return copies without modification
+        if noise_level == 0.0:
+            return bonds_copy
+        
         from bondtrader.core.bond_valuation import BondValuator
         from bondtrader.core.container import get_container
 
         valuator = get_container().get_valuator()
 
-        for bond in bonds:
+        for bond in bonds_copy:
             # Calculate fair value
             fair_value = valuator.calculate_fair_value(bond)
 
@@ -162,4 +171,4 @@ class BondDataGenerator:
             noise = np.random.normal(0, noise_level * fair_value)
             bond.current_price = max(fair_value * 0.5, fair_value + noise)  # Ensure positive
 
-        return bonds
+        return bonds_copy

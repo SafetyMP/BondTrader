@@ -230,11 +230,14 @@ class EnhancedBondDatabase:
         try:
             # Check if bond exists
             existing = session.query(BondModel).filter(BondModel.bond_id == bond.bond_id).first()
+            # Convert coupon_rate from percentage (e.g., 5.0) to decimal (e.g., 0.05) for database
+            coupon_rate_decimal = bond.coupon_rate / 100.0
+            
             if existing:
                 # Update existing
                 existing.bond_type = bond.bond_type.value
                 existing.face_value = bond.face_value
-                existing.coupon_rate = bond.coupon_rate
+                existing.coupon_rate = coupon_rate_decimal
                 existing.maturity_date = bond.maturity_date.isoformat()
                 existing.issue_date = bond.issue_date.isoformat()
                 existing.current_price = bond.current_price
@@ -250,7 +253,7 @@ class EnhancedBondDatabase:
                     bond_id=bond.bond_id,
                     bond_type=bond.bond_type.value,
                     face_value=bond.face_value,
-                    coupon_rate=bond.coupon_rate,
+                    coupon_rate=coupon_rate_decimal,
                     maturity_date=bond.maturity_date.isoformat(),
                     issue_date=bond.issue_date.isoformat(),
                     current_price=bond.current_price,
@@ -323,7 +326,7 @@ class EnhancedBondDatabase:
                         "bond_id": bond.bond_id,
                         "bond_type": bond.bond_type.value,
                         "face_value": bond.face_value,
-                        "coupon_rate": bond.coupon_rate,
+                        "coupon_rate": bond.coupon_rate / 100.0,  # Convert percentage to decimal
                         "maturity_date": bond.maturity_date.isoformat(),
                         "issue_date": bond.issue_date.isoformat(),
                         "current_price": bond.current_price,
@@ -348,7 +351,7 @@ class EnhancedBondDatabase:
                     bond = update_map[existing.bond_id]
                     existing.bond_type = bond.bond_type.value
                     existing.face_value = bond.face_value
-                    existing.coupon_rate = bond.coupon_rate
+                    existing.coupon_rate = bond.coupon_rate / 100.0  # Convert percentage to decimal
                     existing.maturity_date = bond.maturity_date.isoformat()
                     existing.issue_date = bond.issue_date.isoformat()
                     existing.current_price = bond.current_price
@@ -393,11 +396,14 @@ class EnhancedBondDatabase:
 
     def _model_to_bond(self, model: BondModel) -> Bond:
         """Convert SQLAlchemy model to Bond object"""
+        # Convert coupon_rate from decimal (e.g., 0.05) back to percentage (e.g., 5.0)
+        coupon_rate_percentage = model.coupon_rate * 100.0
+        
         return Bond(
             bond_id=model.bond_id,
             bond_type=BondType(model.bond_type),
             face_value=model.face_value,
-            coupon_rate=model.coupon_rate,
+            coupon_rate=coupon_rate_percentage,
             maturity_date=datetime.fromisoformat(model.maturity_date),
             issue_date=datetime.fromisoformat(model.issue_date),
             current_price=model.current_price,

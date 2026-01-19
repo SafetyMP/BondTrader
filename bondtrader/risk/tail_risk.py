@@ -227,11 +227,13 @@ class TailRiskAnalyzer:
         tail_losses = losses[losses >= tail_threshold]
         tail_expectation = np.mean(tail_losses) if len(tail_losses) > 0 else tail_threshold
 
+        tail_expectation_pct = ((tail_expectation / portfolio_value) * 100 if portfolio_value > 0 else 0)
         return {
             "tail_probability": tail_probability,
             "tail_threshold": tail_threshold,
             "tail_expectation": tail_expectation,
-            "tail_expectation_pct": ((tail_expectation / portfolio_value) * 100 if portfolio_value > 0 else 0),
+            "tail_expectation_pct": tail_expectation_pct,
+            "tail_pct": tail_expectation_pct,  # Alias for backward compatibility
             "expected_tail_loss": tail_expectation,
         }
 

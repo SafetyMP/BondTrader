@@ -43,8 +43,9 @@ class TestPasswordHashing:
         """Test verifying password with provided salt"""
         password = "test_password"
         salt = b"test_salt"
-        hashed, _ = hash_password(password, salt)
-        assert verify_password(password, hashed, "")
+        hashed, returned_salt = hash_password(password, salt)
+        # Use the returned salt (which may be converted to string format)
+        assert verify_password(password, hashed, returned_salt)
 
 
 @pytest.mark.unit
