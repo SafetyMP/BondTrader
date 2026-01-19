@@ -1,66 +1,69 @@
 # BondTrader Documentation
 
-Welcome to the BondTrader documentation! This directory contains comprehensive documentation for users, developers, and contributors.
-
-## 📑 Table of Contents
-
-- [User Guides](#user-guides-guides)
-- [API Documentation](#api-documentation-api)
-- [Development Documentation](#development-documentation-development)
-- [Project Organization](#project-organization)
+Welcome to the BondTrader documentation! This directory contains comprehensive documentation organized by audience and purpose.
 
 ## 📚 Documentation Structure
 
-### User Guides (`guides/`)
+### For Users
+- **[Guides](guides/)** - User guides, tutorials, and how-to documentation
+  - Quick Start Guide
+  - User Guide
+  - Training Data Guide
+  - Evaluation Dataset Guide
+  - Historical Data Fetching
+  - Drift Detection
+  - Regenerate Dataset
 
-Step-by-step guides for using BondTrader:
+### For Developers
+- **[API Reference](api/)** - Complete API documentation
+  - API Reference Guide
+- **[Development](development/)** - Development documentation
+  - Architecture
+  - Competitive Analysis
+  - Industry Comparison
+  - **Componentization Strategies** - Various componentization approaches
+  - Troubleshooting guides
 
-- **[Quick Start Guide](guides/QUICK_START_GUIDE.md)** - Quick introduction and setup guide
-- **[User Guide](guides/USER_GUIDE.md)** - Complete usage guide and getting started
-- **[Training Data Guide](guides/TRAINING_DATA.md)** - Generating and using training datasets
-- **[Evaluation Dataset Guide](guides/EVALUATION_DATASET.md)** - Creating and using evaluation datasets
-- **[Regenerate Dataset Guide](guides/REGENERATE_DATASET.md)** - Regenerating evaluation datasets
-- **[Drift Detection Guide](guides/DRIFT_DETECTION.md)** - Model drift detection and monitoring
+### For Executives
+- **[Executive](executive/)** - Executive summaries and CTO reviews
+  - CTO Review & Optimization
+  - Complete CTO Deliverable
+  - Executive Demo Guide
+  - Demo summaries and assessments
 
-### API Documentation (`api/`)
+### For Analysis
+- **[Analysis](analysis/)** - Technical analysis and optimization reports
+  - Performance optimizations
+  - ML improvements
+  - Redundancy analysis
+  - Configuration fixes
 
-Complete API reference:
+### Demo Reports
+- **[Demo](demo/)** - Generated demo execution reports
+  - Automated demo reports with timestamps
 
-- **[API Reference](api/API_REFERENCE.md)** - Complete API documentation with examples
+## Quick Links
 
-### Development Documentation (`development/`)
+- [Main README](../README.md) - Project overview and getting started
+- [Contributing Guide](../CONTRIBUTING.md) - How to contribute
+- [Changelog](../CHANGELOG.md) - Version history
+- [Security Policy](../SECURITY.md) - Security guidelines
 
-Documentation for developers and contributors:
+## Documentation Standards
 
-- **[Architecture](development/ARCHITECTURE.md)** - System architecture and design overview
-- **[Competitive Analysis](development/COMPETITIVE_ANALYSIS.md)** - Comparison with industry leaders
-- **[Industry Comparison](development/INDUSTRY_COMPARISON.md)** - Best practices analysis
+All documentation follows these standards:
+- Markdown format
+- Clear headings and structure
+- Code examples with syntax highlighting
+- Links to related documentation
+- Regular updates with code changes
 
-## 📖 Getting Started
+## Archived Documentation
 
-**New to BondTrader?** Start here:
+Historical summary and implementation files have been consolidated. See [ARCHIVE.md](ARCHIVE.md) for details on where information has been moved.
 
-1. **[Quick Start Guide](guides/QUICK_START_GUIDE.md)** - Get up and running quickly
-2. **[User Guide](guides/USER_GUIDE.md)** - Learn how to use all features
-3. **[API Reference](api/API_REFERENCE.md)** - Explore the API
+## Recent Updates
 
-**Want to contribute?** See:
-
-1. [Contributing Guide](../CONTRIBUTING.md) - How to contribute
-2. [Architecture](development/ARCHITECTURE.md) - Understand the system
-3. [Organization](ORGANIZATION.md) - Codebase structure
-
-## 📁 Project Organization
-
-See [ORGANIZATION.md](ORGANIZATION.md) for details about the codebase structure, test organization, and documentation layout.
-
-## 🔗 Quick Links
-
-- **[Main README](../README.md)** - Project overview and quick start
-- **[Contributing Guide](../CONTRIBUTING.md)** - How to contribute
-- **[Changelog](../CHANGELOG.md)** - Version history and changes
-- **[Roadmap](../ROADMAP.md)** - Planned features
-
----
-
-**Note**: For general usage, refer to the guides and main README. For development, see the Architecture and Competitive Analysis documents.
+- **Security Improvements**: See [CHANGELOG.md](../CHANGELOG.md) for recent security enhancements
+- **Code Review**: Comprehensive codebase review completed - see [CODEBASE_REVIEW_IMPROVEMENTS.md](../CODEBASE_REVIEW_IMPROVEMENTS.md)
+- **CI/CD**: GitHub Actions workflow configured for automated testing and linting

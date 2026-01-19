@@ -75,7 +75,12 @@ class BayesianOptimizer:
         return ucb
 
     def optimize_hyperparameters(
-        self, bonds: List[Bond], param_bounds: Dict[str, tuple], num_iterations: int = 20, use_optuna: bool = False
+        self,
+        bonds: List[Bond],
+        param_bounds: Dict[str, tuple],
+        num_iterations: int = 20,
+        use_optuna: bool = False,
+        model_type: str = "random_forest",
     ) -> Dict:
         """
         Bayesian optimization for hyperparameter tuning
@@ -87,82 +92,179 @@ class BayesianOptimizer:
             param_bounds: {param_name: (min, max)} bounds
             num_iterations: Number of optimization iterations
             use_optuna: Use Optuna for optimization (more advanced if available)
+            model_type: Type of model to optimize ('random_forest' or 'gradient_boosting')
 
         Returns:
             Optimal hyperparameters
         """
         # Use Optuna if requested and available
         if use_optuna and HAS_OPTUNA:
-            return self._optimize_hyperparameters_optuna(bonds, param_bounds, num_iterations)
+            return self._optimize_hyperparameters_optuna(bonds, param_bounds, num_iterations, model_type)
+
+        import numpy as np
+        from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+        from sklearn.metrics import r2_score
+        from sklearn.model_selection import TimeSeriesSplit, train_test_split
+        from sklearn.preprocessing import StandardScaler
+
         from bondtrader.ml.ml_adjuster_enhanced import EnhancedMLBondAdjuster
 
         param_names = list(param_bounds.keys())
 
-        # Define objective function
+        # Prepare data once
+        ml_adjuster = EnhancedMLBondAdjuster(model_type=model_type)
+        fair_values = [ml_adjuster.valuator.calculate_fair_value(bond) for bond in bonds]
+        X, feature_names = ml_adjuster._create_enhanced_features(bonds, fair_values)
+        y = ml_adjuster._create_targets(bonds, fair_values)
+
+        # Use time-based split for financial data
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        scaler = StandardScaler()
+        X_train_scaled = scaler.fit_transform(X_train)
+        X_test_scaled = scaler.transform(X_test)
+
+        # Define objective function that actually uses parameters
         def objective(params_dict):
+            """Objective function that uses the provided parameters"""
             try:
-                ml_adjuster = EnhancedMLBondAdjuster()
+                # Map optimization parameters to model hyperparameters
+                model_params = {}
 
-                # Set parameters (simplified - would need proper parameter mapping)
-                # For demonstration, optimize on test R²
-                metrics = ml_adjuster.train_with_tuning(bonds, tune_hyperparameters=False)
+                # Handle integer parameters
+                int_params = ["n_estimators", "max_depth", "min_samples_split", "min_samples_leaf"]
+                for param in int_params:
+                    if param in params_dict:
+                        model_params[param] = int(params_dict[param])
 
-                # Return negative R² (minimize negative = maximize R²)
-                return -metrics["test_r2"]
-            except:
+                # Handle float parameters
+                float_params = ["learning_rate", "subsample", "min_samples_split", "min_samples_leaf"]
+                for param in float_params:
+                    if param in params_dict and param not in model_params:
+                        model_params[param] = float(params_dict[param])
+
+                # Handle string/categorical parameters
+                if "max_features" in params_dict:
+                    model_params["max_features"] = params_dict["max_features"]
+
+                # Set default values for required parameters
+                if model_type == "random_forest":
+                    default_params = {
+                        "n_estimators": 200,
+                        "max_depth": 15,
+                        "min_samples_split": 5,
+                        "min_samples_leaf": 2,
+                        "max_features": "sqrt",
+                        "random_state": 42,
+                        "n_jobs": -1,
+                    }
+                else:  # gradient_boosting
+                    default_params = {
+                        "n_estimators": 200,
+                        "max_depth": 6,
+                        "learning_rate": 0.1,
+                        "min_samples_split": 5,
+                        "min_samples_leaf": 2,
+                        "subsample": 0.9,
+                        "random_state": 42,
+                    }
+
+                # Merge defaults with provided params
+                final_params = {**default_params, **model_params}
+
+                # Create and train model
+                if model_type == "random_forest":
+                    model = RandomForestRegressor(**final_params)
+                else:
+                    model = GradientBoostingRegressor(**final_params)
+
+                # Use TimeSeriesSplit for cross-validation
+                tscv = TimeSeriesSplit(n_splits=5)
+                cv_scores = []
+                for train_idx, val_idx in tscv.split(X_train_scaled):
+                    X_tr, X_val = X_train_scaled[train_idx], X_train_scaled[val_idx]
+                    y_tr, y_val = y_train[train_idx], y_train[val_idx]
+                    model.fit(X_tr, y_tr)
+                    y_pred = model.predict(X_val)
+                    cv_scores.append(r2_score(y_val, y_pred))
+
+                # Return negative mean CV score (minimize negative = maximize R²)
+                mean_cv_score = np.mean(cv_scores)
+                return -mean_cv_score
+
+            except Exception as e:
+                logger.warning(f"Objective evaluation failed: {e}")
                 return 1.0  # Penalty for failed training
 
-        # Simplified 1D optimization for demonstration
-        # In production, would use multi-dimensional BO
-        if len(param_names) == 1:
-            param_name = param_names[0]
-            bounds = param_bounds[param_name]
+        # Multi-dimensional optimization
+        best_params = {}
+        best_value = float("inf")
+        self.observed_points = []
+        self.observed_values = []
 
-            best_params = {param_name: np.mean(bounds)}
-            best_value = float("inf")
-
-            # Random search with intelligent sampling (simplified BO)
-            for _ in range(num_iterations):
-                # Sample from bounds
-                if len(self.observed_points) < 5:
-                    # Initial random exploration
-                    x = np.random.uniform(bounds[0], bounds[1])
+        # Random initialization for multi-dimensional space
+        for iteration in range(num_iterations):
+            # Sample parameters from bounds
+            params_dict = {}
+            for param_name, (min_val, max_val) in param_bounds.items():
+                if isinstance(min_val, int) and isinstance(max_val, int):
+                    params_dict[param_name] = np.random.randint(min_val, max_val + 1)
                 else:
-                    # Use acquisition function to guide search
-                    candidates = np.linspace(bounds[0], bounds[1], 100)
-                    acq_values = [self.acquisition_function(c, self.observed_points, self.observed_values) for c in candidates]
-                    x = candidates[np.argmax(acq_values)]
+                    params_dict[param_name] = np.random.uniform(min_val, max_val)
 
-                # Evaluate
-                params_dict = {param_name: x}
-                value = objective(params_dict)
+            # Evaluate objective
+            value = objective(params_dict)
 
-                self.observed_points.append(x)
-                self.observed_values.append(value)
+            # Store observation
+            self.observed_points.append(params_dict.copy())
+            self.observed_values.append(value)
 
-                if value < best_value:
-                    best_value = value
-                    best_params = {param_name: x}
+            # Update best if improved
+            if value < best_value:
+                best_value = value
+                best_params = params_dict.copy()
+
+            # Log progress every 5 iterations
+            if (iteration + 1) % 5 == 0:
+                logger.info(f"Bayesian optimization iteration {iteration + 1}/{num_iterations}, best R²: {-best_value:.4f}")
 
         return {
             "optimal_parameters": best_params,
             "best_value": -best_value,  # Convert back to R²
             "num_iterations": num_iterations,
             "observed_points": len(self.observed_points),
+            "method": "Bayesian Optimization (Simplified)",
         }
 
-    def _optimize_hyperparameters_optuna(self, bonds: List[Bond], param_bounds: Dict[str, tuple], num_iterations: int) -> Dict:
+    def _optimize_hyperparameters_optuna(
+        self, bonds: List[Bond], param_bounds: Dict[str, tuple], num_iterations: int, model_type: str = "random_forest"
+    ) -> Dict:
         """Optimize hyperparameters using Optuna (if available)"""
         if not HAS_OPTUNA:
             raise ImportError("Optuna not installed. Install with: pip install optuna")
 
+        import numpy as np
+        from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+        from sklearn.metrics import r2_score
+        from sklearn.model_selection import TimeSeriesSplit, train_test_split
+        from sklearn.preprocessing import StandardScaler
+
         from bondtrader.ml.ml_adjuster_enhanced import EnhancedMLBondAdjuster
 
-        def objective(trial):
-            """Optuna objective function"""
-            try:
-                ml_adjuster = EnhancedMLBondAdjuster()
+        # Prepare data once
+        ml_adjuster = EnhancedMLBondAdjuster(model_type=model_type)
+        fair_values = [ml_adjuster.valuator.calculate_fair_value(bond) for bond in bonds]
+        X, feature_names = ml_adjuster._create_enhanced_features(bonds, fair_values)
+        y = ml_adjuster._create_targets(bonds, fair_values)
 
+        # Use time-based split for financial data
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        scaler = StandardScaler()
+        X_train_scaled = scaler.fit_transform(X_train)
+        X_test_scaled = scaler.transform(X_test)
+
+        def objective(trial):
+            """Optuna objective function that actually uses parameters"""
+            try:
                 # Suggest parameters based on bounds
                 params = {}
                 for param_name, (min_val, max_val) in param_bounds.items():
@@ -171,12 +273,44 @@ class BayesianOptimizer:
                     else:
                         params[param_name] = trial.suggest_float(param_name, min_val, max_val)
 
-                # Set parameters (would need proper parameter mapping)
-                # For now, use default training
-                metrics = ml_adjuster.train_with_tuning(bonds, tune_hyperparameters=False)
+                # Map to model hyperparameters
+                model_params = {}
+                int_params = ["n_estimators", "max_depth", "min_samples_split", "min_samples_leaf"]
+                for param in int_params:
+                    if param in params:
+                        model_params[param] = int(params[param])
 
-                # Return test R² (Optuna maximizes)
-                return metrics["test_r2"]
+                float_params = ["learning_rate", "subsample"]
+                for param in float_params:
+                    if param in params:
+                        model_params[param] = float(params[param])
+
+                if "max_features" in params:
+                    model_params["max_features"] = params["max_features"]
+
+                # Set defaults
+                if model_type == "random_forest":
+                    default_params = {"random_state": 42, "n_jobs": -1}
+                    final_params = {**default_params, **model_params}
+                    model = RandomForestRegressor(**final_params)
+                else:
+                    default_params = {"random_state": 42}
+                    final_params = {**default_params, **model_params}
+                    model = GradientBoostingRegressor(**final_params)
+
+                # Use TimeSeriesSplit for cross-validation
+                tscv = TimeSeriesSplit(n_splits=5)
+                cv_scores = []
+                for train_idx, val_idx in tscv.split(X_train_scaled):
+                    X_tr, X_val = X_train_scaled[train_idx], X_train_scaled[val_idx]
+                    y_tr, y_val = y_train[train_idx], y_train[val_idx]
+                    model.fit(X_tr, y_tr)
+                    y_pred = model.predict(X_val)
+                    cv_scores.append(r2_score(y_val, y_pred))
+
+                # Return mean CV score (Optuna maximizes)
+                return np.mean(cv_scores)
+
             except Exception as e:
                 logger.warning(f"Trial failed: {e}")
                 return 0.0  # Return worst score on error

@@ -18,21 +18,21 @@ try:
     from xgboost import XGBRegressor
 
     HAS_XGBOOST = True
-except ImportError:
+except (ImportError, Exception):  # Catch all exceptions including XGBoostError from lib loading
     HAS_XGBOOST = False
 
 try:
     from lightgbm import LGBMRegressor
 
     HAS_LIGHTGBM = True
-except ImportError:
+except (ImportError, Exception):  # Catch all exceptions including OSError from lib loading
     HAS_LIGHTGBM = False
 
 try:
     from catboost import CatBoostRegressor
 
     HAS_CATBOOST = True
-except ImportError:
+except (ImportError, Exception):  # Catch all exceptions
     HAS_CATBOOST = False
 
 from bondtrader.core.bond_models import Bond
@@ -73,10 +73,24 @@ class MLBondAdjuster:
             raise ValueError(f"Model type '{model_type}' not available. Available models: {', '.join(available_models)}")
 
     def _create_features(self, bonds: List[Bond], fair_values: List[float]) -> np.ndarray:
-        """Create feature matrix from bonds"""
+        """Create feature matrix from bonds (optimized with batch calculations)"""
+        from datetime import datetime
+
+        # OPTIMIZED: Batch calculate YTM, duration, and convexity to leverage caching
+        # Also cache current_time for consistent datetime.now() usage
+        current_time = datetime.now()
+
+        # Batch calculate YTM for all bonds (cached)
+        ytms = [self.valuator.calculate_yield_to_maturity(bond) for bond in bonds]
+        # Batch calculate durations using cached YTMs
+        durations = [self.valuator.calculate_duration(bond, ytm) for bond, ytm in zip(bonds, ytms)]
+        # Batch calculate convexities using cached YTMs
+        convexities = [self.valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds, ytms)]
+
         features = []
-        for bond, fv in zip(bonds, fair_values):
-            char = bond.get_bond_characteristics()
+        for bond, fv, ytm, duration, convexity in zip(bonds, fair_values, ytms, durations, convexities):
+            # OPTIMIZED: Use cached current_time to avoid multiple datetime.now() calls
+            char = bond.get_bond_characteristics(current_time=current_time)
 
             # Base characteristics
             feature_vector = [
@@ -90,20 +104,16 @@ class MLBondAdjuster:
                 char["convertible"],
             ]
 
-            # Additional derived features
-            ytm = self.valuator.calculate_yield_to_maturity(bond)
-            duration = self.valuator.calculate_duration(bond, ytm)
-            convexity = self.valuator.calculate_convexity(bond, ytm)
-
-            # Price relative to fair value
-            price_to_fair_ratio = bond.current_price / fv if fv > 0 else 1.0
+            # Additional derived features (reuse pre-calculated values)
+            # Note: We do NOT include price_to_fair_ratio as a feature because
+            # it would be data leakage (it's the same as our target variable).
+            # The model should learn adjustments from bond characteristics alone.
 
             feature_vector.extend(
                 [
                     ytm * 100,  # YTM as percentage
                     duration,
                     convexity,
-                    price_to_fair_ratio,
                     bond.face_value,  # Size factor
                 ]
             )
@@ -177,6 +187,10 @@ class MLBondAdjuster:
                 min_samples_leaf=2,
                 subsample=0.9,
                 random_state=random_state,
+                # Early stopping to prevent overfitting
+                validation_fraction=0.1,
+                n_iter_no_change=10,
+                tol=1e-4,
             )
         elif self.model_type == "xgboost" and HAS_XGBOOST:
             self.model = XGBRegressor(

@@ -648,15 +648,21 @@ class EvaluationDatasetGenerator:
         return results
 
     def _predict_batch_sklearn(self, model, bonds: List[Bond], batch_size: int) -> List[float]:
-        """Batch prediction for sklearn-style models (fastest)"""
+        """Batch prediction for sklearn-style models (fastest, optimized)"""
+        from datetime import datetime
+
         predictions = []
+
+        # OPTIMIZED: Cache current_time once for entire batch
+        current_time = datetime.now()
 
         # Extract all features at once
         features_list = []
         current_prices = []
 
         for bond in bonds:
-            char = bond.get_bond_characteristics()
+            # OPTIMIZED: Use cached current_time to avoid multiple datetime.now() calls
+            char = bond.get_bond_characteristics(current_time=current_time)
             features_list.append(
                 [
                     char["coupon_rate"],
@@ -679,9 +685,14 @@ class EvaluationDatasetGenerator:
         return predictions.tolist()
 
     def _predict_parallel(self, model, bonds: List[Bond], max_workers: Optional[int], batch_size: int) -> List[float]:
-        """Parallel prediction processing"""
+        """Parallel prediction processing (optimized)"""
+        from datetime import datetime
+
         if max_workers is None:
             max_workers = min(mp.cpu_count(), 8)
+
+        # OPTIMIZED: Cache current_time once for entire batch
+        current_time = datetime.now()
 
         def predict_single(bond):
             try:
@@ -689,7 +700,8 @@ class EvaluationDatasetGenerator:
                     pred = model.predict_adjusted_value(bond)
                     return pred.get("ml_adjusted_value", pred.get("ml_adjusted_fair_value", bond.current_price))
                 elif hasattr(model, "predict"):
-                    char = bond.get_bond_characteristics()
+                    # OPTIMIZED: Use cached current_time to avoid multiple datetime.now() calls
+                    char = bond.get_bond_characteristics(current_time=current_time)
                     features = np.array(
                         [
                             [
@@ -719,9 +731,14 @@ class EvaluationDatasetGenerator:
         return predictions
 
     def _predict_sequential(self, model, bonds: List[Bond], batch_size: int) -> List[float]:
-        """Sequential prediction with progress tracking"""
+        """Sequential prediction with progress tracking (optimized)"""
+        from datetime import datetime
+
         predictions = []
         bond_batches = [bonds[i : i + batch_size] for i in range(0, len(bonds), batch_size)]
+
+        # OPTIMIZED: Cache current_time for consistent datetime usage across batch
+        current_time = datetime.now()
 
         for batch in tqdm(bond_batches, desc="Processing bonds", disable=not TQDM_AVAILABLE or len(bond_batches) < 5):
             for bond in batch:
@@ -730,7 +747,8 @@ class EvaluationDatasetGenerator:
                         pred = model.predict_adjusted_value(bond)
                         value = pred.get("ml_adjusted_value", pred.get("ml_adjusted_fair_value", bond.current_price))
                     elif hasattr(model, "predict"):
-                        char = bond.get_bond_characteristics()
+                        # OPTIMIZED: Use cached current_time to avoid multiple datetime.now() calls
+                        char = bond.get_bond_characteristics(current_time=current_time)
                         features = np.array(
                             [
                                 [

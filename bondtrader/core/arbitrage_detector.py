@@ -53,6 +53,11 @@ class ArbitrageDetector:
         """
         opportunities = []
 
+        # OPTIMIZED: Pre-calculate YTM for all bonds in batch (leverages caching)
+        # This allows us to reuse YTM for duration calculation and avoid redundant calculations
+        # Only calculate YTM once per bond upfront
+        bond_ytms = {bond.bond_id: self.valuator.calculate_yield_to_maturity(bond) for bond in bonds}
+
         for bond in bonds:
             # Get fair value
             if use_ml and self.ml_adjuster and self.ml_adjuster.is_trained:
@@ -81,7 +86,8 @@ class ArbitrageDetector:
 
             # Only include if exceeds threshold and profitable after costs
             if abs(profit_pct) >= (self.min_profit_threshold * 100) and is_profitable_after_costs:
-                ytm = self.valuator.calculate_yield_to_maturity(bond)
+                # OPTIMIZED: Reuse pre-calculated YTM instead of recalculating
+                ytm = bond_ytms[bond.bond_id]
                 duration = self.valuator.calculate_duration(bond, ytm)
 
                 opportunity = {
@@ -166,13 +172,17 @@ class ArbitrageDetector:
             if len(group_bonds) < 2:
                 continue
 
-            # Calculate average fair value for group
+            # OPTIMIZED: Calculate fair values once and reuse
+            # Calculate fair value for each bond once
             fair_values = [self.valuator.calculate_fair_value(b) for b in group_bonds]
             avg_fair_value = np.mean(fair_values)
 
-            # Find most undervalued and overvalued
+            # Create map for O(1) lookup instead of recalculating
+            fair_value_map = {bond.bond_id: fv for bond, fv in zip(group_bonds, fair_values)}
+
+            # Find most undervalued and overvalued (reuse calculated fair values)
             for bond in group_bonds:
-                fair_value = self.valuator.calculate_fair_value(bond)
+                fair_value = fair_value_map[bond.bond_id]  # Reuse instead of recalculating
                 market_price = bond.current_price
 
                 rel_to_avg = ((market_price - fair_value) / fair_value) * 100
@@ -212,7 +222,22 @@ class ArbitrageDetector:
         opportunities = self.find_arbitrage_opportunities(bonds, use_ml=False)
 
         total_market_value = sum(b.current_price * w for b, w in zip(bonds, weights))
-        total_fair_value = sum(self.valuator.calculate_fair_value(b) * w for b, w in zip(bonds, weights))
+
+        # OPTIMIZED: Reuse fair values from opportunities instead of recalculating
+        # Create map from opportunities for O(1) lookup
+        fair_value_map = {opp["bond_id"]: opp["adjusted_fair_value"] for opp in opportunities}
+
+        # Calculate total fair value, reusing from opportunities where available
+        # For bonds not in opportunities (threshold filtered), calculate once
+        total_fair_value = 0
+        for bond, weight in zip(bonds, weights):
+            if bond.bond_id in fair_value_map:
+                # Reuse fair value from opportunities (already calculated)
+                total_fair_value += fair_value_map[bond.bond_id] * weight
+            else:
+                # Only calculate if bond was filtered out from opportunities
+                # This should be rare (only bonds below threshold)
+                total_fair_value += self.valuator.calculate_fair_value(bond) * weight
 
         portfolio_profit = total_fair_value - total_market_value
         portfolio_profit_pct = (portfolio_profit / total_market_value) * 100 if total_market_value > 0 else 0

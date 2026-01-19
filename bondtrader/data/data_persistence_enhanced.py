@@ -25,6 +25,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
 
 from bondtrader.core.bond_models import Bond, BondType
+from bondtrader.utils.utils import logger
 
 # SQLAlchemy Base
 Base = declarative_base()
@@ -96,19 +97,36 @@ class EnhancedBondDatabase:
     Provides same API as BondDatabase but with better performance
     """
 
-    def __init__(self, db_path: str = "bonds.db", pool_size: int = 5):
+    def __init__(self, db_path: str = "bonds.db", pool_size: int = None):
         """
         Initialize enhanced database with connection pooling
 
         Args:
             db_path: Path to SQLite database file
-            pool_size: Size of connection pool
+            pool_size: Size of connection pool (None = auto-detect based on CPU cores)
         """
         self.db_path = db_path
+
+        # OPTIMIZED: Auto-size connection pool based on system resources
+        if pool_size is None:
+            import multiprocessing
+
+            # SQLite works best with small pools, but we allow more for concurrent reads
+            # Default to min(10, CPU cores + 2) for better concurrency
+            pool_size = min(10, multiprocessing.cpu_count() + 2)
+
         # SQLite connection string with connection pooling
         # Use check_same_thread=False for connection pooling
+        # OPTIMIZED: Added pool_recycle to prevent stale connections
         engine_url = f"sqlite:///{db_path}?check_same_thread=False"
-        self.engine = create_engine(engine_url, pool_size=pool_size, pool_pre_ping=True, echo=False)
+        self.engine = create_engine(
+            engine_url,
+            pool_size=pool_size,
+            max_overflow=pool_size * 2,  # Allow overflow for burst traffic
+            pool_pre_ping=True,  # Verify connections before use
+            pool_recycle=3600,  # Recycle connections after 1 hour
+            echo=False,
+        )
         self.SessionLocal = sessionmaker(bind=self.engine, autocommit=False, autoflush=False)
         self._init_database()
 
@@ -164,6 +182,98 @@ class EnhancedBondDatabase:
             session.rollback()
             print(f"Error saving bond: {e}")
             return False
+        finally:
+            session.close()
+
+    def save_bonds_batch(self, bonds: List[Bond], batch_size: int = 1000) -> int:
+        """
+        Batch save multiple bonds (optimized for bulk operations)
+
+        Args:
+            bonds: List of bonds to save
+            batch_size: Number of bonds to commit per batch
+
+        Returns:
+            Number of bonds successfully saved
+        """
+        if not bonds:
+            return 0
+
+        session = self._get_session()
+        saved_count = 0
+        current_time = datetime.now().isoformat()
+
+        try:
+            # Get existing bond IDs in one query for efficiency
+            existing_ids = set(
+                session.query(BondModel.bond_id).filter(BondModel.bond_id.in_([b.bond_id for b in bonds])).all()
+            )
+            existing_ids = {id_tuple[0] for id_tuple in existing_ids}
+
+            # Separate bonds into new and existing
+            new_bonds = []
+            update_map = {}
+
+            for bond in bonds:
+                if bond.bond_id in existing_ids:
+                    update_map[bond.bond_id] = bond
+                else:
+                    new_bonds.append(bond)
+
+            # Batch insert new bonds
+            for i in range(0, len(new_bonds), batch_size):
+                batch = new_bonds[i : i + batch_size]
+                # Create dictionaries for bulk insert
+                bond_dicts = [
+                    {
+                        "bond_id": bond.bond_id,
+                        "bond_type": bond.bond_type.value,
+                        "face_value": bond.face_value,
+                        "coupon_rate": bond.coupon_rate,
+                        "maturity_date": bond.maturity_date.isoformat(),
+                        "issue_date": bond.issue_date.isoformat(),
+                        "current_price": bond.current_price,
+                        "credit_rating": bond.credit_rating,
+                        "issuer": bond.issuer,
+                        "frequency": bond.frequency,
+                        "callable": bond.callable,
+                        "convertible": bond.convertible,
+                        "created_at": current_time,
+                        "updated_at": current_time,
+                    }
+                    for bond in batch
+                ]
+                session.bulk_insert_mappings(BondModel, bond_dicts)
+                saved_count += len(batch)
+
+            # Batch update existing bonds
+            if update_map:
+                existing_bonds = session.query(BondModel).filter(BondModel.bond_id.in_(list(update_map.keys()))).all()
+
+                for existing in existing_bonds:
+                    bond = update_map[existing.bond_id]
+                    existing.bond_type = bond.bond_type.value
+                    existing.face_value = bond.face_value
+                    existing.coupon_rate = bond.coupon_rate
+                    existing.maturity_date = bond.maturity_date.isoformat()
+                    existing.issue_date = bond.issue_date.isoformat()
+                    existing.current_price = bond.current_price
+                    existing.credit_rating = bond.credit_rating
+                    existing.issuer = bond.issuer
+                    existing.frequency = bond.frequency
+                    existing.callable = bond.callable
+                    existing.convertible = bond.convertible
+                    existing.updated_at = current_time
+
+                saved_count += len(update_map)
+
+            session.commit()
+            return saved_count
+
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error in batch save: {e}")
+            return saved_count
         finally:
             session.close()
 

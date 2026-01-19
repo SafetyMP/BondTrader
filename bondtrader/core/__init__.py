@@ -1,8 +1,38 @@
-"""Core bond trading modules"""
+"""Core bond trading modules with industry best practices"""
 
 from bondtrader.core.arbitrage_detector import ArbitrageDetector
 from bondtrader.core.bond_models import Bond, BondType
 from bondtrader.core.bond_valuation import BondValuator
+
+# Import new architectural components
+try:
+    from bondtrader.core.audit import AuditEventType, AuditLogger, audit_log, get_audit_logger
+    from bondtrader.core.circuit_breaker import (
+        CircuitBreaker,
+        CircuitBreakerConfig,
+        circuit_breaker,
+        get_circuit_breaker,
+    )
+    from bondtrader.core.exceptions import (
+        BondTraderException,
+        DataError,
+        MLError,
+        RiskCalculationError,
+        TradingError,
+        ValidationError,
+        ValuationError,
+    )
+    from bondtrader.core.observability import Metrics, get_metrics, trace, trace_context
+    from bondtrader.core.repository import (
+        BondRepository,
+        IBondRepository,
+        InMemoryBondRepository,
+    )
+    from bondtrader.core.result import Result, safe
+    from bondtrader.core.service_layer import BondService
+except ImportError:
+    # Graceful degradation if new modules not available
+    pass
 
 __all__ = [
     "Bond",

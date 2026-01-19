@@ -1,0 +1,192 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: bondtrader-db
+    environment:
+      POSTGRES_DB: bondtrader
+      POSTGRES_USER: bondtrader
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bondtrader_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bondtrader"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bondtrader-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: bondtrader-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - bondtrader-network
+
+  # MLflow Tracking Server
+  mlflow:
+    image: python:3.11-slim
+    container_name: bondtrader-mlflow
+    working_dir: /app
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=postgresql://bondtrader:${POSTGRES_PASSWORD:-bondtrader_password}@postgres:5432/bondtrader
+      - MLFLOW_DEFAULT_ARTIFACT_ROOT=/mlflow/artifacts
+    volumes:
+      - mlflow_data:/mlflow/artifacts
+      - ./requirements.txt:/app/requirements.txt
+    command: >
+      sh -c "pip install --no-cache-dir mlflow psycopg2-binary &&
+             mlflow server --host 0.0.0.0 --port 5000
+             --backend-store-uri $${MLFLOW_BACKEND_STORE_URI}
+             --default-artifact-root $${MLFLOW_DEFAULT_ARTIFACT_ROOT}"
+    ports:
+      - "${MLFLOW_PORT:-5000}:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - bondtrader-network
+
+  # FastAPI REST API Service
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    image: bondtrader-api:latest
+    container_name: bondtrader-api
+    environment:
+      - DATABASE_URL=sqlite:////app/data/bonds.db
+      - REDIS_URL=redis://redis:6379/0
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - DEFAULT_RFR=${DEFAULT_RFR:-0.03}
+      - ML_MODEL_TYPE=${ML_MODEL_TYPE:-random_forest}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - api_data:/app/data
+      - api_models:/app/trained_models
+      - api_logs:/app/logs
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      mlflow:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - bondtrader-network
+    restart: unless-stopped
+
+  # Streamlit Dashboard
+  dashboard:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dashboard
+    image: bondtrader-dashboard:latest
+    container_name: bondtrader-dashboard
+    environment:
+      - DATABASE_URL=sqlite:////app/data/bonds.db
+      - API_URL=http://api:8000
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - DEFAULT_RFR=${DEFAULT_RFR:-0.03}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - dashboard_data:/app/data
+      - dashboard_logs:/app/logs
+      - api_data:/app/data:ro  # Read-only access to shared data
+    ports:
+      - "${DASHBOARD_PORT:-8501}:8501"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - bondtrader-network
+    restart: unless-stopped
+
+  # ML Training Service (Optional - can run on-demand or scheduled)
+  ml-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.ml-service
+    image: bondtrader-ml-service:latest
+    container_name: bondtrader-ml-training
+    environment:
+      - DATABASE_URL=sqlite:////app/data/bonds.db
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - MODEL_DIR=/app/trained_models
+      - DEFAULT_RFR=${DEFAULT_RFR:-0.03}
+      - ML_MODEL_TYPE=${ML_MODEL_TYPE:-random_forest}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ml_models:/app/trained_models
+      - ml_data:/app/training_data
+      - ml_logs:/app/logs
+      - api_data:/app/data:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mlflow:
+        condition: service_healthy
+    networks:
+      - bondtrader-network
+    profiles:
+      - training  # Only start with --profile training
+    restart: "no"  # Manual run
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  mlflow_data:
+    driver: local
+  api_data:
+    driver: local
+  api_models:
+    driver: local
+  api_logs:
+    driver: local
+  dashboard_data:
+    driver: local
+  dashboard_logs:
+    driver: local
+  ml_models:
+    driver: local
+  ml_data:
+    driver: local
+  ml_logs:
+    driver: local
+
+networks:
+  bondtrader-network:
+    driver: bridge

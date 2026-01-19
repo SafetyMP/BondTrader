@@ -50,13 +50,15 @@ class FactorModel:
         """
         n = len(bonds)
 
-        # Build feature matrix
-        features = []
-        for bond in bonds:
-            ytm = self.valuator.calculate_yield_to_maturity(bond)
-            duration = self.valuator.calculate_duration(bond, ytm)
-            convexity = self.valuator.calculate_convexity(bond, ytm)
+        # OPTIMIZED: Batch calculate YTM, duration, and convexity to leverage caching
+        # Build feature matrix with batched calculations
+        ytms = [self.valuator.calculate_yield_to_maturity(bond) for bond in bonds]
+        durations = [self.valuator.calculate_duration(bond, ytm) for bond, ytm in zip(bonds, ytms)]
+        convexities = [self.valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds, ytms)]
 
+        # Build feature matrix using pre-calculated values
+        features = []
+        for bond, ytm, duration, convexity in zip(bonds, ytms, durations, convexities):
             feature_vector = [
                 bond.coupon_rate,
                 bond.time_to_maturity,

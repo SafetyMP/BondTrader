@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **CORS Configuration**: Fixed security vulnerability - removed wildcard CORS origins, now configurable via environment variables
+- **Default Passwords**: Removed hardcoded default passwords in authentication and secrets management
+- **API Authentication**: Implemented optional Bearer token authentication for API endpoints
+- **Rate Limiting**: Added per-IP rate limiting middleware to prevent abuse
+- **Input Validation**: Enhanced date validation and logical checks in API endpoints
+- **Error Handling**: Improved error handling to prevent information leakage
+
 ### Changed
 - **Codebase Truncation**: Reduced codebase size by ~25.6% (7,933 lines) while maintaining full functionality
   - Removed deprecated files: `data_persistence.py`, `bond_models_pydantic.py`, `config_pydantic.py`
@@ -74,13 +82,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Import paths after package reorganization
 - Circular import issues in analytics module
-- Security vulnerabilities (path traversal in file I/O)
-- Generic exception handling patterns
+- Security vulnerabilities (path traversal in file I/O, CORS wildcard, default passwords)
+- Generic exception handling patterns (replaced 23 bare except clauses with specific exceptions)
+- Code formatting issues (black and isort compliance)
+- Duplicate pytest markers in pytest.ini
+- Hardcoded database paths (now configurable via environment variables)
 
 ### Security
 - Added file path validation to prevent directory traversal attacks
 - Enhanced input sanitization for file paths
 - Secure file I/O operations in ML model save/load
+- Fixed CORS configuration (removed wildcard, added environment-based configuration)
+- Removed default passwords (now requires environment variables)
+- Implemented API key authentication (optional Bearer token)
+- Added rate limiting middleware (per-IP, configurable limits)
+- Improved error handling to prevent information leakage
 
 ## [1.0.0] - 2024-01-18
 

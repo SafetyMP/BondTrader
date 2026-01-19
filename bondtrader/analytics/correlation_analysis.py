@@ -44,15 +44,40 @@ class CorrelationAnalyzer:
         correlation_matrix = np.zeros((n, n))
 
         if method == "characteristics":
-            # Correlation based on bond characteristics
-            for i in range(n):
-                for j in range(n):
-                    if i == j:
-                        correlation_matrix[i, j] = 1.0
-                    else:
-                        # Calculate similarity based on characteristics
-                        correlation = self._calculate_bond_similarity(bonds[i], bonds[j])
-                        correlation_matrix[i, j] = correlation
+            # OPTIMIZED: Vectorized correlation calculation based on bond characteristics
+            # Pre-extract characteristics for all bonds to avoid repeated property access
+            ratings = np.array([b.credit_rating for b in bonds])
+            ttms = np.array([b.time_to_maturity for b in bonds])
+            bond_types = np.array([b.bond_type.value for b in bonds])
+            issuers = np.array([b.issuer for b in bonds])
+
+            # Initialize with identity matrix (self-correlation = 1.0)
+            correlation_matrix = np.eye(n)
+
+            # Vectorized similarity calculations
+            # Credit rating similarity
+            rating_matrix = (ratings[:, np.newaxis] == ratings[np.newaxis, :]).astype(float)
+            rating_sim = np.where(rating_matrix, 1.0, 0.5)
+
+            # Maturity similarity
+            ttm_max = np.maximum(ttms[:, np.newaxis], ttms[np.newaxis, :])
+            ttm_max = np.maximum(ttm_max, 1.0)  # Avoid division by zero
+            maturity_diff = np.abs(ttms[:, np.newaxis] - ttms[np.newaxis, :]) / ttm_max
+            maturity_sim = 1.0 - np.minimum(maturity_diff, 1.0)
+
+            # Bond type similarity
+            type_matrix = (bond_types[:, np.newaxis] == bond_types[np.newaxis, :]).astype(float)
+            type_sim = np.where(type_matrix, 1.0, 0.3)
+
+            # Issuer similarity
+            issuer_matrix = (issuers[:, np.newaxis] == issuers[np.newaxis, :]).astype(float)
+            issuer_sim = np.where(issuer_matrix, 1.0, 0.2)
+
+            # Weighted average correlation (excluding diagonal which is already 1.0)
+            mask = ~np.eye(n, dtype=bool)
+            correlation_matrix[mask] = (
+                0.3 * rating_sim[mask] + 0.3 * maturity_sim[mask] + 0.2 * type_sim[mask] + 0.2 * issuer_sim[mask]
+            )
 
         else:  # returns method (would use historical data)
             # Simulate returns for demonstration
@@ -118,16 +143,12 @@ class CorrelationAnalyzer:
         """
         n = len(bonds)
 
-        # Calculate individual volatilities
-        volatilities = []
-        for bond in bonds:
-            ytm = self.valuator.calculate_yield_to_maturity(bond)
-            duration = self.valuator.calculate_duration(bond, ytm)
-            # Volatility ≈ duration * yield_volatility
-            volatility = abs(duration * 0.01)  # Simplified
-            volatilities.append(volatility)
-
-        volatilities = np.array(volatilities)
+        # OPTIMIZED: Batch calculate volatilities to leverage caching
+        # Calculate individual volatilities with batched YTM/duration calculations
+        ytms = [self.valuator.calculate_yield_to_maturity(bond) for bond in bonds]
+        durations = [self.valuator.calculate_duration(bond, ytm) for bond, ytm in zip(bonds, ytms)]
+        # Volatility ≈ duration * yield_volatility
+        volatilities = np.array([abs(duration * 0.01) for duration in durations])  # Simplified
 
         # Get correlation matrix
         if correlation_matrix is None:

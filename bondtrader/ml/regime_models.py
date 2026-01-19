@@ -201,7 +201,12 @@ class RegimeDetector:
                     "var_pct": var_result["var_percentage"],
                     "num_bonds": len(regime_bonds),
                 }
-            except:
+            except (KeyError, ValueError, TypeError) as e:
+                # Skip this regime if calculation fails
+                import logging
+
+                logger = logging.getLogger(__name__)
+                logger.debug(f"Skipping regime risk calculation: {e}")
                 continue
 
         return {"regime_risks": regime_risks, "num_regimes": len(np.unique(self.regimes)) if self.regimes is not None else 0}

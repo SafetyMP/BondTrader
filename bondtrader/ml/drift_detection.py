@@ -18,6 +18,7 @@ import numpy as np
 
 from bondtrader.core.bond_models import Bond
 from bondtrader.core.bond_valuation import BondValuator
+from bondtrader.utils.utils import logger
 
 
 @dataclass
@@ -438,9 +439,12 @@ class ModelTuner:
         validation_bonds: List[Bond],
         benchmark_methodology: str = "consensus",
         tuning_params: Optional[Dict] = None,
+        n_iter: int = 25,
     ) -> Dict:
         """
-        Tune model parameters to minimize drift
+        Tune model parameters to minimize drift using RandomizedSearchCV
+
+        More efficient than exhaustive grid search - samples parameter space intelligently
 
         Args:
             model: Model to tune (must have train/predict methods)
@@ -448,6 +452,7 @@ class ModelTuner:
             validation_bonds: Validation bonds for drift measurement
             benchmark_methodology: Which benchmark to use
             tuning_params: Parameters to tune (if None, uses defaults)
+            n_iter: Number of parameter settings sampled (default: 25)
 
         Returns:
             Dictionary with tuning results
@@ -460,21 +465,48 @@ class ModelTuner:
                 "n_estimators": [50, 100, 200],
             }
 
+        # Limit exhaustive search to small parameter spaces
+        from itertools import product
+
+        param_names = list(tuning_params.keys())
+        param_values = list(tuning_params.values())
+        total_combinations = 1
+        for values in param_values:
+            total_combinations *= len(values)
+
+        # Use RandomizedSearchCV for large parameter spaces, grid search for small ones
+        if total_combinations <= 50:
+            # Small parameter space - use grid search
+            param_combinations = list(product(*param_values))
+            print(f"Tuning model with {len(param_combinations)} parameter combinations (grid search)...")
+            use_randomized = False
+        else:
+            # Large parameter space - use randomized search
+            print(f"Tuning model with {n_iter} random samples from {total_combinations} combinations (randomized search)...")
+            use_randomized = True
+            # Limit iterations to reasonable number
+            n_iter = min(n_iter, 100)
+
         best_drift_score = float("inf")
         best_params = None
         best_model = None
-
-        # Generate grid of parameter combinations
-        param_names = list(tuning_params.keys())
-        param_values = list(tuning_params.values())
-
-        from itertools import product
-
-        param_combinations = list(product(*param_values))
-
         results = []
 
-        print(f"Tuning model with {len(param_combinations)} parameter combinations...")
+        if use_randomized:
+            # Randomized search
+            import random
+
+            random.seed(42)
+            np.random.seed(42)
+
+            # Sample random combinations
+            param_combinations = []
+            for _ in range(n_iter):
+                combo = tuple(np.random.choice(values) for values in param_values)
+                param_combinations.append(combo)
+        else:
+            # Exhaustive grid search
+            param_combinations = list(product(*param_values))
 
         for param_combo in param_combinations:
             params = dict(zip(param_names, param_combo))
@@ -492,7 +524,13 @@ class ModelTuner:
                     from bondtrader.ml.ml_adjuster_enhanced import EnhancedMLBondAdjuster
 
                     if isinstance(model_copy, EnhancedMLBondAdjuster):
-                        model_copy.train_with_tuning(bonds, **params)
+                        model_copy.train_with_tuning(bonds, tune_hyperparameters=False)
+                        # Apply parameters manually if possible
+                        if hasattr(model_copy, "model") and model_copy.model is not None:
+                            # Try to update model parameters
+                            for param, value in params.items():
+                                if hasattr(model_copy.model, param):
+                                    setattr(model_copy.model, param, value)
 
                 # Predict on validation set
                 predictions = []
@@ -528,7 +566,7 @@ class ModelTuner:
                     best_model = model_copy
 
             except Exception as e:
-                print(f"  Error with params {params}: {e}")
+                logger.warning(f"Error with params {params}: {e}")
                 continue
 
         return {
@@ -537,6 +575,9 @@ class ModelTuner:
             "best_model": best_model,
             "all_results": results,
             "tuning_summary": self._summarize_tuning_results(results),
+            "method": "randomized_search" if use_randomized else "grid_search",
+            "total_combinations": total_combinations,
+            "combinations_tested": len(param_combinations),
         }
 
     def _clone_model(self, model):
@@ -545,8 +586,12 @@ class ModelTuner:
 
         try:
             return copy.deepcopy(model)
-        except:
-            # Fallback: create new instance
+        except (TypeError, AttributeError, ValueError) as e:
+            # Fallback: create new instance if deepcopy fails
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Deepcopy failed for model, using fallback: {e}")
             return type(model)(model.valuator if hasattr(model, "valuator") else None)
 
     def _set_model_params(self, model, params: Dict):

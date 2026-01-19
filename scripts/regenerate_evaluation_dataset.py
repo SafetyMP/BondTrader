@@ -35,10 +35,10 @@ def main():
 Examples:
   # Regenerate with default settings (1000 bonds, all scenarios)
   python regenerate_evaluation_dataset.py
-  
+
   # Regenerate with 2000 bonds
   python regenerate_evaluation_dataset.py --num-bonds 2000
-  
+
   # Regenerate specific scenarios only
   python regenerate_evaluation_dataset.py --scenarios normal_market,rate_shock_up_200bps
         """,

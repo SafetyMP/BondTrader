@@ -484,24 +484,40 @@ class TrainingDataGenerator:
         targets = []
         metadata = []
 
-        for data_point in time_series_data:
+        # OPTIMIZED: Batch calculate YTM, duration, and convexity before loop
+        # This leverages caching and reduces redundant calculations
+        bonds_list = [dp["bond"] for dp in time_series_data]
+        ytms = [self.valuator.calculate_yield_to_maturity(bond) for bond in bonds_list]
+        durations = [self.valuator.calculate_duration(bond, ytm) for bond, ytm in zip(bonds_list, ytms)]
+        convexities = [self.valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds_list, ytms)]
+
+        # OPTIMIZED: Cache current_time for consistent datetime usage
+        from datetime import datetime
+
+        current_time = datetime.now()
+
+        for i, data_point in enumerate(time_series_data):
             bond = data_point["bond"]
             fair_value = data_point["fair_value"]
             market_price = data_point["market_price"]
 
-            # Calculate bond metrics
-            ytm = self.valuator.calculate_yield_to_maturity(bond)
-            duration = self.valuator.calculate_duration(bond, ytm)
-            convexity = self.valuator.calculate_convexity(bond, ytm)
+            # Use pre-calculated metrics
+            ytm = ytms[i]
+            duration = durations[i]
+            convexity = convexities[i]
 
-            char = bond.get_bond_characteristics()
+            # OPTIMIZED: Use cached current_time to avoid multiple datetime.now() calls
+            char = bond.get_bond_characteristics(current_time=current_time)
 
             # Feature vector (aligned with model expectations)
+            # Note: We do NOT include market_price/fair_value as a feature because
+            # it would be data leakage (it's the same as our target variable).
+            # The model should learn adjustments from bond characteristics alone.
             feature_vector = [
                 char["coupon_rate"],
                 char["time_to_maturity"],
                 char["credit_rating_numeric"],
-                char["current_price"] / char["face_value"],  # Price to par
+                char["current_price"] / char["face_value"],  # Price to par (OK - different from target)
                 char["years_since_issue"],
                 char["frequency"],
                 char["callable"],
@@ -509,7 +525,7 @@ class TrainingDataGenerator:
                 ytm * 100,
                 duration,
                 convexity,
-                market_price / fair_value if fair_value > 0 else 1.0,  # Price to fair ratio
+                # market_price/fair_value removed - would be data leakage
                 bond.face_value,
                 duration / (1 + ytm) if ytm > 0 else duration,  # Modified duration
                 ytm - data_point["risk_free_rate"],  # Spread over RF

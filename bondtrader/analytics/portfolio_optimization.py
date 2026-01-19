@@ -74,29 +74,28 @@ class PortfolioOptimizer:
 
         else:  # implied
             # Use bond characteristics to estimate returns and covariances
+            # OPTIMIZED: Batch calculate YTM and duration to avoid redundant calculations
             expected_returns = np.array([self.valuator.calculate_yield_to_maturity(bond) for bond in bonds])
 
-            # Build covariance matrix based on correlations
-            covariance = np.zeros((n, n))
-            for i in range(n):
-                for j in range(n):
-                    if i == j:
-                        # Variance: based on duration
-                        duration_i = self.valuator.calculate_duration(bonds[i])
-                        covariance[i, j] = (duration_i * 0.01) ** 2
-                    else:
-                        # Covariance: correlation * sqrt(var_i * var_j)
-                        duration_i = self.valuator.calculate_duration(bonds[i])
-                        duration_j = self.valuator.calculate_duration(bonds[j])
+            # Batch calculate durations (cached internally)
+            durations = np.array([self.valuator.calculate_duration(bond) for bond in bonds])
+            std_devs = durations * 0.01  # Vectorized standard deviation calculation
 
-                        # Correlation based on credit rating similarity
-                        rating_i = bonds[i].credit_rating
-                        rating_j = bonds[j].credit_rating
-                        correlation = 0.3 if rating_i == rating_j else 0.1
+            # Build covariance matrix based on correlations (vectorized)
+            # Extract credit ratings
+            ratings = np.array([bond.credit_rating for bond in bonds])
 
-                        std_i = duration_i * 0.01
-                        std_j = duration_j * 0.01
-                        covariance[i, j] = correlation * std_i * std_j
+            # Create correlation matrix based on rating similarity (vectorized)
+            # Compare ratings element-wise
+            rating_matrix = ratings[:, np.newaxis] == ratings[np.newaxis, :]
+            correlation_matrix = np.where(rating_matrix, 0.3, 0.1)
+
+            # Build covariance matrix: Cov[i,j] = correlation[i,j] * std_i * std_j
+            # Using outer product for efficient calculation
+            covariance = correlation_matrix * np.outer(std_devs, std_devs)
+
+            # Ensure diagonal is variances (std^2)
+            np.fill_diagonal(covariance, std_devs**2)
 
         return expected_returns, covariance
 

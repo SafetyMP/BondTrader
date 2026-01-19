@@ -22,6 +22,7 @@ from bondtrader.analytics.key_rate_duration import KeyRateDuration
 from bondtrader.analytics.multi_curve import MultiCurveFramework
 from bondtrader.analytics.oas_pricing import OASPricer
 from bondtrader.analytics.portfolio_optimization import PortfolioOptimizer
+from bondtrader.config import get_config
 from bondtrader.core.arbitrage_detector import ArbitrageDetector
 from bondtrader.core.bond_models import Bond, BondType
 from bondtrader.core.bond_valuation import BondValuator
@@ -35,6 +36,8 @@ from bondtrader.risk.credit_risk_enhanced import CreditRiskEnhanced
 from bondtrader.risk.liquidity_risk_enhanced import LiquidityRiskEnhanced
 from bondtrader.risk.risk_management import RiskManager
 from bondtrader.risk.tail_risk import TailRiskAnalyzer
+from bondtrader.utils.auth import get_user_manager, logout, require_auth
+from bondtrader.utils.rate_limiter import get_dashboard_rate_limiter
 
 # Page configuration
 st.set_page_config(page_title="Bond Trading Dashboard", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
@@ -79,19 +82,45 @@ def format_percentage(value: float) -> str:
     return f"{value:.2f}%"
 
 
+@require_auth
 def main():
     """Main dashboard application"""
+    # Get centralized configuration
+    config = get_config()
+
+    # Rate limiting check
+    rate_limiter = get_dashboard_rate_limiter()
+    username = st.session_state.get("username", "anonymous")
+    allowed, error = rate_limiter.is_allowed(username)
+    if not allowed:
+        st.error(f"Rate limit exceeded: {error}")
+        st.stop()
+
+    # Logout button in sidebar
+    with st.sidebar:
+        if st.button("🚪 Logout"):
+            logout()
+            st.rerun()
+
+        # Show user info
+        if "username" in st.session_state:
+            st.info(f"👤 Logged in as: **{st.session_state.username}**")
+
     st.markdown('<h1 class="main-header">📊 Bond Trading & Arbitrage Dashboard</h1>', unsafe_allow_html=True)
 
     # Sidebar controls
     st.sidebar.header("Configuration")
 
-    risk_free_rate = st.sidebar.slider("Risk-Free Rate (%)", min_value=0.0, max_value=10.0, value=3.0, step=0.1) / 100
+    # Use config default for risk-free rate, but allow override via slider
+    default_rfr = config.default_risk_free_rate * 100
+    risk_free_rate = st.sidebar.slider("Risk-Free Rate (%)", min_value=0.0, max_value=10.0, value=default_rfr, step=0.1) / 100
 
     num_bonds = st.sidebar.slider("Number of Bonds", min_value=10, max_value=200, value=50, step=10)
 
+    # Use config default for min profit threshold
+    default_min_profit = config.min_profit_threshold * 100
     min_profit_threshold = (
-        st.sidebar.slider("Min Profit Threshold (%)", min_value=0.0, max_value=5.0, value=1.0, step=0.1) / 100
+        st.sidebar.slider("Min Profit Threshold (%)", min_value=0.0, max_value=5.0, value=default_min_profit, step=0.1) / 100
     )
 
     use_ml = st.sidebar.checkbox("Use ML Adjustments", value=True)
@@ -102,13 +131,14 @@ def main():
 
     # Initialize components
     valuator = BondValuator(risk_free_rate=risk_free_rate)
-    ml_adjuster = MLBondAdjuster(model_type="random_forest")
+    # Use config for model type
+    ml_adjuster = MLBondAdjuster(model_type=config.ml_model_type)
 
     # Train ML model if requested
     if train_ml and len(bonds) >= 10:
         with st.sidebar:
             with st.spinner("Training ML model..."):
-                metrics = ml_adjuster.train(bonds, test_size=0.2)
+                metrics = ml_adjuster.train(bonds, test_size=config.ml_test_size, random_state=config.ml_random_state)
                 st.success("ML Model Trained!")
                 st.metric("Train R²", f"{metrics['train_r2']:.3f}")
                 st.metric("Test R²", f"{metrics['test_r2']:.3f}")
@@ -1142,7 +1172,9 @@ def main():
                     if st.button("Train Ensemble Model", key="train_ensemble"):
                         with st.spinner("Training ensemble (this may take a minute)..."):
                             try:
-                                ensemble_result = advanced_ml.train_ensemble(bonds, test_size=0.2, random_state=42)
+                                ensemble_result = advanced_ml.train_ensemble(
+                                    bonds, test_size=config.ml_test_size, random_state=config.ml_random_state
+                                )
 
                                 st.success("Ensemble model trained!")
 
@@ -1263,7 +1295,9 @@ def main():
                         if st.button("Train Model for Explanation", key="train_explain"):
                             with st.spinner("Training model..."):
                                 try:
-                                    advanced_ml.train_ensemble(bonds, test_size=0.2)
+                                    advanced_ml.train_ensemble(
+                                        bonds, test_size=config.ml_test_size, random_state=config.ml_random_state
+                                    )
                                 except Exception as e:
                                     st.error(f"Training error: {e}")
 

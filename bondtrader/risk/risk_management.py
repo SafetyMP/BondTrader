@@ -90,26 +90,26 @@ class RiskManager:
         portfolio_value: float,
         num_simulations: int = 1000,
     ) -> Dict:
-        """Calculate VaR using historical simulation"""
-        # Simulate returns based on historical volatility
-        portfolio_returns = []
+        """Calculate VaR using historical simulation (optimized with vectorization)"""
+        n_bonds = len(bonds)
+        weights_array = np.array(weights)
 
-        for _ in range(num_simulations):
-            portfolio_return = 0
-            for bond, weight in zip(bonds, weights):
-                # Simulate yield change (simplified)
-                yield_change = np.random.normal(0, 0.001)  # 0.1% volatility
-                new_ytm = self.valuator.calculate_yield_to_maturity(bond) + yield_change
+        # Pre-calculate initial durations (cached)
+        initial_ytms = np.array([self.valuator.calculate_yield_to_maturity(bond) for bond in bonds])
+        initial_durations = np.array([self.valuator.calculate_duration(bond, ytm) for bond, ytm in zip(bonds, initial_ytms)])
 
-                # Approximate price change using duration
-                duration = self.valuator.calculate_duration(bond, new_ytm)
-                price_change_pct = -duration * yield_change
+        # OPTIMIZED: Vectorized simulation
+        # Generate all yield changes at once (num_simulations x n_bonds)
+        yield_changes = np.random.normal(0, 0.001, size=(num_simulations, n_bonds))
 
-                portfolio_return += weight * price_change_pct
+        # Approximate price changes using duration (vectorized)
+        # Price change ≈ -duration * Δy
+        price_change_pct = -initial_durations[np.newaxis, :] * yield_changes
 
-            portfolio_returns.append(portfolio_return)
+        # Calculate portfolio returns for all simulations (vectorized)
+        portfolio_returns = np.sum(price_change_pct * weights_array[np.newaxis, :], axis=1)
 
-        # Calculate VaR
+        # Calculate VaR (already vectorized)
         var_percentile = (1 - confidence_level) * 100
         var_return = np.percentile(portfolio_returns, var_percentile)
         var_value = abs(var_return * portfolio_value * np.sqrt(time_horizon))
@@ -159,27 +159,39 @@ class RiskManager:
         portfolio_value: float,
         num_simulations: int = 10000,
     ) -> Dict:
-        """Calculate VaR using Monte Carlo simulation"""
-        portfolio_values = []
+        """Calculate VaR using Monte Carlo simulation (optimized with vectorization)"""
+        n_bonds = len(bonds)
+        weights_array = np.array(weights)
 
-        for _ in range(num_simulations):
-            portfolio_val = 0
-            for bond, weight in zip(bonds, weights):
-                # Simulate yield changes
-                yield_change = np.random.normal(0, 0.001 * np.sqrt(time_horizon))
-                new_ytm = self.valuator.calculate_yield_to_maturity(bond) + yield_change
+        # Pre-calculate initial YTM, duration, and convexity for all bonds (cached)
+        initial_ytms = np.array([self.valuator.calculate_yield_to_maturity(bond) for bond in bonds])
+        initial_durations = np.array([self.valuator.calculate_duration(bond, ytm) for bond, ytm in zip(bonds, initial_ytms)])
+        initial_convexities = np.array(
+            [self.valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds, initial_ytms)]
+        )
+        initial_prices = np.array([bond.current_price for bond in bonds])
+        face_values = np.array([bond.face_value for bond in bonds])
 
-                # Recalculate bond price
-                duration = self.valuator.calculate_duration(bond, new_ytm)
-                convexity = self.valuator.calculate_convexity(bond, new_ytm)
+        # Yield volatility for simulation
+        yield_vol = 0.001 * np.sqrt(time_horizon)
 
-                # Price change using duration and convexity
-                price_change_pct = -duration * yield_change + 0.5 * convexity * (yield_change**2)
-                new_price = bond.current_price * (1 + price_change_pct)
+        # OPTIMIZED: Vectorized Monte Carlo simulation
+        # Generate all yield changes at once (num_simulations x n_bonds)
+        yield_changes = np.random.normal(0, yield_vol, size=(num_simulations, n_bonds))
+        new_ytms = initial_ytms[np.newaxis, :] + yield_changes
 
-                portfolio_val += new_price * weight * bond.face_value
+        # Approximate price changes using Taylor expansion (vectorized)
+        # Price change ≈ -duration * Δy + 0.5 * convexity * (Δy)^2
+        # Note: For large yield changes, we approximate duration/convexity as constant
+        # This is acceptable for VaR calculations and much faster than recalculating
+        price_change_pct = -initial_durations[np.newaxis, :] * yield_changes + 0.5 * initial_convexities[np.newaxis, :] * (
+            yield_changes**2
+        )
+        new_prices = initial_prices[np.newaxis, :] * (1 + price_change_pct)
 
-            portfolio_values.append(portfolio_val)
+        # Calculate portfolio values for all simulations (vectorized)
+        # OPTIMIZED: Use bond prices directly (not multiplied by face value, which is already in price)
+        portfolio_values = np.sum(new_prices * weights_array[np.newaxis, :], axis=1)
 
         # Calculate VaR
         var_percentile = (1 - confidence_level) * 100

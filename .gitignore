@@ -236,3 +236,30 @@ dist/
 # Coverage reports (keep .coverage but ignore HTML reports)
 htmlcov/
 .coverage.*
+
+# Demo reports (generated files)
+docs/demo/demo_report_*.md
+
+# Temporary analysis files (keep organized analysis in docs/analysis/)
+*.tmp.md
+
+# Summary and completion files (consolidated into main docs)
+*_COMPLETE.md
+*_SUMMARY.md
+*_IMPLEMENTATION.md
+ARCHITECTURE_IMPROVEMENTS_SUMMARY.md
+COMPONENTIZATION_QUICK_REFERENCE.md
+DOCKER_COMPONENTIZATION_SUMMARY.md
+DOCKER_SETUP_COMPLETE.md
+GITHUB_BEST_PRACTICES_SUMMARY.md
+NEXT_STEPS_COMPLETE.md
+ORGANIZATION_COMPLETE.md
+QUICK_WINS_COMPLETE.md
+QUICK_WINS_IMPLEMENTATION.md
+SETUP_COMPLETE.md
+IMPLEMENTATION_SUMMARY.md
+CODEBASE_REVIEW_IMPROVEMENTS.md
+
+# Docker volumes and data
+docker/.env
+*.sql
