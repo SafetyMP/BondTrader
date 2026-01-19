@@ -140,7 +140,11 @@ class FactorModel:
             Factor exposure analysis
         """
         # Always re-extract factors if they don't exist or if the number of bonds has changed
-        if self.factors is None or self.factor_loadings is None or (self.factors is not None and self.factors.shape[0] != len(bonds)):
+        if (
+            self.factors is None
+            or self.factor_loadings is None
+            or (self.factors is not None and self.factors.shape[0] != len(bonds))
+        ):
             # Extract factors first
             self.extract_bond_factors(bonds)
 
