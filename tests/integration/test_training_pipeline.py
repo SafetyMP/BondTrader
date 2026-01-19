@@ -6,6 +6,7 @@ Tests end-to-end model training workflows
 import os
 import sys
 import tempfile
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -15,10 +16,6 @@ pytestmark = pytest.mark.integration
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import from fixtures
-import sys
-from pathlib import Path
-
-from datetime import datetime
 
 from bondtrader.core.bond_models import Bond, BondType
 from bondtrader.data.training_data_generator import (
