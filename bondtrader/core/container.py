@@ -4,15 +4,17 @@ Manages service instances and ensures consistent architecture
 """
 
 import os
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from bondtrader.config import Config, get_config
-from bondtrader.core.arbitrage_detector import ArbitrageDetector
 from bondtrader.core.bond_valuation import BondValuator
 from bondtrader.core.repository import BondRepository, IBondRepository
 from bondtrader.core.service_layer import BondService
 from bondtrader.data.data_persistence import EnhancedBondDatabase
 from bondtrader.risk.risk_management import RiskManager
+
+if TYPE_CHECKING:
+    from bondtrader.core.arbitrage_detector import ArbitrageDetector
 
 
 class ServiceContainer:
@@ -40,7 +42,7 @@ class ServiceContainer:
         self._valuator: Optional[BondValuator] = None
         self._repository: Optional[IBondRepository] = None
         self._bond_service: Optional[BondService] = None
-        self._arbitrage_detector: Optional[ArbitrageDetector] = None
+        self._arbitrage_detector: Optional["ArbitrageDetector"] = None
         self._risk_manager: Optional[RiskManager] = None
         self._database: Optional[EnhancedBondDatabase] = None
 
@@ -122,7 +124,7 @@ class ServiceContainer:
             self._bond_service = BondService(repository=repo, valuator=val)
         return self._bond_service
 
-    def get_arbitrage_detector(self, valuator: Optional[BondValuator] = None) -> ArbitrageDetector:
+    def get_arbitrage_detector(self, valuator: Optional[BondValuator] = None) -> "ArbitrageDetector":
         """
         Get ArbitrageDetector instance (singleton)
 
@@ -133,6 +135,9 @@ class ServiceContainer:
             Shared ArbitrageDetector instance
         """
         if self._arbitrage_detector is None:
+            # Lazy import to avoid circular dependency
+            from bondtrader.core.arbitrage_detector import ArbitrageDetector
+
             val = valuator or self.get_valuator()
             self._arbitrage_detector = ArbitrageDetector(
                 valuator=val,
