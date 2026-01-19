@@ -6,6 +6,7 @@ Displays predictions made by trained models on 2025 bond data
 import os
 import sys
 from pathlib import Path
+from typing import Dict, List, Optional
 
 import pandas as pd
 import plotly.express as px
@@ -67,7 +68,7 @@ st.markdown(
 
 
 @st.cache_data
-def load_predictions(file_path: str) -> pd.DataFrame:
+def load_predictions(file_path: str) -> Optional[pd.DataFrame]:
     """Load predictions from CSV file"""
     if not os.path.exists(file_path):
         return None
@@ -94,10 +95,14 @@ def format_percentage(value: float) -> str:
     return _format_percentage(value)
 
 
-def create_prediction_comparison_chart(df: pd.DataFrame):
+def get_prediction_columns(df: pd.DataFrame) -> List[str]:
+    """Extract all prediction column names from dataframe"""
+    return [col for col in df.columns if "_predicted_value" in col]
+
+
+def create_prediction_comparison_chart(df: pd.DataFrame) -> Optional[go.Figure]:
     """Create chart comparing predictions from different models"""
-    # Get all prediction columns
-    prediction_cols = [col for col in df.columns if "_predicted_value" in col]
+    prediction_cols = get_prediction_columns(df)
 
     if not prediction_cols:
         return None
@@ -156,9 +161,9 @@ def create_prediction_comparison_chart(df: pd.DataFrame):
     return fig
 
 
-def create_price_distribution_chart(df: pd.DataFrame):
+def create_price_distribution_chart(df: pd.DataFrame) -> Optional[go.Figure]:
     """Create distribution chart of predicted prices"""
-    prediction_cols = [col for col in df.columns if "_predicted_value" in col]
+    prediction_cols = get_prediction_columns(df)
 
     if not prediction_cols:
         return None
@@ -181,9 +186,9 @@ def create_price_distribution_chart(df: pd.DataFrame):
     return fig
 
 
-def create_model_performance_metrics(df: pd.DataFrame):
-    """Calculate and display model performance metrics"""
-    prediction_cols = [col for col in df.columns if "_predicted_value" in col]
+def calculate_model_performance_metrics(df: pd.DataFrame) -> Dict[str, Dict[str, float]]:
+    """Calculate and return model performance metrics"""
+    prediction_cols = get_prediction_columns(df)
 
     if not prediction_cols:
         return {}
@@ -225,6 +230,106 @@ def create_model_performance_metrics(df: pd.DataFrame):
     return metrics
 
 
+def apply_filters(df: pd.DataFrame) -> pd.DataFrame:
+    """Apply sidebar filters to dataframe"""
+    filtered_df = df.copy()
+
+    # Bond type filter
+    if "bond_type" in filtered_df.columns:
+        bond_types = ["All"] + sorted(filtered_df["bond_type"].unique().tolist())
+        selected_type = st.sidebar.selectbox("Bond Type", bond_types)
+        if selected_type != "All":
+            filtered_df = filtered_df[filtered_df["bond_type"] == selected_type]
+
+    # Credit rating filter
+    if "credit_rating" in filtered_df.columns:
+        ratings = ["All"] + sorted(filtered_df["credit_rating"].unique().tolist())
+        selected_rating = st.sidebar.selectbox("Credit Rating", ratings)
+        if selected_rating != "All":
+            filtered_df = filtered_df[filtered_df["credit_rating"] == selected_rating]
+
+    # Issuer filter
+    if "issuer" in filtered_df.columns:
+        issuers = ["All"] + sorted(filtered_df["issuer"].unique().tolist())
+        selected_issuer = st.sidebar.selectbox("Issuer", issuers)
+        if selected_issuer != "All":
+            filtered_df = filtered_df[filtered_df["issuer"] == selected_issuer]
+
+    return filtered_df
+
+
+def display_summary_statistics(df: pd.DataFrame):
+    """Display summary statistics metrics"""
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric("Total Bonds", len(df))
+
+    with col2:
+        if "current_price" in df.columns:
+            avg_price = df["current_price"].mean()
+            st.metric("Average Current Price", format_currency(avg_price))
+
+    with col3:
+        if "theoretical_fair_value" in df.columns:
+            avg_fair = df["theoretical_fair_value"].mean()
+            st.metric("Average Fair Value", format_currency(avg_fair))
+
+    with col4:
+        if "coupon_rate" in df.columns:
+            avg_coupon = df["coupon_rate"].mean()
+            st.metric("Average Coupon Rate", format_percentage(avg_coupon))
+
+
+def display_model_performance_metrics(metrics: Dict[str, Dict[str, float]]):
+    """Display model performance metrics and visualizations"""
+    if not metrics:
+        st.info("No performance metrics available")
+        return
+
+    metrics_df = pd.DataFrame(metrics).T
+    metrics_df = metrics_df.round(2)
+    st.dataframe(metrics_df, use_container_width=True)
+
+    # Visualize metrics
+    metric_fig = go.Figure()
+
+    for metric_name in ["MAE", "RMSE", "MAPE"]:
+        if metric_name in metrics_df.columns:
+            metric_fig.add_trace(go.Bar(x=metrics_df.index, y=metrics_df[metric_name], name=metric_name))
+
+    metric_fig.update_layout(
+        title="Model Performance Comparison",
+        xaxis_title="Model",
+        yaxis_title="Metric Value",
+        barmode="group",
+        height=400,
+    )
+    st.plotly_chart(metric_fig, use_container_width=True)
+
+
+def display_detailed_predictions_table(df: pd.DataFrame):
+    """Display detailed predictions table with relevant columns"""
+    display_cols = [
+        "bond_id",
+        "bond_type",
+        "issuer",
+        "credit_rating",
+        "coupon_rate",
+        "current_price",
+        "theoretical_fair_value",
+    ]
+
+    # Add prediction columns
+    prediction_cols = get_prediction_columns(df)
+    display_cols.extend(prediction_cols)
+
+    # Filter to available columns
+    display_cols = [col for col in display_cols if col in df.columns]
+
+    st.dataframe(df[display_cols], use_container_width=True, height=400)
+
+
 def main():
     """Main dashboard function"""
     config = get_config()
@@ -249,112 +354,36 @@ def main():
 
     # Sidebar filters
     st.sidebar.header("Filters")
-
-    # Bond type filter
-    if "bond_type" in df.columns:
-        bond_types = ["All"] + sorted(df["bond_type"].unique().tolist())
-        selected_type = st.sidebar.selectbox("Bond Type", bond_types)
-        if selected_type != "All":
-            df = df[df["bond_type"] == selected_type]
-
-    # Credit rating filter
-    if "credit_rating" in df.columns:
-        ratings = ["All"] + sorted(df["credit_rating"].unique().tolist())
-        selected_rating = st.sidebar.selectbox("Credit Rating", ratings)
-        if selected_rating != "All":
-            df = df[df["credit_rating"] == selected_rating]
-
-    # Issuer filter
-    if "issuer" in df.columns:
-        issuers = ["All"] + sorted(df["issuer"].unique().tolist())
-        selected_issuer = st.sidebar.selectbox("Issuer", issuers)
-        if selected_issuer != "All":
-            df = df[df["issuer"] == selected_issuer]
+    df = apply_filters(df)
 
     # Display summary statistics
     st.header("Summary Statistics")
-
-    col1, col2, col3, col4 = st.columns(4)
-
-    with col1:
-        st.metric("Total Bonds", len(df))
-
-    with col2:
-        if "current_price" in df.columns:
-            avg_price = df["current_price"].mean()
-            st.metric("Average Current Price", format_currency(avg_price))
-
-    with col3:
-        if "theoretical_fair_value" in df.columns:
-            avg_fair = df["theoretical_fair_value"].mean()
-            st.metric("Average Fair Value", format_currency(avg_fair))
-
-    with col4:
-        if "coupon_rate" in df.columns:
-            avg_coupon = df["coupon_rate"].mean()
-            st.metric("Average Coupon Rate", format_percentage(avg_coupon))
+    display_summary_statistics(df)
 
     # Model Performance Metrics
     st.header("Model Performance Metrics")
-    metrics = create_model_performance_metrics(df)
-
-    if metrics:
-        metrics_df = pd.DataFrame(metrics).T
-        metrics_df = metrics_df.round(2)
-        st.dataframe(metrics_df, use_container_width=True)
-
-        # Visualize metrics
-        metric_fig = go.Figure()
-
-        for metric_name in ["MAE", "RMSE", "MAPE"]:
-            if metric_name in metrics_df.columns:
-                metric_fig.add_trace(go.Bar(x=metrics_df.index, y=metrics_df[metric_name], name=metric_name))
-
-        metric_fig.update_layout(
-            title="Model Performance Comparison",
-            xaxis_title="Model",
-            yaxis_title="Metric Value",
-            barmode="group",
-            height=400,
-        )
-        st.plotly_chart(metric_fig, use_container_width=True)
+    metrics = calculate_model_performance_metrics(df)
+    display_model_performance_metrics(metrics)
 
     # Predictions Comparison
     st.header("Predictions Comparison")
-
     comparison_fig = create_prediction_comparison_chart(df)
     if comparison_fig:
         st.plotly_chart(comparison_fig, use_container_width=True)
+    else:
+        st.info("No prediction data available for comparison")
 
     # Price Distribution
     st.header("Price Distribution")
-
     dist_fig = create_price_distribution_chart(df)
     if dist_fig:
         st.plotly_chart(dist_fig, use_container_width=True)
+    else:
+        st.info("No prediction data available for distribution chart")
 
     # Detailed Predictions Table
     st.header("Detailed Predictions")
-
-    # Select columns to display
-    display_cols = [
-        "bond_id",
-        "bond_type",
-        "issuer",
-        "credit_rating",
-        "coupon_rate",
-        "current_price",
-        "theoretical_fair_value",
-    ]
-
-    # Add prediction columns
-    prediction_cols = [col for col in df.columns if "_predicted_value" in col]
-    display_cols.extend(prediction_cols)
-
-    # Filter to available columns
-    display_cols = [col for col in display_cols if col in df.columns]
-
-    st.dataframe(df[display_cols], use_container_width=True, height=400)
+    display_detailed_predictions_table(df)
 
     # Download button
     csv = df.to_csv(index=False)
