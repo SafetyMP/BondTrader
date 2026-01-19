@@ -68,6 +68,7 @@ class TestFINRADataProvider:
     def test_fetch_historical_bond_data(self, provider):
         """Test fetching historical bond data"""
         from datetime import datetime
+
         start = datetime(2010, 1, 1)
         end = datetime(2010, 1, 31)
         try:

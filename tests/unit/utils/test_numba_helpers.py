@@ -63,6 +63,7 @@ class TestNumbaHelpers:
 
     def test_enable_numba_jit_decorator(self):
         """Test numba JIT decorator"""
+
         @enable_numba_jit
         def test_func(x):
             return x * 2

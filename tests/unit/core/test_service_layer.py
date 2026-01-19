@@ -112,7 +112,7 @@ class TestBondService:
         result = service.get_bond_count()
         assert result.is_ok()
         count_before = result.value
-        
+
         service.create_bond(sample_bond)
         result = service.get_bond_count()
         assert result.is_ok()

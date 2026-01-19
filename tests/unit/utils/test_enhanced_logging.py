@@ -31,6 +31,7 @@ class TestEnhancedLogging:
 
     def test_log_performance_decorator(self):
         """Test log_performance decorator"""
+
         @log_performance()
         def test_func():
             return 42
@@ -40,6 +41,7 @@ class TestEnhancedLogging:
 
     def test_log_performance_with_name(self):
         """Test log_performance with custom name"""
+
         @log_performance(func_name="custom_name")
         def test_func():
             return 42
@@ -49,6 +51,7 @@ class TestEnhancedLogging:
 
     def test_log_performance_with_error(self):
         """Test log_performance with error"""
+
         @log_performance()
         def failing_func():
             raise ValueError("Test error")

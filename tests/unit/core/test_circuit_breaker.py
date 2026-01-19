@@ -59,9 +59,11 @@ class TestCircuitBreaker:
     def test_circuit_breaker_call_when_open(self):
         """Test calling function when circuit is open"""
         cb = CircuitBreaker("test", config=CircuitBreakerConfig(failure_threshold=2, timeout=60))
+
         # Open the circuit
         def failing_func():
             raise ValueError("Test")
+
         try:
             cb.call(failing_func)
         except ValueError:
@@ -81,14 +83,16 @@ class TestCircuitBreaker:
 
     def test_circuit_breaker_fallback(self):
         """Test circuit breaker with fallback"""
+
         def fallback_func():
             return "fallback_value"
 
         cb = CircuitBreaker("test", config=CircuitBreakerConfig(failure_threshold=2, timeout=60), fallback=fallback_func)
-        
+
         # Open the circuit
         def failing_func():
             raise ValueError("Test")
+
         try:
             cb.call(failing_func)
         except ValueError:
@@ -106,10 +110,11 @@ class TestCircuitBreaker:
     def test_circuit_breaker_timeout(self):
         """Test circuit breaker timeout transition to half-open"""
         cb = CircuitBreaker("test", config=CircuitBreakerConfig(failure_threshold=2, timeout=0.1))
-        
+
         # Open the circuit
         def failing_func():
             raise ValueError("Test")
+
         try:
             cb.call(failing_func)
         except ValueError:
@@ -122,20 +127,22 @@ class TestCircuitBreaker:
 
         # Wait for timeout
         time.sleep(0.15)
-        
+
         # Next call should transition to HALF_OPEN
         def dummy():
             pass
+
         cb.call(dummy)
         # State should be HALF_OPEN or CLOSED depending on success
 
     def test_circuit_breaker_half_open_success(self):
         """Test half-open state with success"""
         cb = CircuitBreaker("test", config=CircuitBreakerConfig(failure_threshold=2, timeout=0.1, success_threshold=1))
-        
+
         # Open the circuit
         def failing_func():
             raise ValueError("Test")
+
         try:
             cb.call(failing_func)
         except ValueError:
@@ -157,10 +164,11 @@ class TestCircuitBreaker:
     def test_circuit_breaker_half_open_failure(self):
         """Test half-open state with failure"""
         cb = CircuitBreaker("test", config=CircuitBreakerConfig(failure_threshold=2, timeout=0.1))
-        
+
         # Open the circuit
         def failing_func():
             raise ValueError("Test")
+
         try:
             cb.call(failing_func)
         except ValueError:
@@ -179,10 +187,11 @@ class TestCircuitBreaker:
     def test_circuit_breaker_reset(self):
         """Test manually resetting circuit breaker"""
         cb = CircuitBreaker("test", config=CircuitBreakerConfig(failure_threshold=2, timeout=60))
-        
+
         # Open the circuit
         def failing_func():
             raise ValueError("Test")
+
         try:
             cb.call(failing_func)
         except ValueError:
@@ -213,6 +222,7 @@ class TestCircuitBreaker:
 
     def test_circuit_breaker_decorator(self):
         """Test circuit breaker decorator"""
+
         @circuit_breaker("decorator_test", config=CircuitBreakerConfig(failure_threshold=5, timeout=60))
         def test_func():
             return 42

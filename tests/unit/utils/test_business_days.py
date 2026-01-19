@@ -65,7 +65,7 @@ class TestBusinessDayCalculator:
         # Next business day should be Monday
         assert next_day.weekday() == 0  # Monday
         assert calc.is_business_day(next_day)
-        
+
         # Test from a business day - should return a business day
         date_fri = datetime(2024, 1, 5)  # Friday
         next_day_fri = calc.get_next_business_day(date_fri)

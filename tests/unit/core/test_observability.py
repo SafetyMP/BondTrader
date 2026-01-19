@@ -47,7 +47,7 @@ class TestMetrics:
         metrics.increment("test.counter")
         metrics.gauge("test.gauge", 100)
         metrics.histogram("test.histogram", 42.5)
-        
+
         all_metrics = metrics.get_metrics()
         assert "counters" in all_metrics
         assert "gauges" in all_metrics
@@ -68,6 +68,7 @@ class TestTraceDecorator:
 
     def test_trace_decorator_success(self):
         """Test trace decorator with successful function"""
+
         @trace
         def test_func():
             return 42
@@ -77,6 +78,7 @@ class TestTraceDecorator:
 
     def test_trace_decorator_with_args(self):
         """Test trace decorator with arguments"""
+
         @trace
         def test_func(x, y):
             return x + y
@@ -86,6 +88,7 @@ class TestTraceDecorator:
 
     def test_trace_decorator_with_kwargs(self):
         """Test trace decorator with keyword arguments"""
+
         @trace
         def test_func(x=1, y=2):
             return x + y
@@ -95,6 +98,7 @@ class TestTraceDecorator:
 
     def test_trace_decorator_error(self):
         """Test trace decorator with error"""
+
         @trace
         def test_func():
             raise ValueError("Test error")

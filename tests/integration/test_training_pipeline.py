@@ -26,6 +26,7 @@ from bondtrader.ml.ml_adjuster_enhanced import EnhancedMLBondAdjuster
 # Import from fixtures
 import sys
 from pathlib import Path
+
 fixtures_path = Path(__file__).parent.parent / "fixtures"
 sys.path.insert(0, str(fixtures_path))
 from bond_factory import create_multiple_bonds
@@ -127,9 +128,7 @@ class TestTrainingPipeline:
         generator = TrainingDataGenerator(seed=42)
 
         # Step 2: Generate training data
-        dataset = generator.generate_comprehensive_dataset(
-            total_bonds=50, time_periods=10, bonds_per_period=10
-        )
+        dataset = generator.generate_comprehensive_dataset(total_bonds=50, time_periods=10, bonds_per_period=10)
 
         # Step 3: Verify dataset structure
         assert "train_bonds" in dataset or "train" in dataset
@@ -152,9 +151,7 @@ class TestTrainingPipeline:
         """Test training model with pre-generated dataset"""
         # Step 1: Generate and save dataset
         generator = TrainingDataGenerator(seed=42)
-        dataset = generator.generate_comprehensive_dataset(
-            total_bonds=30, time_periods=5, bonds_per_period=10
-        )
+        dataset = generator.generate_comprehensive_dataset(total_bonds=30, time_periods=5, bonds_per_period=10)
         original_cwd = os.getcwd()
         try:
             os.chdir(temp_training_dir)
@@ -196,9 +193,7 @@ class TestTrainingPerformance:
         """Test training performance with larger dataset"""
         # Generate larger dataset
         generator = TrainingDataGenerator(seed=42)
-        dataset = generator.generate_comprehensive_dataset(
-            total_bonds=100, time_periods=10, bonds_per_period=20
-        )
+        dataset = generator.generate_comprehensive_dataset(total_bonds=100, time_periods=10, bonds_per_period=20)
 
         # Train model
         adjuster = MLBondAdjuster(model_type="random_forest")

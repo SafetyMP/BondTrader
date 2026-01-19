@@ -37,6 +37,7 @@ class TestExecutionStrategy:
     def test_twap_execution(self, strategy):
         """Test TWAP execution"""
         from datetime import datetime, timedelta
+
         start = datetime.now()
         end = start + timedelta(hours=1)
         result = strategy.twap_execution(total_quantity=100.0, start_time=start, end_time=end)
@@ -46,12 +47,10 @@ class TestExecutionStrategy:
     def test_vwap_execution(self, strategy, sample_bond):
         """Test VWAP execution"""
         from datetime import datetime, timedelta
+
         start = datetime.now()
         end = start + timedelta(hours=1)
-        volume_profile = [
-            {"time": start + timedelta(minutes=i * 6), "expected_volume": 10.0}
-            for i in range(10)
-        ]
+        volume_profile = [{"time": start + timedelta(minutes=i * 6), "expected_volume": 10.0} for i in range(10)]
         result = strategy.vwap_execution(total_quantity=100.0, volume_profile=volume_profile, start_time=start, end_time=end)
         assert isinstance(result, dict)
 

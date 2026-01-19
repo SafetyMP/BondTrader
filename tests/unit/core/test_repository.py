@@ -122,11 +122,11 @@ class TestInMemoryBondRepository:
     def test_find_all_with_filters(self, repo, sample_bond):
         """Test finding with filters"""
         repo.save(sample_bond)
-        
+
         # Filter by bond type
         bonds = repo.find_all({"bond_type": BondType.CORPORATE})
         assert len(bonds) == 1
-        
+
         bonds = repo.find_all({"bond_type": BondType.TREASURY})
         assert len(bonds) == 0
 
@@ -142,7 +142,7 @@ class TestInMemoryBondRepository:
         """Test deleting bond"""
         repo.save(sample_bond)
         assert repo.exists("TEST-001")
-        
+
         deleted = repo.delete("TEST-001")
         assert deleted is True
         assert not repo.exists("TEST-001")
