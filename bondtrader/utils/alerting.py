@@ -149,6 +149,9 @@ class AlertManager:
         # Determine channels to use
         if channels is None:
             channels = list(self.channels.keys())
+            # If no channels configured, use EMAIL as default (for testing and basic functionality)
+            if not channels:
+                channels = [AlertChannel.EMAIL]
 
         success = False
 

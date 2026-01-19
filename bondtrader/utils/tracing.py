@@ -53,7 +53,12 @@ if _otel_available and BatchSpanProcessor:
                 return super().force_flush(timeout_millis)
             except (ValueError, IOError, OSError) as e:
                 # Handle I/O errors (closed files, etc.) gracefully
-                if not self._export_error_logged and "closed" not in str(e).lower():
+                # Suppress errors about closed files during shutdown/cleanup
+                error_msg = str(e).lower()
+                if "closed" in error_msg or "i/o operation" in error_msg:
+                    # Silently ignore closed file errors
+                    return None
+                if not self._export_error_logged:
                     logger.debug(
                         f"Trace export failed (collector may be unavailable): {e}. "
                         "Set OTEL_USE_CONSOLE_EXPORTER=true or OTEL_TRACING_DISABLED=true to avoid this."
@@ -61,6 +66,10 @@ if _otel_available and BatchSpanProcessor:
                     self._export_error_logged = True
                 return None
             except Exception as e:
+                error_msg = str(e).lower()
+                if "closed" in error_msg or "i/o operation" in error_msg:
+                    # Silently ignore closed file errors
+                    return None
                 if not self._export_error_logged:
                     logger.debug(
                         f"Trace export failed: {e}. "
