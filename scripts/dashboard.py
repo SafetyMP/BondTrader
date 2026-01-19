@@ -755,166 +755,198 @@ def main():
         st.header("Portfolio Optimization")
         st.write("Markowitz, Black-Litterman, and Risk Parity strategies")
 
-        optimizer = PortfolioOptimizer(valuator)
+        try:
+            optimizer = PortfolioOptimizer(valuator)
 
-        opt_method = st.selectbox(
-            "Optimization Method", ["Markowitz", "Black-Litterman", "Risk Parity", "Efficient Frontier"], key="opt_method"
-        )
-
-        if opt_method == "Markowitz":
-            st.subheader("Markowitz Mean-Variance Optimization")
-
-            risk_aversion = st.slider("Risk Aversion", 0.5, 5.0, 1.0, step=0.1, key="risk_aversion")
-            target_return = (
-                st.number_input("Target Return (%)", 0.0, 20.0, None, step=0.1) / 100
-                if st.checkbox("Set Target Return", key="target_ret")
-                else None
+            opt_method = st.selectbox(
+                "Optimization Method", ["Markowitz", "Black-Litterman", "Risk Parity", "Efficient Frontier"], key="opt_method"
             )
 
-            result = optimizer.markowitz_optimization(bonds, target_return=target_return, risk_aversion=risk_aversion)
+            if opt_method == "Markowitz":
+                st.subheader("Markowitz Mean-Variance Optimization")
 
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Portfolio Return", format_percentage(result["portfolio_return"] * 100))
-            with col2:
-                st.metric("Portfolio Volatility", format_percentage(result["portfolio_volatility"] * 100))
-            with col3:
-                st.metric("Sharpe Ratio", f"{result['sharpe_ratio']:.3f}")
-
-            # Display weights
-            weights_df = pd.DataFrame(
-                {
-                    "Bond ID": [b.bond_id for b in bonds],
-                    "Weight": [f"{w*100:.2f}%" for w in result["weights"]],
-                    "Weight (Decimal)": result["weights"],
-                }
-            )
-            st.dataframe(weights_df, use_container_width=True)
-
-            # Weight visualization
-            fig_weights = px.bar(weights_df, x="Bond ID", y="Weight (Decimal)", title="Optimal Portfolio Weights")
-            st.plotly_chart(fig_weights, use_container_width=True)
-
-        elif opt_method == "Efficient Frontier":
-            st.subheader("Efficient Frontier")
-
-            with st.spinner("Calculating efficient frontier..."):
-                frontier = optimizer.efficient_frontier(bonds, num_points=30)
-
-            # Plot efficient frontier
-            frontier_df = pd.DataFrame(
-                {
-                    "Return": [r * 100 for r in frontier["returns"]],
-                    "Volatility": [v * 100 for v in frontier["volatilities"]],
-                    "Sharpe Ratio": frontier["sharpe_ratios"],
-                }
-            )
-
-            fig_frontier = px.scatter(
-                frontier_df,
-                x="Volatility",
-                y="Return",
-                color="Sharpe Ratio",
-                title="Efficient Frontier",
-                labels={"Volatility": "Volatility (%)", "Return": "Return (%)"},
-            )
-            st.plotly_chart(fig_frontier, use_container_width=True)
-
-            # Max Sharpe portfolio
-            max_sharpe = frontier["max_sharpe_portfolio"]
-            st.subheader("Maximum Sharpe Ratio Portfolio")
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Return", format_percentage(max_sharpe["return"] * 100))
-            with col2:
-                st.metric("Volatility", format_percentage(max_sharpe["volatility"] * 100))
-            with col3:
-                st.metric("Sharpe Ratio", f"{max_sharpe['sharpe_ratio']:.3f}")
-
-        elif opt_method == "Risk Parity":
-            st.subheader("Risk Parity Optimization")
-
-            result = optimizer.risk_parity_optimization(bonds)
-
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("Portfolio Volatility", format_percentage(result["portfolio_volatility"] * 100))
-                st.metric("Risk Contribution Std", f"{result['risk_contribution_std']:.4f}")
-            with col2:
-                st.write("**Risk Contributions:**")
-                risk_contrib_df = pd.DataFrame(
-                    {
-                        "Bond ID": [b.bond_id for b in bonds],
-                        "Risk Contribution": [f"{r*100:.2f}%" for r in result["risk_contributions"]],
-                    }
+                risk_aversion = st.slider("Risk Aversion", 0.5, 5.0, 1.0, step=0.1, key="risk_aversion")
+                target_return = (
+                    st.number_input("Target Return (%)", 0.0, 20.0, None, step=0.1) / 100
+                    if st.checkbox("Set Target Return", key="target_ret")
+                    else None
                 )
-                st.dataframe(risk_contrib_df, use_container_width=True)
+
+                try:
+                    result = optimizer.markowitz_optimization(bonds, target_return=target_return, risk_aversion=risk_aversion)
+
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Portfolio Return", format_percentage(result["portfolio_return"] * 100))
+                    with col2:
+                        st.metric("Portfolio Volatility", format_percentage(result["portfolio_volatility"] * 100))
+                    with col3:
+                        st.metric("Sharpe Ratio", f"{result['sharpe_ratio']:.3f}")
+
+                    # Display weights
+                    weights_df = pd.DataFrame(
+                        {
+                            "Bond ID": [b.bond_id for b in bonds],
+                            "Weight": [f"{w*100:.2f}%" for w in result["weights"]],
+                            "Weight (Decimal)": result["weights"],
+                        }
+                    )
+                    st.dataframe(weights_df, use_container_width=True)
+
+                    # Weight visualization
+                    fig_weights = px.bar(weights_df, x="Bond ID", y="Weight (Decimal)", title="Optimal Portfolio Weights")
+                    st.plotly_chart(fig_weights, use_container_width=True)
+                except Exception as e:
+                    st.error(f"Error in Markowitz optimization: {e}")
+                    st.info(
+                        "This may require additional dependencies (scipy, scikit-learn). Ensure all dependencies are installed."
+                    )
+
+            elif opt_method == "Efficient Frontier":
+                st.subheader("Efficient Frontier")
+
+                try:
+                    with st.spinner("Calculating efficient frontier..."):
+                        frontier = optimizer.efficient_frontier(bonds, num_points=30)
+
+                    # Plot efficient frontier
+                    frontier_df = pd.DataFrame(
+                        {
+                            "Return": [r * 100 for r in frontier["returns"]],
+                            "Volatility": [v * 100 for v in frontier["volatilities"]],
+                            "Sharpe Ratio": frontier["sharpe_ratios"],
+                        }
+                    )
+
+                    fig_frontier = px.scatter(
+                        frontier_df,
+                        x="Volatility",
+                        y="Return",
+                        color="Sharpe Ratio",
+                        title="Efficient Frontier",
+                        labels={"Volatility": "Volatility (%)", "Return": "Return (%)"},
+                    )
+                    st.plotly_chart(fig_frontier, use_container_width=True)
+
+                    # Max Sharpe portfolio
+                    max_sharpe = frontier["max_sharpe_portfolio"]
+                    st.subheader("Maximum Sharpe Ratio Portfolio")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Return", format_percentage(max_sharpe["return"] * 100))
+                    with col2:
+                        st.metric("Volatility", format_percentage(max_sharpe["volatility"] * 100))
+                    with col3:
+                        st.metric("Sharpe Ratio", f"{max_sharpe['sharpe_ratio']:.3f}")
+                except Exception as e:
+                    st.error(f"Error calculating efficient frontier: {e}")
+                    st.info("This may require additional dependencies (scipy, scikit-learn).")
+
+            elif opt_method == "Risk Parity":
+                st.subheader("Risk Parity Optimization")
+
+                try:
+                    result = optimizer.risk_parity_optimization(bonds)
+
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric("Portfolio Volatility", format_percentage(result["portfolio_volatility"] * 100))
+                        st.metric("Risk Contribution Std", f"{result['risk_contribution_std']:.4f}")
+                    with col2:
+                        st.write("**Risk Contributions:**")
+                        risk_contrib_df = pd.DataFrame(
+                            {
+                                "Bond ID": [b.bond_id for b in bonds],
+                                "Risk Contribution": [f"{r*100:.2f}%" for r in result["risk_contributions"]],
+                            }
+                        )
+                        st.dataframe(risk_contrib_df, use_container_width=True)
+                except Exception as e:
+                    st.error(f"Error in Risk Parity optimization: {e}")
+                    st.info("This may require additional dependencies (scipy, scikit-learn).")
+            elif opt_method == "Black-Litterman":
+                st.info("Black-Litterman optimization is not yet implemented in the dashboard.")
+        except Exception as e:
+            st.error(f"Error in Portfolio Optimization: {e}")
+            st.info(
+                "This may require additional dependencies (scipy, scikit-learn). Install them with: pip install scipy scikit-learn"
+            )
 
     # Tab 10: Factor Models
     with tab10:
         st.header("Factor Model Analysis")
         st.write("PCA-based factors and risk attribution")
 
-        factor_model = FactorModel(valuator)
+        try:
+            factor_model = FactorModel(valuator)
 
-        num_factors = st.slider("Number of Factors", 2, 5, 3, key="num_factors")
+            num_factors = st.slider("Number of Factors", 2, 5, 3, key="num_factors")
 
-        with st.spinner("Extracting factors..."):
-            factor_result = factor_model.extract_bond_factors(bonds, num_factors=num_factors)
+            try:
+                with st.spinner("Extracting factors..."):
+                    factor_result = factor_model.extract_bond_factors(bonds, num_factors=num_factors)
 
-        st.subheader("Factor Analysis")
-        col1, col2 = st.columns(2)
+                st.subheader("Factor Analysis")
+                col1, col2 = st.columns(2)
 
-        with col1:
-            st.write("**Explained Variance:**")
-            variance_df = pd.DataFrame(
-                {
-                    "Factor": [f"Factor {i+1}" for i in range(num_factors)],
-                    "Variance %": [f"{v*100:.2f}%" for v in factor_result["explained_variance"]],
-                    "Cumulative %": [f"{v*100:.2f}%" for v in factor_result["cumulative_variance"]],
-                }
-            )
-            st.dataframe(variance_df, use_container_width=True)
+                with col1:
+                    st.write("**Explained Variance:**")
+                    variance_df = pd.DataFrame(
+                        {
+                            "Factor": [f"Factor {i+1}" for i in range(num_factors)],
+                            "Variance %": [f"{v*100:.2f}%" for v in factor_result["explained_variance"]],
+                            "Cumulative %": [f"{v*100:.2f}%" for v in factor_result["cumulative_variance"]],
+                        }
+                    )
+                    st.dataframe(variance_df, use_container_width=True)
 
-        with col2:
-            st.write("**Factor Names:**")
-            for i, name in enumerate(factor_result["factor_names"]):
-                st.write(f"Factor {i+1}: {name}")
+                with col2:
+                    st.write("**Factor Names:**")
+                    for i, name in enumerate(factor_result["factor_names"]):
+                        st.write(f"Factor {i+1}: {name}")
 
-        # Factor exposures
-        st.subheader("Portfolio Factor Exposures")
-        exposure_result = factor_model.calculate_factor_exposures(bonds)
+                # Factor exposures
+                st.subheader("Portfolio Factor Exposures")
+                exposure_result = factor_model.calculate_factor_exposures(bonds)
 
-        exposure_df = pd.DataFrame(
-            {
-                "Factor": factor_result["factor_names"],
-                "Exposure": [f"{e:.4f}" for e in exposure_result["portfolio_exposures"]],
-                "Contribution": [f"{c*100:.2f}%" for c in exposure_result["factor_contributions"]],
-            }
-        )
-        st.dataframe(exposure_df, use_container_width=True)
+                exposure_df = pd.DataFrame(
+                    {
+                        "Factor": factor_result["factor_names"],
+                        "Exposure": [f"{e:.4f}" for e in exposure_result["portfolio_exposures"]],
+                        "Contribution": [f"{c*100:.2f}%" for c in exposure_result["factor_contributions"]],
+                    }
+                )
+                st.dataframe(exposure_df, use_container_width=True)
 
-        # Risk attribution
-        st.subheader("Risk Attribution")
-        risk_attr = factor_model.risk_attribution(bonds)
+                # Risk attribution
+                st.subheader("Risk Attribution")
+                risk_attr = factor_model.risk_attribution(bonds)
 
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Portfolio Volatility", format_percentage(risk_attr["portfolio_volatility"] * 100))
-        with col2:
-            st.metric("Factor Risk %", format_percentage(100 - risk_attr["idiosyncratic_risk_pct"]))
-        with col3:
-            st.metric("Idiosyncratic Risk %", format_percentage(risk_attr["idiosyncratic_risk_pct"]))
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Portfolio Volatility", format_percentage(risk_attr["portfolio_volatility"] * 100))
+                with col2:
+                    st.metric("Factor Risk %", format_percentage(100 - risk_attr["idiosyncratic_risk_pct"]))
+                with col3:
+                    st.metric("Idiosyncratic Risk %", format_percentage(risk_attr["idiosyncratic_risk_pct"]))
 
-        # Factor risk breakdown
-        factor_risk_df = pd.DataFrame(
-            {
-                "Factor": factor_result["factor_names"],
-                "Risk Contribution %": [f"{r:.2f}%" for r in risk_attr["factor_risk_percentages"]],
-            }
-        )
-        fig_factor_risk = px.bar(factor_risk_df, x="Factor", y="Risk Contribution %", title="Risk Attribution by Factor")
-        st.plotly_chart(fig_factor_risk, use_container_width=True)
+                # Factor risk breakdown
+                factor_risk_df = pd.DataFrame(
+                    {
+                        "Factor": factor_result["factor_names"],
+                        "Risk Contribution %": [f"{r:.2f}%" for r in risk_attr["factor_risk_percentages"]],
+                    }
+                )
+                fig_factor_risk = px.bar(
+                    factor_risk_df, x="Factor", y="Risk Contribution %", title="Risk Attribution by Factor"
+                )
+                st.plotly_chart(fig_factor_risk, use_container_width=True)
+            except Exception as e:
+                st.error(f"Error in factor analysis: {e}")
+                st.info("Factor model requires scikit-learn for PCA. Ensure it's installed: pip install scikit-learn")
+        except Exception as e:
+            st.error(f"Error initializing Factor Model: {e}")
+            st.info("Please ensure scikit-learn is installed: pip install scikit-learn")
 
     # Tab 11: Backtesting & Execution
     with tab11:
@@ -926,151 +958,168 @@ def main():
             horizontal=True,
         )
 
-        if exec_subtab == "Backtesting":
-            st.subheader("Strategy Backtesting")
-            st.write("Backtest arbitrage detection strategy on historical data")
+        try:
+            if exec_subtab == "Backtesting":
+                st.subheader("Strategy Backtesting")
+                st.write("Backtest arbitrage detection strategy on historical data")
 
-            # Simplified backtesting with current bonds
-            st.info("Note: Full backtesting requires historical bond data. This is a demonstration.")
+                # Simplified backtesting with current bonds
+                st.info("Note: Full backtesting requires historical bond data. This is a demonstration.")
 
-            backtest_engine = BacktestEngine(valuator)
+                try:
+                    backtest_engine = BacktestEngine(valuator)
 
-            initial_capital = st.number_input("Initial Capital", 100000, 10000000, 1000000, step=100000)
+                    initial_capital = st.number_input("Initial Capital", 100000, 10000000, 1000000, step=100000)
 
-            if st.button("Run Backtest"):
-                # Simulate historical data (in production, would load from database)
-                historical_bonds = [bonds] * 10  # 10 periods
+                    if st.button("Run Backtest"):
+                        # Simulate historical data (in production, would load from database)
+                        historical_bonds = [bonds] * 10  # 10 periods
 
-                with st.spinner("Running backtest..."):
-                    backtest_result = backtest_engine.backtest_arbitrage_strategy(
-                        historical_bonds, initial_capital=initial_capital
+                        try:
+                            with st.spinner("Running backtest..."):
+                                backtest_result = backtest_engine.backtest_arbitrage_strategy(
+                                    historical_bonds, initial_capital=initial_capital
+                                )
+
+                            col1, col2, col3, col4 = st.columns(4)
+                            with col1:
+                                st.metric("Total Return", format_percentage(backtest_result["total_return_pct"]))
+                            with col2:
+                                st.metric("Sharpe Ratio", f"{backtest_result['sharpe_ratio']:.3f}")
+                            with col3:
+                                st.metric("Max Drawdown", format_percentage(backtest_result["max_drawdown_pct"]))
+                            with col4:
+                                st.metric("Win Rate", format_percentage(backtest_result["win_rate"] * 100))
+
+                            # Performance chart
+                            perf_df = pd.DataFrame(
+                                {
+                                    "Period": range(len(backtest_result["portfolio_values"])),
+                                    "Portfolio Value": backtest_result["portfolio_values"],
+                                }
+                            )
+                            fig_perf = px.line(perf_df, x="Period", y="Portfolio Value", title="Backtest Performance")
+                            st.plotly_chart(fig_perf, use_container_width=True)
+                        except Exception as e:
+                            st.error(f"Error running backtest: {e}")
+                except Exception as e:
+                    st.error(f"Error initializing BacktestEngine: {e}")
+
+            elif exec_subtab == "Execution Strategies":
+                st.subheader("Execution Strategies")
+
+                try:
+                    exec_strategy = ExecutionStrategy()
+
+                    bond_ids = [b.bond_id for b in bonds[:10]]
+                    selected_id = st.selectbox("Select Bond", bond_ids, key="exec_bond")
+                    selected_bond = next(b for b in bonds if b.bond_id == selected_id)
+
+                    strategy_type = st.selectbox("Strategy", ["TWAP", "VWAP", "Optimal Execution"], key="exec_type")
+                    total_quantity = st.number_input("Total Quantity", 100, 10000, 1000, step=100)
+
+                    if strategy_type == "TWAP":
+                        start_time = datetime.now()
+                        end_time = start_time + timedelta(hours=4)
+                        num_intervals = st.slider("Number of Intervals", 5, 20, 10)
+
+                        twap_result = exec_strategy.twap_execution(total_quantity, start_time, end_time, num_intervals)
+
+                        st.write("**TWAP Execution Schedule:**")
+                        schedule_df = pd.DataFrame(twap_result["schedule"])
+                        st.dataframe(
+                            schedule_df[["interval", "time", "quantity", "cumulative_quantity"]], use_container_width=True
+                        )
+
+                    elif strategy_type == "Optimal Execution":
+                        urgency = st.slider("Urgency", 0.0, 1.0, 0.5, step=0.1)
+                        volatility = st.slider("Volatility", 0.001, 0.05, 0.01, step=0.001)
+
+                        opt_result = exec_strategy.optimal_execution(selected_bond, total_quantity, urgency, volatility)
+
+                        st.write("**Optimal Execution Schedule:**")
+                        schedule_df = pd.DataFrame(opt_result["schedule"])
+                        st.dataframe(schedule_df, use_container_width=True)
+                except Exception as e:
+                    st.error(f"Error in execution strategy: {e}")
+
+            elif exec_subtab == "Correlation Analysis":
+                st.subheader("Correlation Analysis")
+
+                try:
+                    corr_analyzer = CorrelationAnalyzer(valuator)
+
+                    corr_result = corr_analyzer.calculate_correlation_matrix(bonds)
+
+                    st.metric("Average Correlation", f"{corr_result['average_correlation']:.3f}")
+                    st.metric("Diversification Ratio", f"{corr_result['diversification_ratio']:.3f}")
+
+                    # Correlation heatmap
+                    corr_df = corr_result["correlation_dataframe"]
+                    fig_corr = px.imshow(
+                        corr_df.values,
+                        labels=dict(x="Bond", y="Bond", color="Correlation"),
+                        x=corr_df.columns,
+                        y=corr_df.index,
+                        title="Bond Correlation Matrix",
+                        color_continuous_scale="RdBu",
+                    )
+                    st.plotly_chart(fig_corr, use_container_width=True)
+
+                    # Diversification metrics
+                    st.subheader("Portfolio Diversification Metrics")
+                    div_metrics = corr_analyzer.portfolio_diversification_metrics(bonds)
+
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Effective Positions", f"{div_metrics['effective_positions']:.2f}")
+                    with col2:
+                        st.metric("Herfindahl Index", f"{div_metrics['herfindahl_index']:.4f}")
+                    with col3:
+                        st.metric("Diversification Benefit", format_percentage(div_metrics["diversification_benefit_pct"]))
+                except Exception as e:
+                    st.error(f"Error in correlation analysis: {e}")
+
+            elif exec_subtab == "Floating Rate Bonds":
+                st.subheader("Floating Rate Bond Analysis")
+
+                floating_bonds = [b for b in bonds if b.bond_type == BondType.FLOATING_RATE]
+
+                if floating_bonds:
+                    fr_pricer = FloatingRateBondPricer(valuator)
+
+                    bond_ids = [b.bond_id for b in floating_bonds]
+                    selected_id = st.selectbox("Select Floating Rate Bond", bond_ids, key="fr_bond")
+                    selected_bond = next(b for b in floating_bonds if b.bond_id == selected_id)
+
+                    next_reset = st.date_input("Next Reset Date", value=datetime.now().date() + timedelta(days=182))
+                    spread = st.slider("Spread (bps)", -50, 200, 0, step=5) / 10000
+
+                    fr_result = fr_pricer.price_floating_rate_bond(
+                        selected_bond, datetime.combine(next_reset, datetime.min.time()), spread=spread
                     )
 
-                col1, col2, col3, col4 = st.columns(4)
-                with col1:
-                    st.metric("Total Return", format_percentage(backtest_result["total_return_pct"]))
-                with col2:
-                    st.metric("Sharpe Ratio", f"{backtest_result['sharpe_ratio']:.3f}")
-                with col3:
-                    st.metric("Max Drawdown", format_percentage(backtest_result["max_drawdown_pct"]))
-                with col4:
-                    st.metric("Win Rate", format_percentage(backtest_result["win_rate"] * 100))
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Clean Price", format_currency(fr_result["clean_price"]))
+                        st.metric("Dirty Price", format_currency(fr_result["dirty_price"]))
+                    with col2:
+                        st.metric("Next Coupon Rate", format_percentage(fr_result["next_coupon_rate"]))
+                        st.metric("Reference Rate", format_percentage(fr_result["reference_rate"]))
+                    with col3:
+                        st.metric("Price to Par", f"{fr_result['price_to_par']:.4f}")
+                        st.metric("Accrued Interest", format_currency(fr_result["accrued_interest"]))
 
-                # Performance chart
-                perf_df = pd.DataFrame(
-                    {
-                        "Period": range(len(backtest_result["portfolio_values"])),
-                        "Portfolio Value": backtest_result["portfolio_values"],
-                    }
-                )
-                fig_perf = px.line(perf_df, x="Period", y="Portfolio Value", title="Backtest Performance")
-                st.plotly_chart(fig_perf, use_container_width=True)
-
-        elif exec_subtab == "Execution Strategies":
-            st.subheader("Execution Strategies")
-
-            exec_strategy = ExecutionStrategy()
-
-            bond_ids = [b.bond_id for b in bonds[:10]]
-            selected_id = st.selectbox("Select Bond", bond_ids, key="exec_bond")
-            selected_bond = next(b for b in bonds if b.bond_id == selected_id)
-
-            strategy_type = st.selectbox("Strategy", ["TWAP", "VWAP", "Optimal Execution"], key="exec_type")
-            total_quantity = st.number_input("Total Quantity", 100, 10000, 1000, step=100)
-
-            if strategy_type == "TWAP":
-                start_time = datetime.now()
-                end_time = start_time + timedelta(hours=4)
-                num_intervals = st.slider("Number of Intervals", 5, 20, 10)
-
-                twap_result = exec_strategy.twap_execution(total_quantity, start_time, end_time, num_intervals)
-
-                st.write("**TWAP Execution Schedule:**")
-                schedule_df = pd.DataFrame(twap_result["schedule"])
-                st.dataframe(schedule_df[["interval", "time", "quantity", "cumulative_quantity"]], use_container_width=True)
-
-            elif strategy_type == "Optimal Execution":
-                urgency = st.slider("Urgency", 0.0, 1.0, 0.5, step=0.1)
-                volatility = st.slider("Volatility", 0.001, 0.05, 0.01, step=0.001)
-
-                opt_result = exec_strategy.optimal_execution(selected_bond, total_quantity, urgency, volatility)
-
-                st.write("**Optimal Execution Schedule:**")
-                schedule_df = pd.DataFrame(opt_result["schedule"])
-                st.dataframe(schedule_df, use_container_width=True)
-
-        elif exec_subtab == "Correlation Analysis":
-            st.subheader("Correlation Analysis")
-
-            corr_analyzer = CorrelationAnalyzer(valuator)
-
-            corr_result = corr_analyzer.calculate_correlation_matrix(bonds)
-
-            st.metric("Average Correlation", f"{corr_result['average_correlation']:.3f}")
-            st.metric("Diversification Ratio", f"{corr_result['diversification_ratio']:.3f}")
-
-            # Correlation heatmap
-            corr_df = corr_result["correlation_dataframe"]
-            fig_corr = px.imshow(
-                corr_df.values,
-                labels=dict(x="Bond", y="Bond", color="Correlation"),
-                x=corr_df.columns,
-                y=corr_df.index,
-                title="Bond Correlation Matrix",
-                color_continuous_scale="RdBu",
-            )
-            st.plotly_chart(fig_corr, use_container_width=True)
-
-            # Diversification metrics
-            st.subheader("Portfolio Diversification Metrics")
-            div_metrics = corr_analyzer.portfolio_diversification_metrics(bonds)
-
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Effective Positions", f"{div_metrics['effective_positions']:.2f}")
-            with col2:
-                st.metric("Herfindahl Index", f"{div_metrics['herfindahl_index']:.4f}")
-            with col3:
-                st.metric("Diversification Benefit", format_percentage(div_metrics["diversification_benefit_pct"]))
-
-        elif exec_subtab == "Floating Rate Bonds":
-            st.subheader("Floating Rate Bond Analysis")
-
-            floating_bonds = [b for b in bonds if b.bond_type == BondType.FLOATING_RATE]
-
-            if floating_bonds:
-                fr_pricer = FloatingRateBondPricer(valuator)
-
-                bond_ids = [b.bond_id for b in floating_bonds]
-                selected_id = st.selectbox("Select Floating Rate Bond", bond_ids, key="fr_bond")
-                selected_bond = next(b for b in floating_bonds if b.bond_id == selected_id)
-
-                next_reset = st.date_input("Next Reset Date", value=datetime.now().date() + timedelta(days=182))
-                spread = st.slider("Spread (bps)", -50, 200, 0, step=5) / 10000
-
-                fr_result = fr_pricer.price_floating_rate_bond(
-                    selected_bond, datetime.combine(next_reset, datetime.min.time()), spread=spread
-                )
-
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("Clean Price", format_currency(fr_result["clean_price"]))
-                    st.metric("Dirty Price", format_currency(fr_result["dirty_price"]))
-                with col2:
-                    st.metric("Next Coupon Rate", format_percentage(fr_result["next_coupon_rate"]))
-                    st.metric("Reference Rate", format_percentage(fr_result["reference_rate"]))
-                with col3:
-                    st.metric("Price to Par", f"{fr_result['price_to_par']:.4f}")
-                    st.metric("Accrued Interest", format_currency(fr_result["accrued_interest"]))
-
-                # Discount Margin
-                dm_result = fr_pricer.calculate_discount_margin(
-                    selected_bond, selected_bond.current_price, datetime.combine(next_reset, datetime.min.time())
-                )
-                if "error" not in dm_result:
-                    st.metric("Discount Margin", f"{dm_result['discount_margin_bps']:.2f} bps")
-            else:
-                st.info("No floating rate bonds found. Generate bonds with FLOATING_RATE type.")
+                    # Discount Margin
+                    dm_result = fr_pricer.calculate_discount_margin(
+                        selected_bond, selected_bond.current_price, datetime.combine(next_reset, datetime.min.time())
+                    )
+                    if "error" not in dm_result:
+                        st.metric("Discount Margin", f"{dm_result['discount_margin_bps']:.2f} bps")
+                else:
+                    st.info("No floating rate bonds found. Generate bonds with FLOATING_RATE type.")
+        except Exception as e:
+            st.error(f"Error in backtesting/execution tab: {e}")
 
     # Tab 12: Advanced ML & AI
     with tab12:
@@ -1083,297 +1132,360 @@ def main():
             horizontal=True,
         )
 
-        if adv_ml_subtab == "Ensemble ML":
-            st.subheader("Advanced Ensemble Machine Learning")
+        try:
+            if adv_ml_subtab == "Ensemble ML":
+                st.subheader("Advanced Ensemble Machine Learning")
 
-            advanced_ml = AdvancedMLBondAdjuster(valuator)
+                try:
+                    advanced_ml = AdvancedMLBondAdjuster(valuator)
 
-            if st.button("Train Ensemble Model", key="train_ensemble"):
-                with st.spinner("Training ensemble (this may take a minute)..."):
+                    if st.button("Train Ensemble Model", key="train_ensemble"):
+                        with st.spinner("Training ensemble (this may take a minute)..."):
+                            try:
+                                ensemble_result = advanced_ml.train_ensemble(bonds, test_size=0.2, random_state=42)
+
+                                st.success("Ensemble model trained!")
+
+                                st.subheader("Model Performance Comparison")
+                                model_df = pd.DataFrame(
+                                    [
+                                        {
+                                            "Model": name,
+                                            "Test R²": f"{metrics['test_r2']:.4f}",
+                                            "Test RMSE": f"{metrics['test_rmse']:.4f}",
+                                        }
+                                        for name, metrics in ensemble_result["individual_models"].items()
+                                    ]
+                                )
+                                model_df.loc[len(model_df)] = {
+                                    "Model": "Ensemble (Stacking)",
+                                    "Test R²": f"{ensemble_result['ensemble_metrics']['test_r2']:.4f}",
+                                    "Test RMSE": f"{ensemble_result['ensemble_metrics']['test_rmse']:.4f}",
+                                }
+                                st.dataframe(model_df, use_container_width=True)
+
+                                st.metric("Ensemble Improvement", f"{ensemble_result['improvement_over_best']:.4f} R²")
+
+                                # Feature importance
+                                st.subheader("Feature Importance (Explainable AI)")
+                                importance = advanced_ml.get_feature_importance_explained()
+                                if "sorted" in importance:
+                                    top_features = list(importance["sorted"].items())[:10]
+                                    feature_df = pd.DataFrame(top_features, columns=["Feature", "Importance"])
+                                    fig_importance = px.bar(
+                                        feature_df, x="Feature", y="Importance", title="Top 10 Most Important Features"
+                                    )
+                                    st.plotly_chart(fig_importance, use_container_width=True)
+                            except Exception as e:
+                                st.error(f"Training error: {e}")
+                                st.info(
+                                    "ML features may require scikit-learn, xgboost, lightgbm, or catboost. Some libraries may not be available due to dependency issues."
+                                )
+
+                    # Prediction with uncertainty
+                    st.subheader("Prediction with Uncertainty Quantification")
+                    bond_ids = [b.bond_id for b in bonds[:10]]
+                    selected_id = st.selectbox("Select Bond", bond_ids, key="uncertainty_bond")
+                    selected_bond = next(b for b in bonds if b.bond_id == selected_id)
+
+                    if advanced_ml.is_trained:
+                        try:
+                            uncertainty_result = advanced_ml.predict_with_uncertainty(selected_bond)
+
+                            col1, col2, col3 = st.columns(3)
+                            with col1:
+                                st.metric("ML-Adjusted Value", format_currency(uncertainty_result["mean_ml_value"]))
+                            with col2:
+                                st.metric(
+                                    "Lower Bound (95% CI)", format_currency(uncertainty_result["confidence_interval_lower"])
+                                )
+                            with col3:
+                                st.metric(
+                                    "Upper Bound (95% CI)", format_currency(uncertainty_result["confidence_interval_upper"])
+                                )
+                                st.metric("Uncertainty %", format_percentage(uncertainty_result["uncertainty_pct"]))
+                        except Exception as e:
+                            st.error(f"Error in prediction: {e}")
+                    else:
+                        st.info("Train the ensemble model first to see predictions with uncertainty quantification.")
+                except Exception as e:
+                    st.error(f"Error initializing Advanced ML: {e}")
+                    st.info("Advanced ML features require scikit-learn. Ensure it's installed: pip install scikit-learn")
+
+            elif adv_ml_subtab == "AutoML":
+                st.subheader("Automated Machine Learning (AutoML)")
+                st.write("Automatically selects best model and hyperparameters")
+
+                try:
+                    automl = AutoMLBondAdjuster(valuator)
+
+                    if st.button("Run AutoML", key="run_automl"):
+                        with st.spinner("Running AutoML (evaluating multiple models)..."):
+                            try:
+                                automl_result = automl.automated_model_selection(bonds, max_evaluation_time=300)
+
+                                st.success(f"Best model selected: {automl_result['best_model']}")
+
+                                col1, col2 = st.columns(2)
+                                with col1:
+                                    st.metric("Best Model", automl_result["best_model"])
+                                    st.metric("Best Score (R²)", f"{automl_result['best_score']:.4f}")
+                                with col2:
+                                    st.write("**Best Hyperparameters:**")
+                                    for param, value in automl_result["best_params"].items():
+                                        st.write(f"- {param}: {value}")
+
+                                # Model comparison
+                                st.subheader("Model Comparison")
+                                comparison_df = pd.DataFrame(
+                                    [
+                                        {"Model": name, "R² Score": f"{score:.4f}"}
+                                        for name, score in automl_result["all_models"].items()
+                                    ]
+                                )
+                                fig_comparison = px.bar(
+                                    comparison_df, x="Model", y="R² Score", title="AutoML Model Comparison"
+                                )
+                                st.plotly_chart(fig_comparison, use_container_width=True)
+                            except Exception as e:
+                                st.error(f"AutoML error: {e}")
+                                st.info("AutoML requires scikit-learn and may require additional ML libraries.")
+                except Exception as e:
+                    st.error(f"Error initializing AutoML: {e}")
+
+            elif adv_ml_subtab == "Explainable AI":
+                st.subheader("Explainable AI - Model Interpretability")
+
+                try:
+                    advanced_ml = AdvancedMLBondAdjuster(valuator)
+
+                    if not advanced_ml.is_trained:
+                        if st.button("Train Model for Explanation", key="train_explain"):
+                            with st.spinner("Training model..."):
+                                try:
+                                    advanced_ml.train_ensemble(bonds, test_size=0.2)
+                                except Exception as e:
+                                    st.error(f"Training error: {e}")
+
+                    if advanced_ml.is_trained:
+                        bond_ids = [b.bond_id for b in bonds]
+                        selected_id = st.selectbox("Select Bond", bond_ids, key="explain_bond")
+                        selected_bond = next(b for b in bonds if b.bond_id == selected_id)
+
+                        try:
+                            explain_result = advanced_ml.explain_prediction(selected_bond)
+
+                            st.subheader(f"Prediction Explanation for {selected_bond.bond_id}")
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                st.metric("Theoretical Value", format_currency(explain_result["theoretical_fair_value"]))
+                                st.metric("ML-Adjusted Value", format_currency(explain_result["ml_adjusted_value"]))
+                                st.metric("Adjustment Factor", f"{explain_result['adjustment_factor']:.4f}")
+
+                            with col2:
+                                st.write("**Top 5 Feature Drivers:**")
+                                for feature, contribution in explain_result["top_drivers"]:
+                                    st.write(f"- **{feature}**: {contribution:.4f}")
+                        except Exception as e:
+                            st.error(f"Error explaining prediction: {e}")
+                    else:
+                        st.info("Train the model first to see explainable AI features.")
+                except Exception as e:
+                    st.error(f"Error in Explainable AI: {e}")
+
+            elif adv_ml_subtab == "Tail Risk":
+                st.subheader("Advanced Tail Risk Analysis (CVaR, Expected Shortfall)")
+
+                try:
+                    tail_risk = TailRiskAnalyzer(valuator)
+
+                    confidence_level = st.slider("Confidence Level", 0.90, 0.999, 0.95, step=0.01)
+
                     try:
-                        ensemble_result = advanced_ml.train_ensemble(bonds, test_size=0.2, random_state=42)
+                        cvar_result = tail_risk.calculate_cvar(bonds, confidence_level=confidence_level)
 
-                        st.success("Ensemble model trained!")
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("VaR", format_currency(cvar_result["var_value"]))
+                            st.metric("VaR %", format_percentage(cvar_result["var_pct"]))
+                        with col2:
+                            st.metric("CVaR (Expected Shortfall)", format_currency(cvar_result["cvar_value"]))
+                            st.metric("CVaR %", format_percentage(cvar_result["cvar_pct"]))
+                        with col3:
+                            st.metric("Tail Ratio (CVaR/VaR)", f"{cvar_result['tail_ratio']:.3f}")
+                            st.write(f"*Higher ratio = heavier tail*")
 
-                        st.subheader("Model Performance Comparison")
-                        model_df = pd.DataFrame(
+                        # Multiple confidence levels
+                        st.subheader("Expected Shortfall at Multiple Levels")
+                        es_levels = tail_risk.calculate_expected_shortfall_multiple_levels(
+                            bonds, confidence_levels=[0.90, 0.95, 0.99, 0.999]
+                        )
+
+                        es_df = pd.DataFrame(
                             [
                                 {
-                                    "Model": name,
-                                    "Test R²": f"{metrics['test_r2']:.4f}",
-                                    "Test RMSE": f"{metrics['test_rmse']:.4f}",
+                                    "Confidence Level": level,
+                                    "Expected Shortfall %": f"{data['es_pct']:.2f}%",
+                                    "VaR %": f"{data['var_pct']:.2f}%",
+                                    "Tail Ratio": f"{data['tail_ratio']:.3f}",
                                 }
-                                for name, metrics in ensemble_result["individual_models"].items()
+                                for level, data in es_levels.items()
                             ]
                         )
-                        model_df.loc[len(model_df)] = {
-                            "Model": "Ensemble (Stacking)",
-                            "Test R²": f"{ensemble_result['ensemble_metrics']['test_r2']:.4f}",
-                            "Test RMSE": f"{ensemble_result['ensemble_metrics']['test_rmse']:.4f}",
-                        }
-                        st.dataframe(model_df, use_container_width=True)
-
-                        st.metric("Ensemble Improvement", f"{ensemble_result['improvement_over_best']:.4f} R²")
-
-                        # Feature importance
-                        st.subheader("Feature Importance (Explainable AI)")
-                        importance = advanced_ml.get_feature_importance_explained()
-                        if "sorted" in importance:
-                            top_features = list(importance["sorted"].items())[:10]
-                            feature_df = pd.DataFrame(top_features, columns=["Feature", "Importance"])
-                            fig_importance = px.bar(
-                                feature_df, x="Feature", y="Importance", title="Top 10 Most Important Features"
-                            )
-                            st.plotly_chart(fig_importance, use_container_width=True)
+                        st.dataframe(es_df, use_container_width=True)
                     except Exception as e:
-                        st.error(f"Training error: {e}")
+                        st.error(f"Error calculating tail risk: {e}")
+                except Exception as e:
+                    st.error(f"Error initializing Tail Risk Analyzer: {e}")
 
-            # Prediction with uncertainty
-            st.subheader("Prediction with Uncertainty Quantification")
-            bond_ids = [b.bond_id for b in bonds[:10]]
-            selected_id = st.selectbox("Select Bond", bond_ids, key="uncertainty_bond")
-            selected_bond = next(b for b in bonds if b.bond_id == selected_id)
+            elif adv_ml_subtab == "Regime Detection":
+                st.subheader("Market Regime Detection & Adaptive Models")
 
-            if advanced_ml.is_trained:
-                uncertainty_result = advanced_ml.predict_with_uncertainty(selected_bond)
+                try:
+                    regime_detector = RegimeDetector(valuator)
 
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("ML-Adjusted Value", format_currency(uncertainty_result["mean_ml_value"]))
-                with col2:
-                    st.metric("Lower Bound (95% CI)", format_currency(uncertainty_result["confidence_interval_lower"]))
-                with col3:
-                    st.metric("Upper Bound (95% CI)", format_currency(uncertainty_result["confidence_interval_upper"]))
-                    st.metric("Uncertainty %", format_percentage(uncertainty_result["uncertainty_pct"]))
+                    num_regimes = st.slider("Number of Regimes", 2, 5, 3)
 
-        elif adv_ml_subtab == "AutoML":
-            st.subheader("Automated Machine Learning (AutoML)")
-            st.write("Automatically selects best model and hyperparameters")
-
-            automl = AutoMLBondAdjuster(valuator)
-
-            if st.button("Run AutoML", key="run_automl"):
-                with st.spinner("Running AutoML (evaluating multiple models)..."):
                     try:
-                        automl_result = automl.automated_model_selection(bonds, max_evaluation_time=300)
+                        with st.spinner("Detecting market regimes..."):
+                            regime_result = regime_detector.detect_regimes(bonds, num_regimes=num_regimes)
 
-                        st.success(f"Best model selected: {automl_result['best_model']}")
-
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            st.metric("Best Model", automl_result["best_model"])
-                            st.metric("Best Score (R²)", f"{automl_result['best_score']:.4f}")
-                        with col2:
-                            st.write("**Best Hyperparameters:**")
-                            for param, value in automl_result["best_params"].items():
-                                st.write(f"- {param}: {value}")
-
-                        # Model comparison
-                        st.subheader("Model Comparison")
-                        comparison_df = pd.DataFrame(
+                        st.subheader("Detected Regimes")
+                        regime_df = pd.DataFrame(
                             [
-                                {"Model": name, "R² Score": f"{score:.4f}"}
-                                for name, score in automl_result["all_models"].items()
+                                {
+                                    "Regime": name,
+                                    "Num Bonds": data["num_bonds"],
+                                    "Avg YTM": format_percentage(data["avg_ytm"]),
+                                    "Avg Spread (bps)": f"{data['avg_spread_bps']:.1f}",
+                                    "Avg Duration": f"{data['avg_duration']:.2f}",
+                                    "Regime Type": data["regime_type"],
+                                }
+                                for name, data in regime_result["regime_analysis"].items()
                             ]
                         )
-                        fig_comparison = px.bar(comparison_df, x="Model", y="R² Score", title="AutoML Model Comparison")
-                        st.plotly_chart(fig_comparison, use_container_width=True)
+                        st.dataframe(regime_df, use_container_width=True)
+
+                        # Regime-dependent pricing
+                        st.subheader("Regime-Dependent Pricing")
+                        bond_ids = [b.bond_id for b in bonds]
+                        selected_id = st.selectbox("Select Bond", bond_ids, key="regime_bond")
+                        selected_bond = next(b for b in bonds if b.bond_id == selected_id)
+
+                        regime_pricing = regime_detector.regime_dependent_pricing(selected_bond)
+
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("Current Regime", f"Regime {regime_pricing['current_regime']}")
+                            st.metric("Base Fair Value", format_currency(regime_pricing["base_fair_value"]))
+                        with col2:
+                            st.metric("Regime Adjustment", format_percentage(regime_pricing["adjustment_pct"]))
+                            st.metric("Regime-Adjusted Value", format_currency(regime_pricing["regime_adjusted_value"]))
                     except Exception as e:
-                        st.error(f"AutoML error: {e}")
+                        st.error(f"Error in regime detection: {e}")
+                except Exception as e:
+                    st.error(f"Error initializing Regime Detector: {e}")
 
-        elif adv_ml_subtab == "Explainable AI":
-            st.subheader("Explainable AI - Model Interpretability")
+            elif adv_ml_subtab == "Alternative Data":
+                st.subheader("Alternative Data Integration")
+                st.write("ESG factors, sentiment analysis, economic indicators")
 
-            advanced_ml = AdvancedMLBondAdjuster(valuator)
+                try:
+                    alt_data = AlternativeDataAnalyzer(valuator)
 
-            if not advanced_ml.is_trained:
-                if st.button("Train Model for Explanation", key="train_explain"):
-                    with st.spinner("Training model..."):
-                        advanced_ml.train_ensemble(bonds, test_size=0.2)
-
-            if advanced_ml.is_trained:
-                bond_ids = [b.bond_id for b in bonds]
-                selected_id = st.selectbox("Select Bond", bond_ids, key="explain_bond")
-                selected_bond = next(b for b in bonds if b.bond_id == selected_id)
-
-                explain_result = advanced_ml.explain_prediction(selected_bond)
-
-                st.subheader(f"Prediction Explanation for {selected_bond.bond_id}")
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("Theoretical Value", format_currency(explain_result["theoretical_fair_value"]))
-                    st.metric("ML-Adjusted Value", format_currency(explain_result["ml_adjusted_value"]))
-                    st.metric("Adjustment Factor", f"{explain_result['adjustment_factor']:.4f}")
-
-                with col2:
-                    st.write("**Top 5 Feature Drivers:**")
-                    for feature, contribution in explain_result["top_drivers"]:
-                        st.write(f"- **{feature}**: {contribution:.4f}")
-
-        elif adv_ml_subtab == "Tail Risk":
-            st.subheader("Advanced Tail Risk Analysis (CVaR, Expected Shortfall)")
-
-            tail_risk = TailRiskAnalyzer(valuator)
-
-            confidence_level = st.slider("Confidence Level", 0.90, 0.999, 0.95, step=0.01)
-
-            cvar_result = tail_risk.calculate_cvar(bonds, confidence_level=confidence_level)
-
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("VaR", format_currency(cvar_result["var_value"]))
-                st.metric("VaR %", format_percentage(cvar_result["var_pct"]))
-            with col2:
-                st.metric("CVaR (Expected Shortfall)", format_currency(cvar_result["cvar_value"]))
-                st.metric("CVaR %", format_percentage(cvar_result["cvar_pct"]))
-            with col3:
-                st.metric("Tail Ratio (CVaR/VaR)", f"{cvar_result['tail_ratio']:.3f}")
-                st.write(f"*Higher ratio = heavier tail*")
-
-            # Multiple confidence levels
-            st.subheader("Expected Shortfall at Multiple Levels")
-            es_levels = tail_risk.calculate_expected_shortfall_multiple_levels(
-                bonds, confidence_levels=[0.90, 0.95, 0.99, 0.999]
-            )
-
-            es_df = pd.DataFrame(
-                [
-                    {
-                        "Confidence Level": level,
-                        "Expected Shortfall %": f"{data['es_pct']:.2f}%",
-                        "VaR %": f"{data['var_pct']:.2f}%",
-                        "Tail Ratio": f"{data['tail_ratio']:.3f}",
-                    }
-                    for level, data in es_levels.items()
-                ]
-            )
-            st.dataframe(es_df, use_container_width=True)
-
-        elif adv_ml_subtab == "Regime Detection":
-            st.subheader("Market Regime Detection & Adaptive Models")
-
-            regime_detector = RegimeDetector(valuator)
-
-            num_regimes = st.slider("Number of Regimes", 2, 5, 3)
-
-            with st.spinner("Detecting market regimes..."):
-                regime_result = regime_detector.detect_regimes(bonds, num_regimes=num_regimes)
-
-            st.subheader("Detected Regimes")
-            regime_df = pd.DataFrame(
-                [
-                    {
-                        "Regime": name,
-                        "Num Bonds": data["num_bonds"],
-                        "Avg YTM": format_percentage(data["avg_ytm"]),
-                        "Avg Spread (bps)": f"{data['avg_spread_bps']:.1f}",
-                        "Avg Duration": f"{data['avg_duration']:.2f}",
-                        "Regime Type": data["regime_type"],
-                    }
-                    for name, data in regime_result["regime_analysis"].items()
-                ]
-            )
-            st.dataframe(regime_df, use_container_width=True)
-
-            # Regime-dependent pricing
-            st.subheader("Regime-Dependent Pricing")
-            bond_ids = [b.bond_id for b in bonds]
-            selected_id = st.selectbox("Select Bond", bond_ids, key="regime_bond")
-            selected_bond = next(b for b in bonds if b.bond_id == selected_id)
-
-            regime_pricing = regime_detector.regime_dependent_pricing(selected_bond)
-
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Current Regime", f"Regime {regime_pricing['current_regime']}")
-                st.metric("Base Fair Value", format_currency(regime_pricing["base_fair_value"]))
-            with col2:
-                st.metric("Regime Adjustment", format_percentage(regime_pricing["adjustment_pct"]))
-                st.metric("Regime-Adjusted Value", format_currency(regime_pricing["regime_adjusted_value"]))
-
-        elif adv_ml_subtab == "Alternative Data":
-            st.subheader("Alternative Data Integration")
-            st.write("ESG factors, sentiment analysis, economic indicators")
-
-            alt_data = AlternativeDataAnalyzer(valuator)
-
-            data_type = st.selectbox(
-                "Data Type", ["ESG Analysis", "Sentiment Analysis", "Economic Factors"], key="alt_data_type"
-            )
-
-            bond_ids = [b.bond_id for b in bonds]
-            selected_id = st.selectbox("Select Bond", bond_ids, key="alt_data_bond")
-            selected_bond = next(b for b in bonds if b.bond_id == selected_id)
-
-            if data_type == "ESG Analysis":
-                esg_result = alt_data.calculate_esg_score(selected_bond)
-
-                st.subheader(f"ESG Analysis for {selected_bond.bond_id}")
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("Overall ESG Score", f"{esg_result['esg_score']:.1f}/100")
-                    st.metric("ESG Rating", esg_result["esg_rating"])
-                with col2:
-                    st.metric("Environmental Score", f"{esg_result['environmental_score']}/100")
-                    st.metric("Social Score", f"{esg_result['social_score']}/100")
-                    st.metric("Governance Score", f"{esg_result['governance_score']}/100")
-
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("Base Fair Value", format_currency(esg_result["base_fair_value"]))
-                with col2:
-                    st.metric("ESG-Adjusted Value", format_currency(esg_result["esg_adjusted_value"]))
-                    st.metric("ESG Impact", format_percentage(esg_result["esg_impact_pct"]))
-
-                # ESG breakdown
-                fig_esg = go.Figure()
-                fig_esg.add_trace(
-                    go.Bar(
-                        x=["Environmental", "Social", "Governance"],
-                        y=[esg_result["environmental_score"], esg_result["social_score"], esg_result["governance_score"]],
-                        marker_color=["green", "blue", "purple"],
+                    data_type = st.selectbox(
+                        "Data Type", ["ESG Analysis", "Sentiment Analysis", "Economic Factors"], key="alt_data_type"
                     )
-                )
-                fig_esg.update_layout(title="ESG Score Breakdown", yaxis_title="Score (0-100)")
-                st.plotly_chart(fig_esg, use_container_width=True)
 
-            elif data_type == "Sentiment Analysis":
-                sentiment_score = st.slider("News Sentiment (-1 to 1)", -1.0, 1.0, 0.0, step=0.1)
+                    bond_ids = [b.bond_id for b in bonds]
+                    selected_id = st.selectbox("Select Bond", bond_ids, key="alt_data_bond")
+                    selected_bond = next(b for b in bonds if b.bond_id == selected_id)
 
-                sentiment_result = alt_data.sentiment_analysis(selected_bond, sentiment_score)
+                    try:
+                        if data_type == "ESG Analysis":
+                            esg_result = alt_data.calculate_esg_score(selected_bond)
 
-                st.subheader("Sentiment Impact Analysis")
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("Sentiment Score", f"{sentiment_result['news_sentiment']:.2f}")
-                    st.metric("Sentiment Label", sentiment_result["sentiment_label"])
-                with col2:
-                    st.metric("Base Fair Value", format_currency(sentiment_result["base_fair_value"]))
-                with col3:
-                    st.metric("Sentiment-Adjusted Value", format_currency(sentiment_result["sentiment_adjusted_value"]))
-                    st.metric("Impact %", format_percentage(sentiment_result["sentiment_impact_pct"]))
+                            st.subheader(f"ESG Analysis for {selected_bond.bond_id}")
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                st.metric("Overall ESG Score", f"{esg_result['esg_score']:.1f}/100")
+                                st.metric("ESG Rating", esg_result["esg_rating"])
+                            with col2:
+                                st.metric("Environmental Score", f"{esg_result['environmental_score']}/100")
+                                st.metric("Social Score", f"{esg_result['social_score']}/100")
+                                st.metric("Governance Score", f"{esg_result['governance_score']}/100")
 
-            elif data_type == "Economic Factors":
-                st.subheader("Economic Factor Impact")
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                st.metric("Base Fair Value", format_currency(esg_result["base_fair_value"]))
+                            with col2:
+                                st.metric("ESG-Adjusted Value", format_currency(esg_result["esg_adjusted_value"]))
+                                st.metric("ESG Impact", format_percentage(esg_result["esg_impact_pct"]))
 
-                inflation = st.slider("Inflation Expectation (%)", 0.0, 10.0, 2.0, step=0.1) / 100
-                gdp = st.slider("GDP Growth (%)", -5.0, 10.0, 3.0, step=0.1) / 100
-                unemployment = st.slider("Unemployment Rate (%)", 2.0, 15.0, 4.0, step=0.1) / 100
+                            # ESG breakdown
+                            fig_esg = go.Figure()
+                            fig_esg.add_trace(
+                                go.Bar(
+                                    x=["Environmental", "Social", "Governance"],
+                                    y=[
+                                        esg_result["environmental_score"],
+                                        esg_result["social_score"],
+                                        esg_result["governance_score"],
+                                    ],
+                                    marker_color=["green", "blue", "purple"],
+                                )
+                            )
+                            fig_esg.update_layout(title="ESG Score Breakdown", yaxis_title="Score (0-100)")
+                            st.plotly_chart(fig_esg, use_container_width=True)
 
-                econ_result = alt_data.economic_factors_impact([selected_bond], inflation, gdp, unemployment)
+                        elif data_type == "Sentiment Analysis":
+                            sentiment_score = st.slider("News Sentiment (-1 to 1)", -1.0, 1.0, 0.0, step=0.1)
 
-                if econ_result["bond_impacts"]:
-                    impact = econ_result["bond_impacts"][0]
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.metric("Inflation Impact", format_percentage(impact["inflation_impact_pct"]))
-                    with col2:
-                        st.metric("GDP Impact", format_percentage(impact["gdp_impact_pct"]))
-                    with col3:
-                        st.metric("Unemployment Impact", format_percentage(impact["unemployment_impact_pct"]))
+                            sentiment_result = alt_data.sentiment_analysis(selected_bond, sentiment_score)
 
-                    st.metric("Total Economic Impact", format_percentage(impact["total_impact_pct"]))
-                    st.metric("Adjusted Value", format_currency(impact["adjusted_value"]))
+                            st.subheader("Sentiment Impact Analysis")
+                            col1, col2, col3 = st.columns(3)
+                            with col1:
+                                st.metric("Sentiment Score", f"{sentiment_result['news_sentiment']:.2f}")
+                                st.metric("Sentiment Label", sentiment_result["sentiment_label"])
+                            with col2:
+                                st.metric("Base Fair Value", format_currency(sentiment_result["base_fair_value"]))
+                            with col3:
+                                st.metric(
+                                    "Sentiment-Adjusted Value", format_currency(sentiment_result["sentiment_adjusted_value"])
+                                )
+                                st.metric("Impact %", format_percentage(sentiment_result["sentiment_impact_pct"]))
+
+                        elif data_type == "Economic Factors":
+                            st.subheader("Economic Factor Impact")
+
+                            inflation = st.slider("Inflation Expectation (%)", 0.0, 10.0, 2.0, step=0.1) / 100
+                            gdp = st.slider("GDP Growth (%)", -5.0, 10.0, 3.0, step=0.1) / 100
+                            unemployment = st.slider("Unemployment Rate (%)", 2.0, 15.0, 4.0, step=0.1) / 100
+
+                            econ_result = alt_data.economic_factors_impact([selected_bond], inflation, gdp, unemployment)
+
+                            if econ_result["bond_impacts"]:
+                                impact = econ_result["bond_impacts"][0]
+                                col1, col2, col3 = st.columns(3)
+                                with col1:
+                                    st.metric("Inflation Impact", format_percentage(impact["inflation_impact_pct"]))
+                                with col2:
+                                    st.metric("GDP Impact", format_percentage(impact["gdp_impact_pct"]))
+                                with col3:
+                                    st.metric("Unemployment Impact", format_percentage(impact["unemployment_impact_pct"]))
+
+                                st.metric("Total Economic Impact", format_percentage(impact["total_impact_pct"]))
+                                st.metric("Adjusted Value", format_currency(impact["adjusted_value"]))
+                    except Exception as e:
+                        st.error(f"Error in Alternative Data analysis: {e}")
+                except Exception as e:
+                    st.error(f"Error initializing Alternative Data Analyzer: {e}")
+        except Exception as e:
+            st.error(f"Error in Advanced ML & AI tab: {e}")
+            st.info(
+                "Some ML features may require additional dependencies. Check that scikit-learn is installed: pip install scikit-learn"
+            )
 
 
 if __name__ == "__main__":
