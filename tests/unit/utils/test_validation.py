@@ -223,6 +223,91 @@ class TestBondInputValidation:
 class TestValidationIntegration:
     """Integration tests for validation utilities"""
 
+    def test_validate_positive_zero(self):
+        """Test validating zero (should fail)"""
+        from bondtrader.utils.validation import validate_positive
+
+        with pytest.raises(ValueError):
+            validate_positive(0, "value")
+
+    def test_validate_percentage_above_one(self):
+        """Test validating percentage above 1"""
+        from bondtrader.utils.validation import validate_percentage
+
+        # validate_percentage allows values 0-100, so 1.5 is valid (150%)
+        # This should not raise an error
+        validate_percentage(1.5, "percentage")
+        
+        # Values above 100 should raise
+        with pytest.raises(ValueError):
+            validate_percentage(150.0, "percentage")
+
+    def test_validate_probability_negative(self):
+        """Test validating negative probability"""
+        from bondtrader.utils.validation import validate_probability
+
+        with pytest.raises(ValueError):
+            validate_probability(-0.1, "probability")
+
+    def test_validate_weights_sum_not_one(self):
+        """Test validating weights that don't sum to 1"""
+        from bondtrader.utils.validation import validate_weights_sum
+
+        with pytest.raises(ValueError):
+            validate_weights_sum([0.3, 0.4, 0.2], expected_sum=1.0)  # Sums to 0.9
+
+    def test_validate_list_not_empty_empty_list(self):
+        """Test validating empty list"""
+        from bondtrader.utils.validation import validate_list_not_empty
+
+        with pytest.raises(ValueError):
+            validate_list_not_empty([], "bonds")
+
+    def test_validate_file_path_absolute_not_allowed(self):
+        """Test validating absolute path when not allowed"""
+        from bondtrader.utils.validation import validate_file_path
+
+        with pytest.raises(ValueError):
+            validate_file_path("/absolute/path/file.txt", allow_absolute=False)
+
+    def test_validate_file_path_traversal_attempt(self):
+        """Test validating file path with traversal attempt"""
+        from bondtrader.utils.validation import validate_file_path
+
+        with pytest.raises(ValueError):
+            validate_file_path("../../../etc/passwd", allow_absolute=False)
+
+    def test_validate_file_path_allowed_extensions(self):
+        """Test validating file path with allowed extensions"""
+        from bondtrader.utils.validation import validate_file_path
+
+        # Should pass with allowed extension
+        validate_file_path("test.json", allowed_extensions=[".json", ".csv"])
+        
+        # Should fail with disallowed extension
+        with pytest.raises(ValueError):
+            validate_file_path("test.exe", allowed_extensions=[".json", ".csv"])
+
+    def test_sanitize_file_path(self):
+        """Test sanitizing file path"""
+        from bondtrader.utils.validation import sanitize_file_path
+
+        # Should normalize path (simple case without traversal)
+        path = sanitize_file_path("test/file.txt")
+        assert isinstance(path, str)
+        
+        # Path with traversal will fail validation first
+        with pytest.raises(ValueError):
+            sanitize_file_path("test/../file.txt")
+
+    def test_validate_credit_rating_invalid_warns(self):
+        """Test validating invalid credit rating (warns but doesn't raise)"""
+        from bondtrader.utils.validation import validate_credit_rating
+        
+        # Should warn but not raise - just verify it doesn't crash
+        validate_credit_rating("INVALID", "rating")
+        # Test passes if no exception raised
+
     def test_combined_validations(self):
         """Test combining multiple validations"""
         weights = [0.3, 0.3, 0.4]

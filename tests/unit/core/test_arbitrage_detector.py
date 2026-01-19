@@ -63,7 +63,75 @@ def test_find_arbitrage_opportunities(sample_bonds, detector):
 
     assert isinstance(opportunities, list)
     # Should find opportunities if bonds are mispriced
-    assert len(opportunities) >= 0
+
+
+@pytest.mark.unit
+class TestArbitrageDetectorAdvanced:
+    """Advanced tests for ArbitrageDetector"""
+
+    @pytest.fixture
+    def detector(self):
+        """Create detector"""
+        return ArbitrageDetector(valuator=BondValuator())
+
+    @pytest.fixture
+    def sample_bonds(self):
+        """Create sample bonds"""
+        now = datetime.now()
+        return [
+            Bond(
+                bond_id="BOND-001",
+                bond_type=BondType.CORPORATE,
+                face_value=1000,
+                coupon_rate=5.0,
+                maturity_date=now + timedelta(days=1825),
+                issue_date=now - timedelta(days=365),
+                current_price=950,
+                credit_rating="BBB",
+                issuer="Test Corp",
+                frequency=2,
+            ),
+            Bond(
+                bond_id="BOND-002",
+                bond_type=BondType.CORPORATE,
+                face_value=1000,
+                coupon_rate=4.0,
+                maturity_date=now + timedelta(days=1825),
+                issue_date=now - timedelta(days=365),
+                current_price=1050,
+                credit_rating="A",
+                issuer="Test Corp 2",
+                frequency=2,
+            ),
+        ]
+
+    def test_compare_equivalent_bonds_by_type(self, detector, sample_bonds):
+        """Test comparing equivalent bonds by bond type"""
+        result = detector.compare_equivalent_bonds(sample_bonds, grouping_key="bond_type")
+        assert isinstance(result, list)
+
+    def test_compare_equivalent_bonds_by_rating(self, detector, sample_bonds):
+        """Test comparing equivalent bonds by credit rating"""
+        result = detector.compare_equivalent_bonds(sample_bonds, grouping_key="credit_rating")
+        assert isinstance(result, list)
+
+    def test_compare_equivalent_bonds_by_maturity(self, detector, sample_bonds):
+        """Test comparing equivalent bonds by maturity bucket"""
+        result = detector.compare_equivalent_bonds(sample_bonds, grouping_key="maturity_bucket")
+        assert isinstance(result, list)
+
+    def test_compare_equivalent_bonds_single_bond(self, detector, sample_bonds):
+        """Test comparing bonds when only one bond in group"""
+        result = detector.compare_equivalent_bonds([sample_bonds[0]], grouping_key="bond_type")
+        assert isinstance(result, list)
+
+    def test_find_arbitrage_opportunities_with_transaction_costs(self, detector, sample_bonds):
+        """Test finding opportunities with transaction costs"""
+        detector.include_transaction_costs = True
+        detector.transaction_costs = TransactionCostCalculator()
+        opportunities = detector.find_arbitrage_opportunities(sample_bonds)
+        assert isinstance(opportunities, list)
+        assert len(opportunities) >= 0
 
 
 def test_arbitrage_opportunity_structure(sample_bonds, detector):

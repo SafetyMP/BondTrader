@@ -105,3 +105,40 @@ class TestTraceDecorator:
 
         with pytest.raises(ValueError):
             test_func()
+
+    def test_track_trading_volume(self):
+        """Test tracking trading volume"""
+        metrics = get_metrics()
+        metrics.track_trading_volume(1000.0, bond_type="CORPORATE")
+        all_metrics = metrics.get_metrics()
+        assert all_metrics["business"]["total_trading_volume"] == 1000.0
+
+    def test_track_pnl(self):
+        """Test tracking profit and loss"""
+        metrics = get_metrics()
+        metrics.track_pnl(500.0, trade_id="TRADE-001")
+        all_metrics = metrics.get_metrics()
+        assert all_metrics["business"]["total_pnl"] == 500.0
+
+    def test_track_portfolio_value(self):
+        """Test tracking portfolio value"""
+        metrics = get_metrics()
+        metrics.track_portfolio_value(10000.0)
+        all_metrics = metrics.get_metrics()
+        assert all_metrics["business"]["current_portfolio_value"] == 10000.0
+
+    def test_track_risk_metric(self):
+        """Test tracking risk metric"""
+        metrics = get_metrics()
+        metrics.track_risk_metric("var_95", 150.0)
+        all_metrics = metrics.get_metrics()
+        assert all_metrics["business"]["risk_metrics"]["var_95"] == 150.0
+
+    def test_track_multiple_portfolio_values(self):
+        """Test tracking multiple portfolio values"""
+        metrics = get_metrics()
+        for i in range(1100):  # More than 1000 to test truncation
+            metrics.track_portfolio_value(10000.0 + i)
+        all_metrics = metrics.get_metrics()
+        # Should keep only last 1000
+        assert len(metrics._portfolio_values) <= 1000

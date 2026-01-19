@@ -84,3 +84,70 @@ def test_bond_years_since_issue():
 
     years = bond.years_since_issue
     assert abs(years - 2.0) < 0.1  # Approximately 2 years
+
+
+@pytest.mark.unit
+class TestBondClassifier:
+    """Test BondClassifier functionality"""
+
+    def test_classify_zero_coupon(self):
+        """Test classifying zero coupon bond"""
+        classifier = BondClassifier()
+        bond = Bond(
+            bond_id="ZERO-001",
+            bond_type=BondType.ZERO_COUPON,
+            face_value=1000,
+            coupon_rate=0.0,
+            maturity_date=datetime.now() + timedelta(days=1825),
+            issue_date=datetime.now() - timedelta(days=365),
+            current_price=900,
+        )
+        assert classifier.classify(bond) == BondType.ZERO_COUPON
+
+    def test_classify_treasury(self):
+        """Test classifying treasury bond"""
+        classifier = BondClassifier()
+        bond = Bond(
+            bond_id="TREASURY-001",
+            bond_type=BondType.TREASURY,
+            face_value=1000,
+            coupon_rate=3.0,
+            maturity_date=datetime.now() + timedelta(days=1825),
+            issue_date=datetime.now() - timedelta(days=365),
+            current_price=980,
+            credit_rating="AAA",
+            issuer="US Treasury",
+        )
+        assert classifier.classify(bond) == BondType.TREASURY
+
+    def test_classify_high_yield(self):
+        """Test classifying high yield bond"""
+        classifier = BondClassifier()
+        bond = Bond(
+            bond_id="HY-001",
+            bond_type=BondType.HIGH_YIELD,
+            face_value=1000,
+            coupon_rate=8.0,
+            maturity_date=datetime.now() + timedelta(days=1825),
+            issue_date=datetime.now() - timedelta(days=365),
+            current_price=950,
+            credit_rating="BB",
+        )
+        assert classifier.classify(bond) == BondType.HIGH_YIELD
+
+    def test_extract_features(self):
+        """Test extracting features from bonds"""
+        classifier = BondClassifier()
+        bonds = [
+            create_test_bond(bond_id="TEST-001"),
+            create_test_bond(bond_id="TEST-002"),
+        ]
+        features = classifier.extract_features(bonds)
+        assert features.shape[0] == 2
+        assert features.shape[1] == 8  # 8 features per bond
+
+    def test_extract_features_empty_list(self):
+        """Test extracting features from empty list"""
+        classifier = BondClassifier()
+        features = classifier.extract_features([])
+        assert features.shape[0] == 0

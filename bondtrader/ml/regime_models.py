@@ -22,8 +22,18 @@ class RegimeDetector:
     """
 
     def __init__(self, valuator: BondValuator = None):
-        """Initialize regime detector"""
-        self.valuator = valuator if valuator else BondValuator()
+        """
+        Initialize regime detector
+
+        Args:
+            valuator: Optional BondValuator instance. If None, gets from container.
+        """
+        if valuator is None:
+            from bondtrader.core.container import get_container
+
+            self.valuator = get_container().get_valuator()
+        else:
+            self.valuator = valuator
         self.regimes = None
         self.regime_model = None
 

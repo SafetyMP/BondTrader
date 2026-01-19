@@ -22,8 +22,18 @@ class LiquidityRiskEnhanced:
     """
 
     def __init__(self, valuator: BondValuator = None):
-        """Initialize enhanced liquidity risk analyzer"""
-        self.valuator = valuator if valuator else BondValuator()
+        """
+        Initialize enhanced liquidity risk analyzer
+
+        Args:
+            valuator: Optional BondValuator instance. If None, gets from container.
+        """
+        if valuator is None:
+            from bondtrader.core.container import get_container
+
+            self.valuator = get_container().get_valuator()
+        else:
+            self.valuator = valuator
 
     def calculate_bid_ask_spread(self, bond: Bond, base_spread: Optional[float] = None) -> Dict:
         """

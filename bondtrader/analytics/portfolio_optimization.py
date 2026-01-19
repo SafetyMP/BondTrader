@@ -18,12 +18,13 @@ try:
 except ImportError:
     HAS_CVXPY = False
 
+from bondtrader.core.base_analytics import AnalyticsBase
 from bondtrader.core.bond_models import Bond
 from bondtrader.core.bond_valuation import BondValuator
 from bondtrader.utils.utils import logger
 
 
-class PortfolioOptimizer:
+class PortfolioOptimizer(AnalyticsBase):
     """
     Portfolio optimization engine
     Implements Markowitz, Black-Litterman, risk parity, and other strategies
@@ -34,9 +35,9 @@ class PortfolioOptimizer:
         Initialize portfolio optimizer
 
         Args:
-            valuator: Bond valuator instance (optional, creates default if None)
+            valuator: Bond valuator instance (optional, gets from container if None)
         """
-        self.valuator = valuator if valuator else BondValuator()
+        super().__init__(valuator)
 
     def calculate_returns_and_covariance(
         self, bonds: List[Bond], lookback_periods: int = 252, method: str = "historical"

@@ -27,7 +27,12 @@ class FactorModel:
         Args:
             valuator: Bond valuator instance (optional, creates default if None)
         """
-        self.valuator = valuator if valuator else BondValuator()
+        if valuator is None:
+            from bondtrader.core.container import get_container
+
+            self.valuator = get_container().get_valuator()
+        else:
+            self.valuator = valuator
         self.factors = None
         self.factor_loadings = None
         self.scaler = StandardScaler()

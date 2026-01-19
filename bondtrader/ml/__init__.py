@@ -1,11 +1,47 @@
-"""Machine Learning modules for bond price adjustment"""
+"""
+Machine Learning modules for bond price adjustment
+
+ML Adjuster Hierarchy:
+- MLBondAdjuster: Basic ML adjuster with standard sklearn models
+- EnhancedMLBondAdjuster: Enhanced with hyperparameter tuning and cross-validation
+- AdvancedMLBondAdjuster: Advanced with deep learning, ensembles, and explainable AI
+"""
 
 from bondtrader.ml.automl import AutoMLBondAdjuster
 from bondtrader.ml.bayesian_optimization import BayesianOptimizer
 from bondtrader.ml.drift_detection import DriftDetector, ModelTuner
 from bondtrader.ml.ml_adjuster import MLBondAdjuster
-from bondtrader.ml.ml_adjuster_enhanced import EnhancedMLBondAdjuster
-from bondtrader.ml.ml_advanced import AdvancedMLBondAdjuster
+from bondtrader.ml.ml_adjuster_unified import MLBondAdjuster as UnifiedMLBondAdjuster
+from bondtrader.ml.training_framework import TrainingConfig, UnifiedTrainingFramework
+
+
+# Backward compatibility aliases for enhanced and advanced adjusters
+def EnhancedMLBondAdjuster(model_type: str = "random_forest", valuator=None):
+    """Backward compatible alias for enhanced ML adjuster"""
+    import warnings
+
+    warnings.warn(
+        "EnhancedMLBondAdjuster is deprecated. Use MLBondAdjuster(feature_level='enhanced') instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return UnifiedMLBondAdjuster(model_type=model_type, feature_level="enhanced", valuator=valuator, use_ensemble=False)
+
+
+def AdvancedMLBondAdjuster(valuator=None, use_ensemble: bool = True):
+    """Backward compatible alias for advanced ML adjuster"""
+    import warnings
+
+    warnings.warn(
+        "AdvancedMLBondAdjuster is deprecated. Use MLBondAdjuster(feature_level='advanced', use_ensemble=True) instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return UnifiedMLBondAdjuster(
+        model_type="random_forest", feature_level="advanced", valuator=valuator, use_ensemble=use_ensemble
+    )
+
+
 from bondtrader.ml.regime_models import RegimeDetector
 
 # New MLOps modules
@@ -70,6 +106,8 @@ __all__ = [
     "DriftDetector",
     "ModelTuner",
     "RegimeDetector",
+    "TrainingConfig",
+    "UnifiedTrainingFramework",
 ]
 
 if HAS_MLOPS:

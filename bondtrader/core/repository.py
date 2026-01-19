@@ -2,12 +2,17 @@
 Repository Pattern Implementation
 Abstracts data access layer following industry best practices
 Provides clean separation between business logic and data persistence
+
+CRITICAL: Supports transaction management through optional session parameter
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from bondtrader.core.bond_models import Bond
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 
 
 class IBondRepository(ABC):
@@ -17,8 +22,14 @@ class IBondRepository(ABC):
     """
 
     @abstractmethod
-    def save(self, bond: Bond) -> None:
-        """Save a bond"""
+    def save(self, bond: Bond, session: Optional["Session"] = None) -> None:
+        """
+        Save a bond
+
+        Args:
+            bond: Bond to save
+            session: Optional SQLAlchemy session for transaction support
+        """
         pass
 
     @abstractmethod
@@ -56,14 +67,23 @@ class BondRepository(IBondRepository):
     def __init__(self, database=None):
         """Initialize with database instance"""
         if database is None:
-            from bondtrader.data.data_persistence_enhanced import EnhancedBondDatabase
+            from bondtrader.data.data_persistence import EnhancedBondDatabase
 
             database = EnhancedBondDatabase()
         self.db = database
 
-    def save(self, bond: Bond) -> None:
-        """Save a bond"""
-        self.db.save_bond(bond)
+    def save(self, bond: Bond, session: Optional["Session"] = None) -> None:
+        """
+        Save a bond with optional transaction support.
+
+        CRITICAL: If session is provided, uses that session for transaction atomicity.
+        If not provided, creates its own session (standalone operation).
+
+        Args:
+            bond: Bond to save
+            session: Optional SQLAlchemy session (for transaction support)
+        """
+        self.db.save_bond(bond, session=session)
 
     def find_by_id(self, bond_id: str) -> Optional[Bond]:
         """Find bond by ID"""
@@ -120,7 +140,14 @@ class InMemoryBondRepository(IBondRepository):
     def __init__(self):
         self._bonds: Dict[str, Bond] = {}
 
-    def save(self, bond: Bond) -> None:
+    def save(self, bond: Bond, session: Optional["Session"] = None) -> None:
+        """
+        Save a bond (in-memory, session parameter ignored for compatibility)
+
+        Args:
+            bond: Bond to save
+            session: Ignored (in-memory repository doesn't use sessions)
+        """
         self._bonds[bond.bond_id] = bond
 
     def find_by_id(self, bond_id: str) -> Optional[Bond]:

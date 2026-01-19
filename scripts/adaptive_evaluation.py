@@ -40,7 +40,9 @@ class AdaptiveEvaluator:
         """Initialize adaptive evaluator"""
         config = get_config()
         self.model_dir = model_dir or config.model_dir
-        self.valuator = BondValuator()
+        from bondtrader.core.container import get_container
+
+        self.valuator = get_container().get_valuator()
         self.drift_detector = DriftDetector()
         self.feedback_history = []
 

@@ -67,16 +67,10 @@ def load_bonds_from_csv(csv_path: str) -> List[Bond]:
 
             # Parse bond type
             bond_type_str = row.get("bond_type", "Fixed Rate")
-            bond_type_map = {
-                "Zero Coupon": BondType.ZERO_COUPON,
-                "Fixed Rate": BondType.FIXED_RATE,
-                "Floating Rate": BondType.FLOATING_RATE,
-                "Treasury": BondType.TREASURY,
-                "Corporate": BondType.CORPORATE,
-                "Municipal": BondType.MUNICIPAL,
-                "High Yield": BondType.HIGH_YIELD,
-            }
-            bond_type = bond_type_map.get(bond_type_str, BondType.FIXED_RATE)
+            from bondtrader.utils.constants import BOND_TYPE_STRING_MAP
+
+            bond_type_name = BOND_TYPE_STRING_MAP.get(bond_type_str, "FIXED_RATE")
+            bond_type = getattr(BondType, bond_type_name, BondType.FIXED_RATE)
 
             bond = Bond(
                 bond_id=row["bond_id"],
@@ -137,9 +131,9 @@ def create_training_dataset_from_bonds(
                 char = bond.get_bond_characteristics()
 
                 # Calculate YTM, duration, convexity
-                from bondtrader.core.bond_valuation import BondValuator
+                from bondtrader.core.container import get_container
 
-                valuator = BondValuator()
+                valuator = get_container().get_valuator()
                 ytm = valuator.calculate_yield_to_maturity(bond)
                 duration = valuator.calculate_duration(bond, ytm)
                 convexity = valuator.calculate_convexity(bond, ytm)

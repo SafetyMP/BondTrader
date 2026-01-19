@@ -73,7 +73,7 @@ def test_ml_adjuster_train_insufficient_bonds(ml_adjuster):
 def test_ml_adjuster_create_features(training_bonds, ml_adjuster):
     """Test feature creation"""
     fair_values = [ml_adjuster.valuator.calculate_fair_value(bond) for bond in training_bonds]
-    features = ml_adjuster._create_features(training_bonds, fair_values)
+    features, feature_names = ml_adjuster._create_features(training_bonds, fair_values)
 
     assert isinstance(features, np.ndarray)
     assert len(features) == len(training_bonds)

@@ -30,7 +30,12 @@ class KeyRateDuration:
             valuator: Bond valuator instance
             shock_size: Size of yield shock (as decimal, default 1bp = 0.0001)
         """
-        self.valuator = valuator if valuator else BondValuator()
+        if valuator is None:
+            from bondtrader.core.container import get_container
+
+            self.valuator = get_container().get_valuator()
+        else:
+            self.valuator = valuator
         self.shock_size = shock_size
 
     def calculate_krd(self, bond: Bond, key_rates: Optional[List[float]] = None) -> Dict:

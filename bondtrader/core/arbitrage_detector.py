@@ -34,7 +34,12 @@ class ArbitrageDetector:
             min_profit_threshold: Minimum profit percentage to consider (as decimal)
             include_transaction_costs: Whether to account for transaction costs
         """
-        self.valuator = valuator if valuator else BondValuator()
+        if valuator is None:
+            from bondtrader.core.container import get_container
+
+            self.valuator = get_container().get_valuator()
+        else:
+            self.valuator = valuator
         self.ml_adjuster = ml_adjuster
         self.transaction_costs = transaction_costs if transaction_costs else TransactionCostCalculator()
         self.min_profit_threshold = min_profit_threshold

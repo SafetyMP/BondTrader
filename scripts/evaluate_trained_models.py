@@ -17,7 +17,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from bondtrader.config import get_config
 from bondtrader.core.bond_models import Bond
-from bondtrader.core.bond_valuation import BondValuator
 from scripts.train_with_historical_data import load_bonds_from_csv
 
 
@@ -35,7 +34,9 @@ def evaluate_model_on_bonds(model, bonds: List[Bond], model_name: str) -> Dict:
     """
     print(f"\nEvaluating {model_name}...")
 
-    valuator = BondValuator()
+    from bondtrader.core.container import get_container
+
+    valuator = get_container().get_valuator()
     predictions = []
     actuals = []
     fair_values = []

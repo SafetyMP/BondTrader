@@ -2,10 +2,19 @@
 
 ## Quick Start
 
-To regenerate the evaluation dataset (fixes missing bonds issue):
+To regenerate the evaluation dataset, use the EvaluationDatasetGenerator directly:
 
-```bash
-python regenerate_evaluation_dataset.py
+```python
+from bondtrader.data.evaluation_dataset_generator import EvaluationDatasetGenerator, save_evaluation_dataset
+
+generator = EvaluationDatasetGenerator(seed=42)
+dataset = generator.generate_evaluation_dataset(
+    num_bonds=1000, 
+    scenarios=None,  # All scenarios
+    include_benchmarks=True, 
+    point_in_time=True
+)
+save_evaluation_dataset(dataset, "evaluation_data/evaluation_dataset.joblib")
 ```
 
 ## What This Does

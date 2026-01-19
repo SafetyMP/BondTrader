@@ -71,7 +71,10 @@ class ComprehensiveDemo:
     def __init__(self, output_file: str = None):
         """Initialize demo with configuration"""
         self.config = get_config()
-        self.valuator = BondValuator(risk_free_rate=self.config.default_risk_free_rate)
+        from bondtrader.core.container import get_container
+
+        container = get_container()
+        self.valuator = container.get_valuator(risk_free_rate=self.config.default_risk_free_rate)
         self.results = {}
         self.output_file = output_file
         self.output_lines = []

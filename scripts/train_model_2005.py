@@ -242,12 +242,12 @@ def train_model_with_2005_data(dataset: dict, model_type: str = "random_forest",
 
     # Convert dataset to Bond objects for training
     from bondtrader.core.bond_models import Bond
-    from bondtrader.core.bond_valuation import BondValuator
+    from bondtrader.core.container import get_container
 
     def features_to_bonds(features, targets, metadata):
         """Convert features back to Bond objects for training"""
         bonds = []
-        valuator = BondValuator()
+        valuator = get_container().get_valuator()
 
         for i, (feat, target, meta) in enumerate(zip(features, targets, metadata)):
             # Reconstruct bond from metadata
@@ -329,8 +329,9 @@ def train_model_with_2005_data(dataset: dict, model_type: str = "random_forest",
     print("-" * 70)
     try:
         from bondtrader.core.bond_valuation import BondValuator
+        from bondtrader.core.container import get_container
 
-        valuator = BondValuator()
+        valuator = get_container().get_valuator()
         advanced_ml = AdvancedMLBondAdjuster(valuator)
         ensemble_metrics = advanced_ml.train_ensemble(train_set, test_size=0.2, random_state=42)
         results["advanced_ml_adjuster"] = {"model": advanced_ml, "metrics": ensemble_metrics, "status": "success"}
@@ -355,9 +356,9 @@ def train_model_with_2005_data(dataset: dict, model_type: str = "random_forest",
     print("Training: AutoML (Automated Model Selection)")
     print("-" * 70)
     try:
-        from bondtrader.core.bond_valuation import BondValuator
+        from bondtrader.core.container import get_container
 
-        valuator = BondValuator()
+        valuator = get_container().get_valuator()
         automl = AutoMLBondAdjuster(valuator)
         automl_results = automl.automated_model_selection(
             train_set, candidate_models=["random_forest", "gradient_boosting"], max_evaluation_time=300  # 5 minutes

@@ -139,8 +139,9 @@ class BondDataGenerator:
             List of bonds with adjusted prices
         """
         from bondtrader.core.bond_valuation import BondValuator
+        from bondtrader.core.container import get_container
 
-        valuator = BondValuator()
+        valuator = get_container().get_valuator()
 
         for bond in bonds:
             # Calculate fair value

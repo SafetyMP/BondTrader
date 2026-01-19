@@ -25,7 +25,6 @@ from bondtrader.analytics.portfolio_optimization import PortfolioOptimizer
 from bondtrader.config import get_config
 from bondtrader.core.arbitrage_detector import ArbitrageDetector
 from bondtrader.core.bond_models import Bond, BondType
-from bondtrader.core.bond_valuation import BondValuator
 from bondtrader.data.data_generator import BondDataGenerator
 from bondtrader.ml.automl import AutoMLBondAdjuster
 from bondtrader.ml.bayesian_optimization import BayesianOptimizer
@@ -72,14 +71,7 @@ def load_sample_bonds(num_bonds: int = 50) -> List[Bond]:
     return generator.generate_bonds(num_bonds)
 
 
-def format_currency(value: float) -> str:
-    """Format number as currency"""
-    return f"${value:,.2f}"
-
-
-def format_percentage(value: float) -> str:
-    """Format number as percentage"""
-    return f"{value:.2f}%"
+from bondtrader.utils import format_currency, format_percentage
 
 
 @require_auth
@@ -129,8 +121,12 @@ def main():
     # Load bonds
     bonds = load_sample_bonds(num_bonds)
 
-    # Initialize components
-    valuator = BondValuator(risk_free_rate=risk_free_rate)
+    # Initialize components using container
+    from bondtrader.core.container import get_container
+
+    container = get_container()
+    # Update valuator with user-selected risk-free rate
+    valuator = container.get_valuator(risk_free_rate=risk_free_rate)
     # Use config for model type
     ml_adjuster = MLBondAdjuster(model_type=config.ml_model_type)
 

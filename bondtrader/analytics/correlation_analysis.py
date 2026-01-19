@@ -27,7 +27,12 @@ class CorrelationAnalyzer:
         Args:
             valuator: Bond valuator instance (optional, creates default if None)
         """
-        self.valuator = valuator if valuator else BondValuator()
+        if valuator is None:
+            from bondtrader.core.container import get_container
+
+            self.valuator = get_container().get_valuator()
+        else:
+            self.valuator = valuator
 
     def calculate_correlation_matrix(self, bonds: List[Bond], method: str = "characteristics") -> Dict:
         """

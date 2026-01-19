@@ -34,7 +34,6 @@ except ImportError:
 
 
 from bondtrader.core.bond_models import Bond
-from bondtrader.core.bond_valuation import BondValuator
 from bondtrader.data.evaluation_dataset_generator import (
     EvaluationDatasetGenerator,
     EvaluationMetrics,
@@ -270,7 +269,9 @@ class ModelEvaluator:
         self.model_dir = model_dir
         self.evaluation_data_dir = evaluation_data_dir
         self.scorer = ModelPerformanceScorer()
-        self.valuator = BondValuator()
+        from bondtrader.core.container import get_container
+
+        self.valuator = get_container().get_valuator()
 
         os.makedirs(evaluation_data_dir, exist_ok=True)
         os.makedirs("evaluation_results", exist_ok=True)

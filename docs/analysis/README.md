@@ -8,8 +8,8 @@ This directory contains detailed analysis documents covering:
 - `COMPUTATIONAL_REDUNDANCY_ANALYSIS.md` - Detailed redundancy analysis
 
 ## Machine Learning Improvements
+- `ML_PIPELINE_ANALYSIS.md` - **CONSOLIDATED** ML pipeline analysis (replaces ML_PIPELINE_REVIEW.md and ML_PIPELINE_CRITIQUE.md)
 - `ML_IMPROVEMENTS_*.md` - ML pipeline enhancements
-- `ML_PIPELINE_*.md` - Pipeline analysis and improvements
 - `MODEL_*.md` - Model testing and tuning results
 - `TUNING_FIXES_*.md` - Hyperparameter tuning fixes
 

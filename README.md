@@ -11,7 +11,7 @@
 - 🔒 **Security Hardened**: API authentication, rate limiting, CORS protection, input validation
 - 🚀 **Production Ready**: Comprehensive error handling, logging, monitoring, CI/CD pipeline
 - 📊 **Enterprise Grade**: RESTful API, interactive dashboard, ML model management
-- 🧪 **Well Tested**: 70%+ code coverage, unit/integration/smoke tests
+- 🧪 **Well Tested**: 55% CI coverage threshold (60% target), unit/integration/smoke tests
 - 📚 **Fully Documented**: Comprehensive guides, API reference, architecture docs
 
 ## 📑 Table of Contents
@@ -111,6 +111,26 @@ pip install -r requirements.txt
 ```
 
 ### Usage
+
+#### Managing Artifacts
+
+The codebase generates binary artifacts (trained models, datasets, etc.) that are not committed to git. You can manage them with:
+
+```bash
+# Clear all artifacts (dry run first)
+make clear-artifacts          # See what would be deleted
+make clear-artifacts-force     # Actually delete artifacts
+
+# Regenerate models and datasets
+make refresh-models            # Full refresh (datasets + models)
+make refresh-datasets          # Generate datasets only
+make refresh-models-only       # Train models only (use existing datasets)
+
+# Clean slate (clear + refresh)
+make clean-all                 # Clear artifacts and Docker resources
+```
+
+See [Artifact Management](ARTIFACT_MANAGEMENT.md) for detailed documentation.
 
 #### Running the Dashboard
 
@@ -427,7 +447,7 @@ See [Docker Setup Guide](docs/guides/DOCKER_SETUP.md) for detailed instructions.
 
 ## 🧪 Testing
 
-BondTrader includes a comprehensive test suite with 70%+ code coverage:
+BondTrader includes a comprehensive test suite with 55% CI coverage threshold (60% target):
 
 ### Running Tests
 
@@ -526,7 +546,7 @@ For more information, see [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code of Co
 - **Input Validation**: Comprehensive validation with security checks
 - **Code Formatting**: Consistent formatting with black and isort
 - **Linting**: flake8 compliance with critical error checks
-- **Testing**: 70%+ code coverage with unit, integration, and smoke tests
+- **Testing**: 55% CI coverage threshold enforced, 60% target coverage with unit, integration, and smoke tests
 
 ### Recent Improvements (January 2025)
 - ✅ Comprehensive codebase review and security hardening
@@ -535,8 +555,12 @@ For more information, see [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code of Co
 - ✅ Enhanced error handling and input validation
 - ✅ Improved code organization and documentation
 - ✅ CI/CD pipeline with automated testing and linting
+- ✅ Code formatting: Applied black formatter across entire codebase (line-length=127)
+- ✅ Import organization: Fixed all import statements using isort with black profile
+- ✅ Fixed all critical linting errors (undefined names, missing imports)
+- ✅ Documentation reorganization: Moved historical status reports to `docs/archive/status-reports/`
 
-See [CODEBASE_REVIEW_IMPROVEMENTS.md](CODEBASE_REVIEW_IMPROVEMENTS.md) for details.
+See [CHANGELOG.md](CHANGELOG.md) for complete details.
 
 ## 📊 Features Overview
 

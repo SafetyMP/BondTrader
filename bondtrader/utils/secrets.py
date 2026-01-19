@@ -67,11 +67,13 @@ class SecretsManager:
                 )
             salt = salt.encode()
 
+            # CRITICAL: Increased iterations for better security (600k+ recommended for financial systems)
+            # Using 600,000 iterations (6x increase from previous 100k)
             kdf = PBKDF2HMAC(
                 algorithm=hashes.SHA256(),
                 length=32,
                 salt=salt,
-                iterations=100000,
+                iterations=600000,  # Increased from 100k for better security
             )
             key = base64.urlsafe_b64encode(kdf.derive(master_password.encode()))
 
@@ -103,30 +105,56 @@ class SecretsManager:
         except ImportError:
             raise ImportError("hvac required for Vault backend. Install with: pip install hvac")
 
-    def get_secret(self, key: str, default: Optional[str] = None) -> Optional[str]:
+    def get_secret(self, key: str, default: Optional[str] = None, user_id: Optional[str] = None) -> Optional[str]:
         """
-        Get a secret value
+        Get a secret value with audit logging.
+
+        CRITICAL: All secret access is logged for security compliance.
 
         Args:
             key: Secret key
             default: Default value if not found
+            user_id: Optional user ID accessing the secret (for audit logging)
 
         Returns:
             Secret value or default
         """
+        # Import audit logger (avoid circular import)
+        try:
+            from bondtrader.core.audit import AuditEventType, get_audit_logger
+
+            audit_logger = get_audit_logger()
+        except ImportError:
+            audit_logger = None
+
+        # Get secret
         if self.backend == "env":
-            return os.getenv(key, default)
-
+            secret = os.getenv(key, default)
         elif self.backend == "file":
-            return self._get_file_secret(key, default)
-
+            secret = self._get_file_secret(key, default)
         elif self.backend == "aws":
-            return self._get_aws_secret(key, default)
-
+            secret = self._get_aws_secret(key, default)
         elif self.backend == "vault":
-            return self._get_vault_secret(key, default)
+            secret = self._get_vault_secret(key, default)
+        else:
+            secret = default
 
-        return default
+        # CRITICAL: Log secret access for audit compliance
+        if audit_logger:
+            audit_logger.log(
+                AuditEventType.DATA_ACCESSED,
+                key,
+                "secret_accessed",
+                user_id=user_id or "system",
+                details={
+                    "secret_key": key,
+                    "backend": self.backend,
+                    "found": secret is not None,
+                },
+                compliance_tags=["SOX"],
+            )
+
+        return secret
 
     def _get_file_secret(self, key: str, default: Optional[str]) -> Optional[str]:
         """Get secret from encrypted file"""
@@ -206,23 +234,24 @@ class SecretsManager:
         with open(self.secrets_file, "wb") as f:
             f.write(encrypted_data)
 
-    def get_api_key(self, service: str) -> Optional[str]:
+    def get_api_key(self, service: str, user_id: Optional[str] = None) -> Optional[str]:
         """
-        Get API key for a service
+        Get API key for a service with audit logging.
 
         Args:
             service: Service name (e.g., 'fred', 'finra')
+            user_id: Optional user ID (for audit logging)
 
         Returns:
             API key or None
         """
         # Try service-specific key first
-        key = self.get_secret(f"{service.upper()}_API_KEY")
+        key = self.get_secret(f"{service.upper()}_API_KEY", user_id=user_id)
         if key:
             return key
 
         # Try generic API key
-        return self.get_secret("API_KEY")
+        return self.get_secret("API_KEY", user_id=user_id)
 
     def require_secret(self, key: str) -> str:
         """

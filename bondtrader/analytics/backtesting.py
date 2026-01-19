@@ -24,7 +24,12 @@ class BacktestEngine:
 
     def __init__(self, valuator: BondValuator = None):
         """Initialize backtesting engine"""
-        self.valuator = valuator if valuator else BondValuator()
+        if valuator is None:
+            from bondtrader.core.container import get_container
+
+            self.valuator = get_container().get_valuator()
+        else:
+            self.valuator = valuator
 
     def backtest_arbitrage_strategy(
         self, historical_bonds: List[List[Bond]], initial_capital: float = 1000000, transaction_costs: bool = True

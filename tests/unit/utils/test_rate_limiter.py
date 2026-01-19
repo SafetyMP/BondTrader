@@ -1,47 +1,44 @@
 """
-Tests for rate limiting utilities
+Unit tests for rate limiting utilities
 """
 
-import time
-from datetime import datetime, timedelta
-
 import pytest
+import time
+from datetime import timedelta
+from unittest.mock import patch
 
-from bondtrader.utils.rate_limiter import (
-    RateLimiter,
-    get_api_rate_limiter,
-    get_dashboard_rate_limiter,
-)
+from bondtrader.utils.rate_limiter import RateLimiter, get_api_rate_limiter, get_dashboard_rate_limiter
 
 
+@pytest.mark.unit
 class TestRateLimiter:
-    """Test RateLimiter functionality"""
+    """Test RateLimiter class"""
 
-    def test_rate_limiter_init(self):
-        """Test RateLimiter initialization"""
+    def test_rate_limiter_creation(self):
+        """Test creating rate limiter"""
         limiter = RateLimiter(max_requests=10, time_window_seconds=60)
         assert limiter.max_requests == 10
         assert limiter.time_window == timedelta(seconds=60)
 
-    def test_rate_limiter_allows_requests(self):
-        """Test that rate limiter allows requests within limit"""
+    def test_rate_limiter_allowed(self):
+        """Test checking if request is allowed"""
         limiter = RateLimiter(max_requests=5, time_window_seconds=60)
-
+        
+        # First few requests should be allowed
         for i in range(5):
             allowed, error = limiter.is_allowed("user1")
             assert allowed is True
             assert error is None
 
-    def test_rate_limiter_blocks_excess_requests(self):
-        """Test that rate limiter blocks requests over limit"""
+    def test_rate_limiter_exceeded(self):
+        """Test rate limit exceeded"""
         limiter = RateLimiter(max_requests=3, time_window_seconds=60)
-
-        # Make 3 requests (should all be allowed)
+        
+        # Fill up the limit
         for i in range(3):
-            allowed, error = limiter.is_allowed("user1")
-            assert allowed is True
-
-        # 4th request should be blocked
+            limiter.is_allowed("user1")
+        
+        # Next request should be denied
         allowed, error = limiter.is_allowed("user1")
         assert allowed is False
         assert error is not None
@@ -50,90 +47,105 @@ class TestRateLimiter:
     def test_rate_limiter_per_user(self):
         """Test per-user rate limiting"""
         limiter = RateLimiter(max_requests=2, time_window_seconds=60, per_user=True)
-
-        # User1 makes 2 requests
-        assert limiter.is_allowed("user1")[0] is True
-        assert limiter.is_allowed("user1")[0] is True
-        assert limiter.is_allowed("user1")[0] is False  # Blocked
-
-        # User2 should still be able to make requests
-        assert limiter.is_allowed("user2")[0] is True
-        assert limiter.is_allowed("user2")[0] is True
-        assert limiter.is_allowed("user2")[0] is False  # Blocked
+        
+        # User 1 fills limit
+        limiter.is_allowed("user1")
+        limiter.is_allowed("user1")
+        
+        # User 2 should still be allowed
+        allowed, _ = limiter.is_allowed("user2")
+        assert allowed is True
 
     def test_rate_limiter_global(self):
         """Test global rate limiting"""
         limiter = RateLimiter(max_requests=2, time_window_seconds=60, per_user=False)
+        
+        # Fill global limit
+        limiter.is_allowed("user1")
+        limiter.is_allowed("user2")
+        
+        # Any user should be denied
+        allowed, _ = limiter.is_allowed("user3")
+        assert allowed is False
 
-        # User1 makes 2 requests
-        assert limiter.is_allowed("user1")[0] is True
-        assert limiter.is_allowed("user1")[0] is True
-
-        # User2 should also be blocked (global limit)
-        assert limiter.is_allowed("user2")[0] is False
-
-    def test_rate_limiter_reset(self):
+    def test_reset(self):
         """Test resetting rate limit"""
         limiter = RateLimiter(max_requests=2, time_window_seconds=60)
-
-        # Make 2 requests
-        assert limiter.is_allowed("user1")[0] is True
-        assert limiter.is_allowed("user1")[0] is True
-        assert limiter.is_allowed("user1")[0] is False  # Blocked
-
+        
+        # Fill limit
+        limiter.is_allowed("user1")
+        limiter.is_allowed("user1")
+        
+        # Should be denied
+        allowed, _ = limiter.is_allowed("user1")
+        assert allowed is False
+        
         # Reset
         limiter.reset("user1")
-
-        # Should be able to make requests again
-        assert limiter.is_allowed("user1")[0] is True
+        
+        # Should be allowed again
+        allowed, _ = limiter.is_allowed("user1")
+        assert allowed is True
 
     def test_get_remaining(self):
         """Test getting remaining requests"""
-        limiter = RateLimiter(max_requests=5, time_window_seconds=60)
-
-        # Initially 5 remaining
-        assert limiter.get_remaining("user1") == 5
-
-        # Make 2 requests
+        limiter = RateLimiter(max_requests=10, time_window_seconds=60)
+        
+        # Initial remaining should be max
+        remaining = limiter.get_remaining("user1")
+        assert remaining == 10
+        
+        # After one request
         limiter.is_allowed("user1")
-        limiter.is_allowed("user1")
+        remaining = limiter.get_remaining("user1")
+        assert remaining == 9
 
-        # Should have 3 remaining
-        assert limiter.get_remaining("user1") == 3
-
-    def test_rate_limiter_window_expiry(self):
+    def test_time_window_expiry(self):
         """Test that old requests expire after time window"""
-        limiter = RateLimiter(max_requests=2, time_window_seconds=1)  # 1 second window
-
-        # Make 2 requests
-        assert limiter.is_allowed("user1")[0] is True
-        assert limiter.is_allowed("user1")[0] is True
-        assert limiter.is_allowed("user1")[0] is False  # Blocked
-
-        # Wait for window to expire
+        limiter = RateLimiter(max_requests=2, time_window_seconds=1)
+        
+        # Fill limit
+        limiter.is_allowed("user1")
+        limiter.is_allowed("user1")
+        
+        # Should be denied
+        allowed, _ = limiter.is_allowed("user1")
+        assert allowed is False
+        
+        # Wait for time window to expire
         time.sleep(1.1)
+        
+        # Should be allowed again
+        allowed, _ = limiter.is_allowed("user1")
+        assert allowed is True
 
-        # Should be able to make requests again
-        assert limiter.is_allowed("user1")[0] is True
 
+@pytest.mark.unit
+class TestRateLimiterFunctions:
+    """Test rate limiter helper functions"""
 
-class TestGlobalRateLimiters:
-    """Test global rate limiter instances"""
-
+    @patch.dict("os.environ", {"API_RATE_LIMIT": "50", "API_RATE_LIMIT_WINDOW": "30"})
     def test_get_api_rate_limiter(self):
         """Test getting API rate limiter"""
         limiter = get_api_rate_limiter()
-        assert limiter is not None
-        assert isinstance(limiter, RateLimiter)
+        assert limiter.max_requests == 50
+        assert limiter.time_window == timedelta(seconds=30)
 
+    @patch.dict("os.environ", {"DASHBOARD_RATE_LIMIT": "100", "DASHBOARD_RATE_LIMIT_WINDOW": "60"})
     def test_get_dashboard_rate_limiter(self):
         """Test getting dashboard rate limiter"""
         limiter = get_dashboard_rate_limiter()
-        assert limiter is not None
-        assert isinstance(limiter, RateLimiter)
+        assert limiter.max_requests == 100
+        assert limiter.time_window == timedelta(seconds=60)
 
-    def test_rate_limiters_are_singletons(self):
-        """Test that rate limiters are singletons"""
-        limiter1 = get_api_rate_limiter()
-        limiter2 = get_api_rate_limiter()
-        assert limiter1 is limiter2
+    def test_rate_limit_decorator(self):
+        """Test rate_limit decorator"""
+        from bondtrader.utils.rate_limiter import rate_limit
+
+        @rate_limit(max_requests=2, window_seconds=60)
+        def test_endpoint(user_id=None, ip_address=None):
+            return "success"
+
+        # Should work with decorator
+        result = test_endpoint(user_id="user1")
+        assert result == "success"

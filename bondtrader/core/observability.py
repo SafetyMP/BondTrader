@@ -6,21 +6,28 @@ Metrics, Tracing, and Monitoring following industry best practices
 import time
 from contextlib import contextmanager
 from functools import wraps
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from bondtrader.utils.utils import logger
 
 
 class Metrics:
     """
-    Simple metrics collection
-    In production, integrate with Prometheus, StatsD, or similar
+    Metrics collection with business KPIs.
+
+    CRITICAL: Tracks both technical and business metrics for Fortune 10 financial institutions.
     """
 
     def __init__(self):
         self._counters: Dict[str, int] = {}
         self._gauges: Dict[str, float] = {}
         self._histograms: Dict[str, list] = {}
+
+        # Business metrics tracking
+        self._trading_volume: float = 0.0
+        self._total_pnl: float = 0.0
+        self._portfolio_values: List[float] = []
+        self._risk_metrics: Dict[str, float] = {}
 
     def increment(self, name: str, value: int = 1, tags: Optional[Dict[str, str]] = None):
         """Increment a counter metric"""
@@ -49,8 +56,58 @@ class Metrics:
         tag_str = ",".join(f"{k}={v}" for k, v in sorted(tags.items()))
         return f"{name}[{tag_str}]"
 
+    def track_trading_volume(self, volume: float, bond_type: Optional[str] = None):
+        """
+        Track trading volume (business metric).
+
+        Args:
+            volume: Trading volume in dollars
+            bond_type: Optional bond type for categorization
+        """
+        self._trading_volume += volume
+        self.increment("business.trading_volume", value=int(volume), tags={"bond_type": bond_type} if bond_type else None)
+        self.gauge("business.total_trading_volume", self._trading_volume)
+
+    def track_pnl(self, pnl: float, trade_id: Optional[str] = None):
+        """
+        Track profit and loss (business metric).
+
+        Args:
+            pnl: Profit/loss in dollars
+            trade_id: Optional trade identifier
+        """
+        self._total_pnl += pnl
+        self.gauge("business.total_pnl", self._total_pnl)
+        self.histogram("business.trade_pnl", pnl, tags={"trade_id": trade_id} if trade_id else None)
+
+    def track_portfolio_value(self, value: float):
+        """
+        Track portfolio value (business metric).
+
+        Args:
+            value: Portfolio value in dollars
+        """
+        self._portfolio_values.append(value)
+        # Keep only last 1000 values to prevent memory issues
+        if len(self._portfolio_values) > 1000:
+            self._portfolio_values = self._portfolio_values[-1000:]
+
+        self.gauge("business.portfolio.total_value", value)
+        self.histogram("business.portfolio.value", value)
+
+    def track_risk_metric(self, metric_name: str, value: float):
+        """
+        Track risk metric (business metric).
+
+        Args:
+            metric_name: Name of risk metric (e.g., "var_95", "credit_risk")
+            value: Metric value
+        """
+        self._risk_metrics[metric_name] = value
+        self.gauge(f"business.risk.{metric_name}", value)
+
     def get_metrics(self) -> Dict[str, Any]:
-        """Get all metrics"""
+        """Get all metrics including business KPIs"""
         return {
             "counters": self._counters.copy(),
             "gauges": self._gauges.copy(),
@@ -63,6 +120,12 @@ class Metrics:
                 }
                 for k, v in self._histograms.items()
             },
+            "business": {
+                "total_trading_volume": self._trading_volume,
+                "total_pnl": self._total_pnl,
+                "current_portfolio_value": self._portfolio_values[-1] if self._portfolio_values else None,
+                "risk_metrics": self._risk_metrics.copy(),
+            },
         }
 
     def reset(self):
@@ -70,6 +133,10 @@ class Metrics:
         self._counters.clear()
         self._gauges.clear()
         self._histograms.clear()
+        self._trading_volume = 0.0
+        self._total_pnl = 0.0
+        self._portfolio_values.clear()
+        self._risk_metrics.clear()
 
 
 # Global metrics instance

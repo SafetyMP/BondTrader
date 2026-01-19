@@ -9,6 +9,10 @@ joblib>=1.3.0
 pytest>=7.4.0
 pytest-cov>=4.1.0
 requests>=2.31.0
+authlib>=1.2.0  # OAuth 2.0 / OpenID Connect support
+opentelemetry-api>=1.21.0  # Distributed tracing
+opentelemetry-sdk>=1.21.0
+opentelemetry-exporter-otlp>=1.21.0
 yfinance>=0.2.0
 shap>=0.42.0
 tqdm>=4.66.0
@@ -17,10 +21,6 @@ tqdm>=4.66.0
 numba>=0.58.0
 
 # Financial & quantitative libraries
-# QuantLib-Python is optional - requires system dependencies
-# Install manually with: pip install QuantLib-Python (if needed)
-# Version 1.32+ may not be available - check PyPI for latest version
-# QuantLib-Python>=1.31  # Commented out - install manually if needed
 pandas-market-calendars>=4.1.0,<4.2.0  # 4.2.1+ may use Python 3.10+ syntax (| union), pin to 4.1.x for Python 3.9 compatibility
 arch>=6.2.0
 statsmodels>=0.14.0
@@ -84,8 +84,13 @@ pandas-datareader>=0.10.0
 
 # Security & authentication
 cryptography>=41.0.0  # For secrets encryption
+bcrypt>=4.0.0  # For secure password hashing (industry standard)
+pyotp>=2.9.0  # For TOTP-based MFA (Time-based One-Time Password)
+qrcode>=7.4.0  # For MFA QR code generation
 safety>=2.3.0  # For dependency vulnerability scanning
 pip-audit>=2.6.0  # For dependency vulnerability scanning
+tenacity>=8.2.0  # For retry logic with exponential backoff
+circuitbreaker>=1.4.0  # For circuit breaker pattern
 
 # Optional: Cloud secrets management
 # boto3>=1.28.0  # For AWS Secrets Manager (uncomment if using AWS)

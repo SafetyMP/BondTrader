@@ -24,7 +24,12 @@ class AutoMLBondAdjuster:
 
     def __init__(self, valuator: BondValuator = None):
         """Initialize AutoML adjuster"""
-        self.valuator = valuator if valuator else BondValuator()
+        if valuator is None:
+            from bondtrader.core.container import get_container
+
+            self.valuator = get_container().get_valuator()
+        else:
+            self.valuator = valuator
         self.best_model = None
         self.best_model_type = None
         self.best_params = None

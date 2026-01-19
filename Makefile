@@ -75,3 +75,22 @@ health: ## Check health of all services
 	@curl -s http://localhost:8501/_stcore/health || echo "Dashboard not responding"
 	@echo "\nMLflow Health:"
 	@curl -s http://localhost:5000/health || echo "MLflow not responding"
+
+clear-artifacts: ## Clear all binary artifacts and generated data (dry run)
+	python scripts/clear_artifacts.py --dry-run
+
+clear-artifacts-force: ## Clear all binary artifacts and generated data (actually delete)
+	python scripts/clear_artifacts.py
+
+refresh-models: ## Refresh/regenerate all models and datasets
+	python scripts/refresh_models.py
+
+refresh-datasets: ## Generate fresh datasets only (no model training)
+	python scripts/refresh_models.py --datasets-only
+
+refresh-models-only: ## Train models only (use existing datasets)
+	python scripts/refresh_models.py --skip-training-data --skip-evaluation-data
+
+clean-all: clear-artifacts-force ## Clear artifacts and clean Docker resources
+	docker-compose -f $(COMPOSE_FILE) down -v
+	docker system prune -f

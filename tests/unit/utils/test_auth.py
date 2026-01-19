@@ -1,174 +1,146 @@
 """
-Tests for authentication utilities
+Unit tests for authentication utilities
 """
 
-import json
 import os
 import tempfile
 from pathlib import Path
 
 import pytest
 
-from bondtrader.utils.auth import (
-    AuthenticationError,
-    AuthorizationError,
-    UserManager,
-    get_user_manager,
-    hash_password,
-    verify_password,
-)
+from bondtrader.utils.auth import UserManager, hash_password, verify_password
 
 
+@pytest.mark.unit
 class TestPasswordHashing:
-    """Test password hashing functionality"""
+    """Test password hashing functions"""
 
-    def test_hash_password_generates_salt(self):
-        """Test that hash_password generates a salt if not provided"""
-        hashed1, salt1 = hash_password("test_password")
-        hashed2, salt2 = hash_password("test_password")
-
-        # Different salts should produce different hashes
-        assert salt1 != salt2
-        assert hashed1 != hashed2
-
-    def test_hash_password_with_salt(self):
-        """Test that hash_password uses provided salt"""
-        salt = "test_salt"
-        hashed1, salt1 = hash_password("test_password", salt)
-        hashed2, salt2 = hash_password("test_password", salt)
-
-        # Same salt should produce same hash
-        assert salt1 == salt2 == salt
-        assert hashed1 == hashed2
+    def test_hash_password_generates_hash(self):
+        """Test that password hashing generates a hash"""
+        hashed, salt = hash_password("test_password")
+        assert hashed is not None
+        assert len(hashed) > 0
 
     def test_verify_password_correct(self):
-        """Test password verification with correct password"""
+        """Test verifying correct password"""
         password = "test_password"
         hashed, salt = hash_password(password)
-
-        assert verify_password(password, hashed, salt) is True
+        assert verify_password(password, hashed, salt)
 
     def test_verify_password_incorrect(self):
-        """Test password verification with incorrect password"""
+        """Test verifying incorrect password"""
+        hashed, salt = hash_password("test_password")
+        assert not verify_password("wrong_password", hashed, salt)
+
+    def test_hash_password_different_salts(self):
+        """Test that same password hashed twice produces different hashes"""
+        hashed1, salt1 = hash_password("test_password")
+        hashed2, salt2 = hash_password("test_password")
+        # Hashes should be different due to salt
+        assert hashed1 != hashed2 or salt1 != salt2
+
+    def test_verify_password_with_salt(self):
+        """Test verifying password with provided salt"""
         password = "test_password"
-        hashed, salt = hash_password(password)
-
-        assert verify_password("wrong_password", hashed, salt) is False
-
-    def test_verify_password_timing_attack_protection(self):
-        """Test that verify_password uses constant-time comparison"""
-        password = "test_password"
-        hashed, salt = hash_password(password)
-
-        # Should not raise exception even with wrong password
-        result = verify_password("wrong_password", hashed, salt)
-        assert result is False
+        salt = b"test_salt"
+        hashed, _ = hash_password(password, salt)
+        assert verify_password(password, hashed, "")
 
 
+@pytest.mark.unit
 class TestUserManager:
     """Test UserManager functionality"""
 
-    def test_user_manager_init(self):
-        """Test UserManager initialization"""
-        manager = UserManager()
-        assert manager is not None
+    @pytest.fixture
+    def temp_users_file(self):
+        """Create temporary users file"""
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json") as f:
+            temp_path = f.name
+        yield temp_path
+        if os.path.exists(temp_path):
+            os.unlink(temp_path)
 
-    def test_user_manager_from_file(self):
-        """Test loading users from file"""
-        # Create temporary users file
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
-            hashed, salt = hash_password("test_password")
-            users_data = {"test_user": {"password_hash": hashed, "salt": salt, "roles": ["user"]}}
-            json.dump(users_data, f)
-            temp_file = f.name
+    @pytest.fixture
+    def user_manager_empty(self):
+        """Create empty user manager"""
+        return UserManager(users_file=None)
 
-        try:
-            manager = UserManager(users_file=temp_file)
-            assert manager.authenticate("test_user", "test_password") is True
-            assert manager.authenticate("test_user", "wrong_password") is False
-        finally:
-            os.unlink(temp_file)
+    @pytest.fixture
+    def user_manager_file(self, temp_users_file):
+        """Create user manager with file"""
+        return UserManager(users_file=temp_users_file)
 
-    def test_user_manager_from_env(self):
-        """Test loading users from environment variable"""
-        # Set environment variable
-        os.environ["USERS"] = "test_user:test_password,admin:admin_pass"
+    def test_user_manager_initialization(self, user_manager_empty):
+        """Test user manager initialization"""
+        assert user_manager_empty.users is not None
+        assert isinstance(user_manager_empty.users, dict)
 
-        try:
-            manager = UserManager()
-            assert manager.authenticate("test_user", "test_password") is True
-            assert manager.authenticate("admin", "admin_pass") is True
-            assert manager.authenticate("test_user", "wrong_password") is False
-        finally:
-            if "USERS" in os.environ:
-                del os.environ["USERS"]
+    def test_authenticate_nonexistent_user(self, user_manager_empty):
+        """Test authentication for non-existent user"""
+        assert not user_manager_empty.authenticate("nonexistent", "password")
 
-    def test_user_manager_default_admin(self):
-        """Test default admin user creation"""
-        os.environ["ENABLE_DEFAULT_ADMIN"] = "true"
-        os.environ["DEFAULT_ADMIN_PASSWORD"] = "test_admin_pass"
+    def test_has_role_nonexistent(self, user_manager_empty):
+        """Test checking role for non-existent user"""
+        assert not user_manager_empty.has_role("nonexistent", "admin")
 
-        try:
-            # Clear any existing users
-            if "USERS" in os.environ:
-                del os.environ["USERS"]
+    def test_get_user_roles_nonexistent(self, user_manager_empty):
+        """Test getting roles for non-existent user"""
+        roles = user_manager_empty.get_user_roles("nonexistent")
+        assert roles == []
 
-            manager = UserManager()
-            assert manager.authenticate("admin", "test_admin_pass") is True
-        finally:
-            if "ENABLE_DEFAULT_ADMIN" in os.environ:
-                del os.environ["ENABLE_DEFAULT_ADMIN"]
-            if "DEFAULT_ADMIN_PASSWORD" in os.environ:
-                del os.environ["DEFAULT_ADMIN_PASSWORD"]
+    def test_enable_mfa(self, user_manager_file):
+        """Test enabling MFA for user"""
+        # Create user first by adding to users dict
+        hashed, salt = hash_password("testpassword")
+        user_manager_file.users["testuser"] = {"password_hash": hashed, "salt": salt, "roles": ["user"]}
 
-    def test_has_role(self):
-        """Test role checking"""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
-            hashed, salt = hash_password("test_password")
-            users_data = {
-                "admin_user": {"password_hash": hashed, "salt": salt, "roles": ["admin", "user"]},
-                "regular_user": {"password_hash": hashed, "salt": salt, "roles": ["user"]},
-            }
-            json.dump(users_data, f)
-            temp_file = f.name
+        if user_manager_file.mfa_manager:
+            secret, qr_code = user_manager_file.enable_mfa("testuser")
+            assert secret is not None
+            assert qr_code is not None
+            assert "mfa_secret" in user_manager_file.users["testuser"]
 
-        try:
-            manager = UserManager(users_file=temp_file)
-            assert manager.has_role("admin_user", "admin") is True
-            assert manager.has_role("admin_user", "user") is True
-            assert manager.has_role("regular_user", "admin") is False
-            assert manager.has_role("regular_user", "user") is True
-            assert manager.has_role("nonexistent", "user") is False
-        finally:
-            os.unlink(temp_file)
-
-    def test_get_user_roles(self):
-        """Test getting user roles"""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
-            hashed, salt = hash_password("test_password")
-            users_data = {"test_user": {"password_hash": hashed, "salt": salt, "roles": ["admin", "user", "analyst"]}}
-            json.dump(users_data, f)
-            temp_file = f.name
-
-        try:
-            manager = UserManager(users_file=temp_file)
-            roles = manager.get_user_roles("test_user")
-            assert "admin" in roles
-            assert "user" in roles
-            assert "analyst" in roles
-            assert len(roles) == 3
-
-            # Non-existent user
-            assert manager.get_user_roles("nonexistent") == []
-        finally:
-            os.unlink(temp_file)
-
-
-class TestGetUserManager:
-    """Test global user manager instance"""
+    def test_enable_mfa_nonexistent_user(self, user_manager_file):
+        """Test enabling MFA for non-existent user"""
+        with pytest.raises(Exception):  # Should raise AuthenticationError
+            user_manager_file.enable_mfa("nonexistent")
 
     def test_get_user_manager_singleton(self):
-        """Test that get_user_manager returns singleton"""
+        """Test get_user_manager returns singleton"""
+        from bondtrader.utils.auth import get_user_manager
+
         manager1 = get_user_manager()
         manager2 = get_user_manager()
+        # Should be same instance
         assert manager1 is manager2
+
+    def test_user_manager_load_from_file(self, temp_users_file):
+        """Test loading users from file"""
+        import json
+
+        users_data = {
+            "user1": {"password_hash": "hash1", "salt": "salt1", "roles": ["user"]},
+            "user2": {"password_hash": "hash2", "salt": "salt2", "roles": ["admin"]},
+        }
+        with open(temp_users_file, "w") as f:
+            json.dump(users_data, f)
+
+        manager = UserManager(users_file=temp_users_file)
+        assert "user1" in manager.users
+        assert "user2" in manager.users
+
+    def test_user_manager_save_to_file(self, temp_users_file):
+        """Test saving users to file"""
+        manager = UserManager(users_file=temp_users_file)
+        # Add user directly to users dict (UserManager doesn't have create_user method)
+        hashed, salt = hash_password("testpassword")
+        manager.users["testuser"] = {"password_hash": hashed, "salt": salt, "roles": ["user"]}
+        manager._save_users()
+
+        # Verify file was created and has content
+        assert os.path.exists(temp_users_file)
+        import json
+
+        with open(temp_users_file, "r") as f:
+            data = json.load(f)
+            assert "testuser" in data

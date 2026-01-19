@@ -29,9 +29,14 @@ class AdvancedAnalytics:
         Initialize advanced analytics
 
         Args:
-            valuator: Bond valuator instance (optional, creates default if None)
+            valuator: Bond valuator instance (optional, gets from container if None)
         """
-        self.valuator = valuator if valuator else BondValuator()
+        if valuator is None:
+            from bondtrader.core.container import get_container
+
+            self.valuator = get_container().get_valuator()
+        else:
+            self.valuator = valuator
 
     def fit_yield_curve(self, bonds: List[Bond], method: str = "nelson_siegel", use_statsmodels: bool = False) -> Dict:
         """

@@ -86,6 +86,46 @@ def get_default_probability(rating: str) -> float:
     return DEFAULT_PROBABILITIES.get(rating.upper(), 0.020)
 
 
+# Credit rating to numeric mapping
+RATING_TO_NUMERIC = {
+    "AAA": 20,
+    "AA+": 19,
+    "AA": 18,
+    "AA-": 17,
+    "A+": 16,
+    "A": 15,
+    "A-": 14,
+    "BBB+": 13,
+    "BBB": 12,
+    "BBB-": 11,
+    "BB+": 10,
+    "BB": 9,
+    "BB-": 8,
+    "B+": 7,
+    "B": 6,
+    "B-": 5,
+    "CCC+": 4,
+    "CCC": 3,
+    "CCC-": 2,
+    "D": 1,
+    "NR": 0,
+}
+
+# Numeric to credit rating mapping (reverse lookup)
+NUMERIC_TO_RATING = {v: k for k, v in RATING_TO_NUMERIC.items()}
+
+# Bond type string to enum name mapping
+BOND_TYPE_STRING_MAP = {
+    "Zero Coupon": "ZERO_COUPON",
+    "Fixed Rate": "FIXED_RATE",
+    "Floating Rate": "FLOATING_RATE",
+    "Treasury": "TREASURY",
+    "Corporate": "CORPORATE",
+    "Municipal": "MUNICIPAL",
+    "High Yield": "HIGH_YIELD",
+}
+
+
 def get_recovery_rate_standard(rating: str) -> float:
     """Get recovery rate based on credit rating (standard model)"""
     return RECOVERY_RATES_STANDARD.get(rating.upper(), 0.40)

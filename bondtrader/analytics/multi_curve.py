@@ -23,8 +23,18 @@ class MultiCurveFramework:
     """
 
     def __init__(self, valuator: BondValuator = None):
-        """Initialize multi-curve framework"""
-        self.valuator = valuator if valuator else BondValuator()
+        """
+        Initialize multi-curve framework
+
+        Args:
+            valuator: Optional BondValuator instance. If None, gets from container.
+        """
+        if valuator is None:
+            from bondtrader.core.container import get_container
+
+            self.valuator = get_container().get_valuator()
+        else:
+            self.valuator = valuator
 
         # Default curves (in production, would fetch from market data)
         self.ois_curve = None  # Overnight Index Swap curve (discounting)

@@ -2,16 +2,11 @@
 Unit tests for utility functions
 """
 
-import os
-import sys
+from datetime import datetime
 
 import pytest
 
 pytestmark = pytest.mark.unit
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from datetime import datetime
 
 from bondtrader.utils.utils import (
     ValidationError,
@@ -22,83 +17,9 @@ from bondtrader.utils.utils import (
     handle_exceptions,
     logger,
     memoize,
-    validate_bond_data,
 )
 
-
-def test_validate_bond_data_success():
-    """Test bond data validation with valid data"""
-    bond_data = {
-        "bond_id": "TEST-001",
-        "bond_type": "CORPORATE",
-        "face_value": 1000,
-        "coupon_rate": 5.0,
-        "maturity_date": datetime(2029, 12, 31),
-        "issue_date": datetime(2024, 1, 1),
-        "current_price": 950,
-    }
-
-    assert validate_bond_data(bond_data) is True
-
-
-def test_validate_bond_data_missing_field():
-    """Test bond data validation with missing field"""
-    bond_data = {
-        "bond_id": "TEST-001",
-        "face_value": 1000,
-        # Missing required fields
-    }
-
-    with pytest.raises(ValidationError, match="Missing required field"):
-        validate_bond_data(bond_data)
-
-
-def test_validate_bond_data_invalid_price():
-    """Test bond data validation with invalid price"""
-    bond_data = {
-        "bond_id": "TEST-001",
-        "bond_type": "CORPORATE",
-        "face_value": 1000,
-        "coupon_rate": 5.0,
-        "maturity_date": datetime(2029, 12, 31),
-        "issue_date": datetime(2024, 1, 1),
-        "current_price": -100,  # Invalid
-    }
-
-    with pytest.raises(ValidationError, match="Current price must be positive"):
-        validate_bond_data(bond_data)
-
-
-def test_validate_bond_data_invalid_face_value():
-    """Test bond data validation with invalid face value"""
-    bond_data = {
-        "bond_id": "TEST-001",
-        "bond_type": "CORPORATE",
-        "face_value": 0,  # Invalid
-        "coupon_rate": 5.0,
-        "maturity_date": datetime(2029, 12, 31),
-        "issue_date": datetime(2024, 1, 1),
-        "current_price": 950,
-    }
-
-    with pytest.raises(ValidationError, match="Face value must be positive"):
-        validate_bond_data(bond_data)
-
-
-def test_validate_bond_data_invalid_dates():
-    """Test bond data validation with invalid date range"""
-    bond_data = {
-        "bond_id": "TEST-001",
-        "bond_type": "CORPORATE",
-        "face_value": 1000,
-        "coupon_rate": 5.0,
-        "maturity_date": datetime(2024, 1, 1),  # Before issue date
-        "issue_date": datetime(2024, 12, 31),
-        "current_price": 950,
-    }
-
-    with pytest.raises(ValidationError, match="Maturity date must be after issue date"):
-        validate_bond_data(bond_data)
+# validate_bond_data tests moved to test_validation.py (uses bondtrader.core.helpers.validate_bond_data)
 
 
 def test_cache_key_simple():

@@ -7,11 +7,11 @@ This guide provides quick instructions for using the newly implemented module op
 ## ✅ Implemented Features
 
 ### 1. Enhanced Database (SQLAlchemy)
-**Location:** `bondtrader/data/data_persistence_enhanced.py`
+**Location:** `bondtrader/data/data_persistence.py`
 
 **Usage:**
 ```python
-from bondtrader.data.data_persistence_enhanced import EnhancedBondDatabase
+from bondtrader.data.data_persistence import EnhancedBondDatabase
 
 # Create database with connection pooling
 db = EnhancedBondDatabase(db_path="bonds.db", pool_size=5)
@@ -134,7 +134,7 @@ ml_adjuster.save_model("models/xgboost_model.pkl")
 ### Example 2: Using Enhanced Database
 
 ```python
-from bondtrader.data.data_persistence_enhanced import EnhancedBondDatabase
+from bondtrader.data.data_persistence import EnhancedBondDatabase
 from bondtrader.data.data_generator import BondDataGenerator
 
 # Create database with connection pooling
@@ -179,13 +179,13 @@ for model_type in models_to_test:
 
 **Before:**
 ```python
-from bondtrader.data.data_persistence_enhanced import EnhancedBondDatabase
+from bondtrader.data.data_persistence import EnhancedBondDatabase
 db = BondDatabase("bonds.db")
 ```
 
 **After (Recommended):**
 ```python
-from bondtrader.data.data_persistence_enhanced import EnhancedBondDatabase
+from bondtrader.data.data_persistence import EnhancedBondDatabase
 db = EnhancedBondDatabase("bonds.db", pool_size=5)
 # API is identical - drop-in replacement
 ```

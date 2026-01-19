@@ -58,17 +58,26 @@ class TrainingDataGenerator:
     10. Multiple bond types and credit ratings
     """
 
-    def __init__(self, seed: int = 42) -> None:
+    def __init__(self, seed: int = 42, valuator: BondValuator = None) -> None:
         """
         Initialize generator with seed for reproducibility
 
         Args:
             seed: Random seed for reproducibility (default: 42)
+            valuator: Optional BondValuator instance. If None, gets from container.
         """
         self.seed = seed
         np.random.seed(seed)
         random.seed(seed)
-        self.valuator = BondValuator()
+
+        # Use provided valuator or get from container (shared instance)
+        if valuator is None:
+            from bondtrader.core.container import get_container
+
+            self.valuator = get_container().get_valuator()
+        else:
+            self.valuator = valuator
+
         self.base_generator = BondDataGenerator(seed=seed)
 
         # Define market regimes (following industry practice)

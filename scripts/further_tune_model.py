@@ -247,9 +247,9 @@ def further_tune_models(
             print(f"✓ Loaded existing model from {existing_model_paths['ml_adjuster']}")
 
             # Evaluate on new test data first
-            from bondtrader.core.bond_valuation import BondValuator
+            from bondtrader.core.container import get_container
 
-            valuator = BondValuator()
+            valuator = get_container().get_valuator()
             test_predictions = []
             test_actuals = []
 
@@ -353,9 +353,9 @@ def further_tune_models(
             print(f"✓ Loaded existing model from {existing_model_paths['enhanced_ml_adjuster']}")
 
             # Evaluate on new test data first
-            from bondtrader.core.bond_valuation import BondValuator
+            from bondtrader.core.container import get_container
 
-            valuator = BondValuator()
+            valuator = get_container().get_valuator()
             test_predictions = []
             test_actuals = []
 
@@ -459,9 +459,9 @@ def further_tune_models(
             print(f"✓ Loaded existing model from {existing_model_paths['advanced_ml_adjuster']}")
 
             # Evaluate on new test data first
-            from bondtrader.core.bond_valuation import BondValuator
+            from bondtrader.core.container import get_container
 
-            valuator = BondValuator()
+            valuator = get_container().get_valuator()
             test_predictions = []
             test_actuals = []
 
@@ -570,9 +570,9 @@ def further_tune_models(
             print(f"✓ Loaded existing model from {existing_model_paths['automl']}")
 
             # Evaluate on new test data first
-            from bondtrader.core.bond_valuation import BondValuator
+            from bondtrader.core.container import get_container
 
-            valuator = BondValuator()
+            valuator = get_container().get_valuator()
             test_predictions = []
             test_actuals = []
 

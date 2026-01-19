@@ -45,7 +45,6 @@ from bondtrader.analytics.factor_models import FactorModel
 # Import all models
 from bondtrader.config import get_config
 from bondtrader.core.bond_models import Bond, BondType
-from bondtrader.core.bond_valuation import BondValuator
 from bondtrader.data.training_data_generator import TrainingDataGenerator, load_training_dataset, save_training_dataset
 from bondtrader.ml.automl import AutoMLBondAdjuster
 from bondtrader.ml.bayesian_optimization import BayesianOptimizer
@@ -58,16 +57,7 @@ from bondtrader.risk.tail_risk import TailRiskAnalyzer
 
 
 class ModelTrainer:
-    """
-    Comprehensive model trainer for all models in the codebase
-
-    Enhanced with:
-    - Progress tracking with ETA
-    - Caching for bond conversion
-    - Parallel training for independent models
-    - Checkpointing for resume capability
-    - Better error handling
-    """
+    """Comprehensive model trainer with progress tracking, caching, parallel training, and checkpointing"""
 
     def __init__(
         self,
@@ -90,7 +80,10 @@ class ModelTrainer:
         # Get centralized configuration
         self.config = get_config()
 
-        self.valuator = BondValuator()
+        # Use container for shared valuator instance
+        from bondtrader.core.container import get_container
+
+        self.valuator = get_container().get_valuator()
         self.checkpoint_dir = checkpoint_dir or self.config.checkpoint_dir
         self.use_parallel = use_parallel
         self.max_workers = max_workers or self.config.max_workers or min(mp.cpu_count(), 8)
@@ -180,18 +173,12 @@ class ModelTrainer:
                     credit_rating = metadata.get("credit_rating", "BBB")
                     issuer = metadata.get("issuer", "Unknown")
 
-                    # Determine bond type
+                    # Determine bond type using shared constants
                     bond_type_str = metadata.get("bond_type", "Fixed Rate")
-                    bond_type_map = {
-                        "Zero Coupon": BondType.ZERO_COUPON,
-                        "Fixed Rate": BondType.FIXED_RATE,
-                        "Floating Rate": BondType.FLOATING_RATE,
-                        "Treasury": BondType.TREASURY,
-                        "Corporate": BondType.CORPORATE,
-                        "Municipal": BondType.MUNICIPAL,
-                        "High Yield": BondType.HIGH_YIELD,
-                    }
-                    bond_type = bond_type_map.get(bond_type_str, BondType.FIXED_RATE)
+                    from bondtrader.utils.constants import BOND_TYPE_STRING_MAP
+
+                    bond_type_name = BOND_TYPE_STRING_MAP.get(bond_type_str, "FIXED_RATE")
+                    bond_type = getattr(BondType, bond_type_name, BondType.FIXED_RATE)
 
                     # Reconstruct price from target (target = market_price / fair_value)
                     # We'll use the price_to_par from features as approximation
@@ -209,43 +196,16 @@ class ModelTrainer:
                     convertible_flag = bool(features[7])
                     face_value = features[13] if len(features) > 13 else 1000
 
-                    # Convert rating
-                    rating_map = {
-                        20: "AAA",
-                        19: "AA+",
-                        18: "AA",
-                        17: "AA-",
-                        16: "A+",
-                        15: "A",
-                        14: "A-",
-                        13: "BBB+",
-                        12: "BBB",
-                        11: "BBB-",
-                        10: "BB+",
-                        9: "BB",
-                        8: "BB-",
-                        7: "B+",
-                        6: "B",
-                        5: "B-",
-                        4: "CCC+",
-                        3: "CCC",
-                        2: "CCC-",
-                        1: "D",
-                        0: "NR",
-                    }
-                    credit_rating = rating_map.get(int(credit_rating_numeric), "BBB")
+                    # Convert rating using shared constants
+                    from bondtrader.utils.constants import NUMERIC_TO_RATING
+
+                    credit_rating = NUMERIC_TO_RATING.get(int(credit_rating_numeric), "BBB")
 
                     bond_type_str = metadata.get("bond_type", "Fixed Rate")
-                    bond_type_map = {
-                        "Zero Coupon": BondType.ZERO_COUPON,
-                        "Fixed Rate": BondType.FIXED_RATE,
-                        "Floating Rate": BondType.FLOATING_RATE,
-                        "Treasury": BondType.TREASURY,
-                        "Corporate": BondType.CORPORATE,
-                        "Municipal": BondType.MUNICIPAL,
-                        "High Yield": BondType.HIGH_YIELD,
-                    }
-                    bond_type = bond_type_map.get(bond_type_str, BondType.FIXED_RATE)
+                    from bondtrader.utils.constants import BOND_TYPE_STRING_MAP
+
+                    bond_type_name = BOND_TYPE_STRING_MAP.get(bond_type_str, "FIXED_RATE")
+                    bond_type = getattr(BondType, bond_type_name, BondType.FIXED_RATE)
 
                     current_date = datetime.now()
                     maturity_date = current_date + timedelta(days=int(time_to_maturity * 365.25))
@@ -276,11 +236,7 @@ class ModelTrainer:
         return bonds
 
     def _save_checkpoint(self, model_name: str, result: Dict):
-        """
-        Save checkpoint for a model with file locking
-
-        FIXED: Uses atomic writes and file locking to prevent race conditions
-        """
+        """Save checkpoint for a model with atomic writes and file locking"""
         try:
             checkpoint_path = os.path.join(self.checkpoint_dir, f"{model_name}.joblib")
             checkpoint_data = {"model_name": model_name, "result": result, "timestamp": datetime.now().isoformat()}

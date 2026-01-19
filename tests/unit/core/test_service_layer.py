@@ -118,3 +118,44 @@ class TestBondService:
         result = service.get_bond_count()
         assert result.is_ok()
         assert result.value == count_before + 1
+
+    def test_calculate_valuation_for_bond(self, service, sample_bond):
+        """Test calculating valuation for bond object"""
+        result = service.calculate_valuation_for_bond(sample_bond)
+        assert result.is_ok()
+        valuation = result.value
+        assert "fair_value" in valuation
+        assert "ytm" in valuation
+        assert "duration" in valuation
+        assert "convexity" in valuation
+
+    def test_calculate_valuations_batch(self, service, sample_bond):
+        """Test batch valuation calculation"""
+        bond2 = Bond(
+            bond_id="TEST-002",
+            bond_type=BondType.TREASURY,
+            face_value=1000,
+            coupon_rate=4.0,
+            maturity_date=datetime.now() + timedelta(days=1825),
+            issue_date=datetime.now() - timedelta(days=365),
+            current_price=980,
+            credit_rating="AAA",
+            issuer="US Treasury",
+            frequency=2,
+        )
+        bonds = [sample_bond, bond2]
+        result = service.calculate_valuations_batch(bonds)
+        assert result.is_ok()
+        valuations = result.value
+        assert len(valuations) == 2
+        assert all("fair_value" in v for v in valuations)
+
+    def test_predict_with_ml_not_trained(self, service, sample_bond):
+        """Test ML prediction with untrained model"""
+        service.create_bond(sample_bond)
+        result = service.predict_with_ml("TEST-001", model_type="basic")
+        assert result.is_ok()
+        prediction = result.value
+        assert "theoretical_fair_value" in prediction
+        assert "ml_adjusted_fair_value" in prediction
+        assert prediction["model_trained"] is False

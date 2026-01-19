@@ -21,8 +21,19 @@ class FloatingRateBondPricer:
     """
 
     def __init__(self, valuator: BondValuator = None, multi_curve: MultiCurveFramework = None):
-        """Initialize floating rate bond pricer"""
-        self.valuator = valuator if valuator else BondValuator()
+        """
+        Initialize floating rate bond pricer
+
+        Args:
+            valuator: Optional BondValuator instance. If None, gets from container.
+            multi_curve: Optional MultiCurveFramework instance.
+        """
+        if valuator is None:
+            from bondtrader.core.container import get_container
+
+            self.valuator = get_container().get_valuator()
+        else:
+            self.valuator = valuator
         self.multi_curve = multi_curve if multi_curve else MultiCurveFramework(self.valuator)
         if not self.multi_curve.ois_curve:
             self.multi_curve.initialize_default_curves()

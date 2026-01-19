@@ -11,7 +11,7 @@ import joblib
 import numpy as np
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_split
+from sklearn.model_selection import cross_val_score, train_test_split
 from sklearn.preprocessing import StandardScaler
 
 from bondtrader.core.bond_models import Bond
@@ -28,18 +28,30 @@ except ImportError:
 
 
 class EnhancedMLBondAdjuster:
-    """
-    Enhanced ML model with hyperparameter tuning and advanced features
-    """
+    """Enhanced ML model with hyperparameter tuning and advanced features"""
 
-    def __init__(self, model_type: str = "random_forest"):
-        """Initialize enhanced ML adjuster"""
+    def __init__(self, model_type: str = "random_forest", valuator: BondValuator = None):
+        """
+        Initialize enhanced ML adjuster
+
+        Args:
+            model_type: Model type to use
+            valuator: Optional BondValuator instance. If None, gets from container.
+        """
         self.model_type = model_type
         self.model = None
         self.best_params = None
         self.scaler = StandardScaler()
         self.is_trained = False
-        self.valuator = BondValuator()
+
+        # Use provided valuator or get from container (shared instance)
+        if valuator is None:
+            from bondtrader.core.container import get_container
+
+            self.valuator = get_container().get_valuator()
+        else:
+            self.valuator = valuator
+
         self.feature_names = []
         self.training_metrics = {}
 
@@ -68,13 +80,8 @@ class EnhancedMLBondAdjuster:
         ]
 
         current_date = datetime.now()
-
-        # OPTIMIZED: Batch calculate YTM, duration, and convexity to leverage caching
-        # Calculate YTM for all bonds first (cached)
         ytms = [self.valuator.calculate_yield_to_maturity(bond) for bond in bonds]
-        # Calculate durations using cached YTMs
         durations = [self.valuator.calculate_duration(bond, ytm) for bond, ytm in zip(bonds, ytms)]
-        # Calculate convexities using cached YTMs
         convexities = [self.valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds, ytms)]
 
         for bond, fv, ytm, duration, convexity in zip(bonds, fair_values, ytms, durations, convexities):

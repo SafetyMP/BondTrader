@@ -10,25 +10,21 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 
 from bondtrader.core.bond_models import Bond, BondType
-from bondtrader.core.quantlib_integration import get_quantlib_integration, is_quantlib_available
 from bondtrader.utils.utils import logger
 
 
 class BondValuator:
     """Core bond valuation engine with calculation caching for performance"""
 
-    def __init__(self, risk_free_rate: float = 0.03, use_quantlib: bool = False, enable_caching: bool = True):
+    def __init__(self, risk_free_rate: float = 0.03, enable_caching: bool = True):
         """
         Initialize valuator with risk-free rate (default 3%)
 
         Args:
             risk_free_rate: Annual risk-free rate as decimal (e.g., 0.03 for 3%)
-            use_quantlib: Use QuantLib for calculations if available (default: False)
             enable_caching: Enable caching for expensive calculations (default: True)
         """
         self.risk_free_rate = risk_free_rate
-        self.use_quantlib = use_quantlib and is_quantlib_available()
-        self.quantlib = get_quantlib_integration() if self.use_quantlib else None
         self.enable_caching = enable_caching
         # Cache for calculations - using dict for manual cache management
         self._calculation_cache = {} if enable_caching else None
@@ -135,7 +131,9 @@ class BondValuator:
         self, bond: Bond, required_yield: Optional[float] = None, risk_free_rate: Optional[float] = None
     ) -> float:
         """
-        Calculate theoretical fair value of a bond
+        Calculate theoretical fair value of a bond with comprehensive validation.
+
+        CRITICAL: All inputs and outputs are validated to prevent incorrect valuations.
 
         Args:
             bond: Bond object
@@ -144,23 +142,36 @@ class BondValuator:
 
         Returns:
             Fair value of the bond
+
+        Raises:
+            ValueError: If bond data is invalid or calculation produces invalid result
+            CalculationError: If calculation fails or produces suspicious values
         """
-        # Try QuantLib first if enabled
-        if self.use_quantlib and self.quantlib:
-            rf_rate = risk_free_rate if risk_free_rate is not None else self.risk_free_rate
-            if required_yield is None:
-                spread = self._get_credit_spread(bond.credit_rating)
-                required_yield = rf_rate + spread
+        from bondtrader.core.exceptions import CalculationError, InvalidBondError
 
-            ql_price = self.quantlib.calculate_bond_price_quantlib(bond, required_yield)
-            if ql_price is not None:
-                return ql_price
+        # CRITICAL: Comprehensive input validation
+        if bond.face_value <= 0:
+            raise InvalidBondError(f"Face value must be positive, got {bond.face_value}")
+        if bond.current_price <= 0:
+            raise InvalidBondError(f"Current price must be positive, got {bond.current_price}")
+        if bond.coupon_rate < 0 or bond.coupon_rate > 100:
+            raise InvalidBondError(f"Coupon rate must be between 0 and 100, got {bond.coupon_rate}")
+        if bond.frequency <= 0:
+            raise InvalidBondError(f"Frequency must be positive, got {bond.frequency}")
 
-        # Fallback to standard implementation
+        # Validate risk-free rate if provided
+        if risk_free_rate is not None:
+            if risk_free_rate < 0 or risk_free_rate > 1:
+                raise InvalidBondError(f"Risk-free rate must be between 0 and 1, got {risk_free_rate}")
+        if required_yield is not None:
+            if required_yield < 0 or required_yield > 1:
+                raise InvalidBondError(f"Required yield must be between 0 and 1, got {required_yield}")
+
         rf_rate = risk_free_rate if risk_free_rate is not None else self.risk_free_rate
         time_to_maturity = bond.time_to_maturity
 
         if time_to_maturity <= 0:
+            # Bond is at or past maturity - return face value
             return bond.face_value
 
         if bond.bond_type == BondType.ZERO_COUPON:
@@ -207,6 +218,32 @@ class BondValuator:
         pv_face = bond.face_value / ((1 + required_ytm / bond.frequency) ** periods) if periods > 0 else bond.face_value
 
         fair_value = pv_coupons + pv_face
+
+        # CRITICAL: Output validation and anomaly detection
+        if fair_value <= 0:
+            raise CalculationError(f"Invalid fair value calculated: {fair_value}. Must be positive.")
+        if not np.isfinite(fair_value):
+            raise CalculationError(f"Fair value is not finite: {fair_value}")
+
+        # Anomaly detection: Flag suspicious deviations (>50% from market price)
+        deviation_pct = abs(fair_value - bond.current_price) / bond.current_price if bond.current_price > 0 else 0
+        if deviation_pct > 0.5:  # More than 50% deviation
+            logger.warning(
+                f"Large deviation detected for bond {bond.bond_id}: "
+                f"fair_value={fair_value:.2f}, market_price={bond.current_price:.2f}, "
+                f"deviation={deviation_pct*100:.1f}%. This may require manual review."
+            )
+            # In production: trigger alert for manual review
+
+        # Sanity check: Fair value should be reasonable relative to face value
+        # (typically between 50% and 200% of face value for most bonds)
+        if fair_value < bond.face_value * 0.1 or fair_value > bond.face_value * 5.0:
+            logger.warning(
+                f"Unusual fair value for bond {bond.bond_id}: "
+                f"fair_value={fair_value:.2f}, face_value={bond.face_value:.2f}, "
+                f"ratio={fair_value/bond.face_value:.2f}x"
+            )
+
         return fair_value
 
     # Class-level constant for credit spreads (optimized - no dict lookup overhead)

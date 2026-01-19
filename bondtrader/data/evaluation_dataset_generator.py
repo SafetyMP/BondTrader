@@ -135,7 +135,12 @@ class EvaluationDatasetGenerator:
         self.seed = seed
         np.random.seed(seed)
         random.seed(seed)
-        self.valuator = valuator if valuator else BondValuator()
+        if valuator is None:
+            from bondtrader.core.container import get_container
+
+            self.valuator = get_container().get_valuator()
+        else:
+            self.valuator = valuator
         self.benchmark_generator = BenchmarkGenerator(self.valuator)
         self.drift_detector = DriftDetector(self.benchmark_generator)
         self.base_generator = BondDataGenerator(seed=seed)

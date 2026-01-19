@@ -55,8 +55,18 @@ class BenchmarkGenerator:
     """
 
     def __init__(self, valuator: BondValuator = None):
-        """Initialize benchmark generator"""
-        self.valuator = valuator if valuator else BondValuator()
+        """
+        Initialize benchmark generator
+
+        Args:
+            valuator: Optional BondValuator instance. If None, gets from container.
+        """
+        if valuator is None:
+            from bondtrader.core.container import get_container
+
+            self.valuator = get_container().get_valuator()
+        else:
+            self.valuator = valuator
 
         # Industry-specific adjustment factors (based on research)
         # These simulate how different firms adjust standard valuations
@@ -541,9 +551,9 @@ class ModelTuner:
                     elif hasattr(model_copy, "predict"):
                         # For sklearn models
                         # Need to extract features first
-                        from bondtrader.core.bond_valuation import BondValuator
+                        from bondtrader.core.container import get_container
 
-                        valuator = BondValuator()
+                        valuator = get_container().get_valuator()
                         fair_value = valuator.calculate_fair_value(bond)
                         # Simplified feature extraction
                         features = np.array([[bond.coupon_rate, bond.time_to_maturity]])
@@ -644,9 +654,9 @@ def compare_models_against_benchmarks(
                     pred = model.predict_adjusted_value(bond)
                     value = pred.get("ml_adjusted_value", pred.get("ml_adjusted_fair_value", bond.current_price))
                 elif hasattr(model, "predict"):
-                    from bondtrader.core.bond_valuation import BondValuator
+                    from bondtrader.core.container import get_container
 
-                    valuator = BondValuator()
+                    valuator = get_container().get_valuator()
                     fair_value = valuator.calculate_fair_value(bond)
                     features = np.array([[bond.coupon_rate, bond.time_to_maturity]])
                     pred_value = model.predict(features)[0]

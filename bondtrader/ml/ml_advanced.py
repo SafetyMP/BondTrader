@@ -43,14 +43,21 @@ except ImportError:
 
 
 class AdvancedMLBondAdjuster:
-    """
-    Advanced ML with deep learning, ensembles, and explainable AI
-    Features beyond standard industry implementations
-    """
+    """Advanced ML with deep learning, ensembles, and explainable AI"""
 
     def __init__(self, valuator: BondValuator = None):
-        """Initialize advanced ML adjuster"""
-        self.valuator = valuator if valuator else BondValuator()
+        """
+        Initialize advanced ML adjuster
+
+        Args:
+            valuator: Optional BondValuator instance. If None, gets from container.
+        """
+        if valuator is None:
+            from bondtrader.core.container import get_container
+
+            self.valuator = get_container().get_valuator()
+        else:
+            self.valuator = valuator
         self.scaler = StandardScaler()
         self.models = {}
         self.ensemble_model = None
@@ -71,16 +78,11 @@ class AdvancedMLBondAdjuster:
         self.scaler_var_ = None
 
     def _create_advanced_features(self, bonds: List[Bond], fair_values: List[float]) -> Tuple[np.ndarray, List[str]]:
-        """Create advanced feature set with polynomial and interaction features (optimized)"""
+        """Create advanced feature set with polynomial and interaction features"""
         features = []
         feature_names = []
-
-        # OPTIMIZED: Batch calculate YTM, duration, and convexity to leverage caching
-        # Calculate YTM for all bonds first (cached)
         ytms = [self.valuator.calculate_yield_to_maturity(bond) for bond in bonds]
-        # Calculate durations using cached YTMs
         durations = [self.valuator.calculate_duration(bond, ytm) for bond, ytm in zip(bonds, ytms)]
-        # Calculate convexities using cached YTMs
         convexities = [self.valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds, ytms)]
 
         for bond, fv, ytm, duration, convexity in zip(bonds, fair_values, ytms, durations, convexities):

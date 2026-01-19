@@ -60,3 +60,21 @@ class TestConstants:
         rate = get_recovery_rate_enhanced("AAA")
         assert isinstance(rate, float)
         assert 0 < rate < 1
+
+    def test_get_default_probability_all_ratings(self):
+        """Test getting default probabilities for all ratings"""
+        for rating in DEFAULT_PROBABILITIES.keys():
+            prob = get_default_probability(rating)
+            assert 0 <= prob <= 1
+
+    def test_get_recovery_rate_all_ratings_standard(self):
+        """Test getting recovery rates for all ratings (standard)"""
+        for rating in RECOVERY_RATES_STANDARD.keys():
+            rate = get_recovery_rate_standard(rating)
+            assert 0 <= rate <= 1
+
+    def test_get_recovery_rate_all_ratings_enhanced(self):
+        """Test getting recovery rates for all ratings (enhanced)"""
+        for rating in RECOVERY_RATES_ENHANCED.keys():
+            rate = get_recovery_rate_enhanced(rating)
+            assert 0 <= rate <= 1

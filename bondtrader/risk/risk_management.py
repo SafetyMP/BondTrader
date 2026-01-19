@@ -26,12 +26,13 @@ except ImportError:
 
     prange = range
 
+from bondtrader.core.base_analytics import AnalyticsBase
 from bondtrader.core.bond_models import Bond
 from bondtrader.core.bond_valuation import BondValuator
 from bondtrader.utils.utils import logger
 
 
-class RiskManager:
+class RiskManager(AnalyticsBase):
     """Risk management and analysis for bond portfolios"""
 
     def __init__(self, valuator: BondValuator = None):
@@ -41,7 +42,7 @@ class RiskManager:
         Args:
             valuator: Bond valuator instance
         """
-        self.valuator = valuator if valuator else BondValuator()
+        super().__init__(valuator)
         # Credit migration matrix (annual transition probabilities) for enhanced credit risk
         self.migration_matrix = self._get_default_migration_matrix()
 

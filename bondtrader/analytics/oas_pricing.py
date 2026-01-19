@@ -43,7 +43,12 @@ class OASPricer:
             valuator: Bond valuator instance
             num_steps: Number of steps in binomial tree
         """
-        self.valuator = valuator if valuator else BondValuator()
+        if valuator is None:
+            from bondtrader.core.container import get_container
+
+            self.valuator = get_container().get_valuator()
+        else:
+            self.valuator = valuator
         self.num_steps = num_steps
 
     def calculate_oas(

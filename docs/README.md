@@ -29,10 +29,11 @@ Welcome to the BondTrader documentation! This directory contains comprehensive d
   - CTO Review & Optimization
   - Complete CTO Deliverable
   - Executive Demo Guide
-  - Demo summaries and assessments
+  - Demo Assessment (consolidated)
 
 ### For Analysis
 - **[Analysis](analysis/)** - Technical analysis and optimization reports
+  - ML Pipeline Analysis (consolidated)
   - Performance optimizations
   - ML improvements
   - Redundancy analysis
@@ -58,12 +59,17 @@ All documentation follows these standards:
 - Links to related documentation
 - Regular updates with code changes
 
+## Log Files Organization
+
+All log files are organized in the `logs/` directory. See [LOGS_ORGANIZATION.md](LOGS_ORGANIZATION.md) for details on log file management.
+
 ## Archived Documentation
 
 Historical summary and implementation files have been consolidated. See [ARCHIVE.md](ARCHIVE.md) for details on where information has been moved.
 
 ## Recent Updates
 
+- **Documentation Reorganization**: Consolidated duplicate documentation files for better organization
+- **Log File Organization**: All log files now stored in `logs/` directory
 - **Security Improvements**: See [CHANGELOG.md](../CHANGELOG.md) for recent security enhancements
-- **Code Review**: Comprehensive codebase review completed - see [CODEBASE_REVIEW_IMPROVEMENTS.md](../CODEBASE_REVIEW_IMPROVEMENTS.md)
 - **CI/CD**: GitHub Actions workflow configured for automated testing and linting

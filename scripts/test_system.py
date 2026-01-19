@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from bondtrader.core.arbitrage_detector import ArbitrageDetector
 from bondtrader.core.bond_models import Bond, BondType
-from bondtrader.core.bond_valuation import BondValuator
+from bondtrader.core.container import get_container
 from bondtrader.data.data_generator import BondDataGenerator
 from bondtrader.ml.ml_adjuster import MLBondAdjuster
 
@@ -28,7 +28,8 @@ def test_basic_valuation():
         frequency=2,
     )
 
-    valuator = BondValuator(risk_free_rate=0.03)
+    container = get_container()
+    valuator = container.get_valuator(risk_free_rate=0.03)
     fair_value = valuator.calculate_fair_value(bond)
     ytm = valuator.calculate_yield_to_maturity(bond)
     mismatch = valuator.calculate_price_mismatch(bond)
@@ -47,7 +48,8 @@ def test_arbitrage_detection(bonds):
     """Test arbitrage detection"""
     print("Testing arbitrage detection...")
 
-    valuator = BondValuator()
+    container = get_container()
+    valuator = container.get_valuator()
     detector = ArbitrageDetector(valuator=valuator, min_profit_threshold=0.01)
     opportunities = detector.find_arbitrage_opportunities(bonds, use_ml=False)
 
