@@ -11,7 +11,9 @@ try:
     import pandas_market_calendars as mcal
 
     HAS_MARKET_CALENDARS = True
-except ImportError:
+except (ImportError, SyntaxError):
+    # ImportError: package not installed
+    # SyntaxError: package has incompatible type annotations (e.g., Python 3.10+ | syntax on Python 3.9)
     HAS_MARKET_CALENDARS = False
 
 from bondtrader.utils.utils import logger

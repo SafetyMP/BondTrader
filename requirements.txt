@@ -21,7 +21,7 @@ numba>=0.58.0
 # Install manually with: pip install QuantLib-Python (if needed)
 # Version 1.32+ may not be available - check PyPI for latest version
 # QuantLib-Python>=1.31  # Commented out - install manually if needed
-pandas-market-calendars>=4.2.1,<5.3.0  # 4.3.0+ requires Python 3.10+ (uses | union syntax)
+pandas-market-calendars>=4.1.0,<4.2.0  # 4.2.1+ may use Python 3.10+ syntax (| union), pin to 4.1.x for Python 3.9 compatibility
 arch>=6.2.0
 statsmodels>=0.14.0
 Riskfolio-Lib>=5.0.0
