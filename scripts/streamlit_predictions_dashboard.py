@@ -118,9 +118,7 @@ def create_prediction_comparison_chart(df: pd.DataFrame):
                         "Predicted Value": row[col],
                         "Theoretical Value": base_value,
                         "Difference": row[col] - base_value,
-                        "Difference %": (
-                            ((row[col] - base_value) / base_value * 100) if base_value > 0 else 0
-                        ),
+                        "Difference %": (((row[col] - base_value) / base_value * 100) if base_value > 0 else 0),
                     }
                 )
 
