@@ -18,6 +18,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import sys
 from pathlib import Path
 
+from datetime import datetime
+
 from bondtrader.core.bond_models import Bond, BondType
 from bondtrader.data.training_data_generator import (
     TrainingDataGenerator,
@@ -30,6 +32,38 @@ from bondtrader.ml.ml_adjuster_enhanced import EnhancedMLBondAdjuster
 fixtures_path = Path(__file__).parent.parent / "fixtures"
 sys.path.insert(0, str(fixtures_path))
 from bond_factory import create_multiple_bonds
+
+
+def reconstruct_bonds_from_metadata(metadata_list):
+    """Reconstruct Bond objects from metadata"""
+    bonds = []
+    for meta in metadata_list:
+        # Parse dates from metadata
+        if isinstance(meta["maturity_date"], str):
+            maturity_date = datetime.fromisoformat(meta["maturity_date"])
+        else:
+            maturity_date = meta["maturity_date"]
+        if isinstance(meta["issue_date"], str):
+            issue_date = datetime.fromisoformat(meta["issue_date"])
+        else:
+            issue_date = meta["issue_date"]
+        
+        bond = Bond(
+            bond_id=meta["bond_id"],
+            bond_type=BondType(meta["bond_type"]),
+            face_value=meta["face_value"],
+            coupon_rate=meta["coupon_rate"],
+            maturity_date=maturity_date,
+            issue_date=issue_date,
+            current_price=meta.get("current_price", meta["face_value"] * 0.95),  # Default if not in metadata
+            credit_rating=meta["credit_rating"],
+            issuer=meta["issuer"],
+            frequency=meta.get("frequency", 2),
+            callable=meta.get("callable", False),
+            convertible=meta.get("convertible", False),
+        )
+        bonds.append(bond)
+    return bonds
 
 
 @pytest.fixture
@@ -131,8 +165,9 @@ class TestTrainingPipeline:
         dataset = generator.generate_comprehensive_dataset(total_bonds=50, time_periods=10, bonds_per_period=10)
 
         # Step 3: Verify dataset structure
-        assert "train_bonds" in dataset or "train" in dataset
-        assert len(dataset.get("train_bonds", dataset.get("train", []))) > 0
+        assert "train" in dataset, "Dataset should have 'train' key"
+        assert "bonds" in dataset["train"], "Dataset train should have 'bonds' key"
+        assert len(dataset["train"]["bonds"]) > 0, "Train bonds should not be empty"
 
         # Step 4: Save dataset (use relative path)
         original_cwd = os.getcwd()
@@ -159,7 +194,12 @@ class TestTrainingPipeline:
 
             # Step 2: Load dataset
             loaded_dataset = load_training_dataset("dataset.joblib")
-            train_bonds = loaded_dataset.get("train_bonds", loaded_dataset.get("train", []))
+            # Dataset structure: {"train": {"bonds": [...], "metadata": [...], ...}, ...}
+            train_metadata = loaded_dataset.get("train", {}).get("metadata", [])
+            # Reconstruct Bond objects from metadata
+            train_bonds = reconstruct_bonds_from_metadata(train_metadata)
+            # Ensure we have enough bonds for training
+            assert len(train_bonds) >= 10, f"Need at least 10 bonds for training, got {len(train_bonds)}"
         finally:
             os.chdir(original_cwd)
 
@@ -199,8 +239,14 @@ class TestTrainingPerformance:
         adjuster = MLBondAdjuster(model_type="random_forest")
         import time
 
+        # Dataset structure: {"train": {"bonds": [...], "metadata": [...], ...}, ...}
+        train_metadata = dataset.get("train", {}).get("metadata", [])
+        # Reconstruct Bond objects from metadata
+        train_bonds = reconstruct_bonds_from_metadata(train_metadata)
+        assert len(train_bonds) >= 10, f"Need at least 10 bonds for training, got {len(train_bonds)}"
+
         start_time = time.time()
-        metrics = adjuster.train(dataset["train_bonds"], test_size=0.2, random_state=42)
+        metrics = adjuster.train(train_bonds, test_size=0.2, random_state=42)
         elapsed_time = time.time() - start_time
 
         # Should complete within reasonable time (adjust threshold as needed)
