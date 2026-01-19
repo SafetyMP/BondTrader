@@ -26,6 +26,8 @@ except ImportError:
     pass
 
 from bondtrader.config import get_config
+from bondtrader.utils import format_currency as _format_currency
+from bondtrader.utils import format_percentage as _format_percentage
 
 # Page configuration
 st.set_page_config(
@@ -76,10 +78,6 @@ def load_predictions(file_path: str) -> pd.DataFrame:
         df["maturity_date"] = pd.to_datetime(df["maturity_date"])
 
     return df
-
-
-from bondtrader.utils import format_currency as _format_currency
-from bondtrader.utils import format_percentage as _format_percentage
 
 
 def format_currency(value: float) -> str:
