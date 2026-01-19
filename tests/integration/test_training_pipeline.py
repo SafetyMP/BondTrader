@@ -52,9 +52,7 @@ def reconstruct_bonds_from_metadata(metadata_list):
             coupon_rate=meta["coupon_rate"],
             maturity_date=maturity_date,
             issue_date=issue_date,
-            current_price=meta.get(
-                "current_price", meta["face_value"] * 0.95
-            ),  # Default if not in metadata
+            current_price=meta.get("current_price", meta["face_value"] * 0.95),  # Default if not in metadata
             credit_rating=meta["credit_rating"],
             issuer=meta["issuer"],
             frequency=meta.get("frequency", 2),
@@ -133,9 +131,7 @@ class TestTrainingPipeline:
         assert not adjuster.is_trained
 
         # Step 2: Train with tuning
-        metrics = adjuster.train_with_tuning(
-            training_bonds, tune_hyperparameters=False, random_state=42
-        )
+        metrics = adjuster.train_with_tuning(training_bonds, tune_hyperparameters=False, random_state=42)
 
         # Step 3: Verify training succeeded
         assert adjuster.is_trained
@@ -163,9 +159,7 @@ class TestTrainingPipeline:
         generator = TrainingDataGenerator(seed=42)
 
         # Step 2: Generate training data
-        dataset = generator.generate_comprehensive_dataset(
-            total_bonds=50, time_periods=10, bonds_per_period=10
-        )
+        dataset = generator.generate_comprehensive_dataset(total_bonds=50, time_periods=10, bonds_per_period=10)
 
         # Step 3: Verify dataset structure
         assert "train" in dataset, "Dataset should have 'train' key"
@@ -189,9 +183,7 @@ class TestTrainingPipeline:
         """Test training model with pre-generated dataset"""
         # Step 1: Generate and save dataset
         generator = TrainingDataGenerator(seed=42)
-        dataset = generator.generate_comprehensive_dataset(
-            total_bonds=30, time_periods=5, bonds_per_period=10
-        )
+        dataset = generator.generate_comprehensive_dataset(total_bonds=30, time_periods=5, bonds_per_period=10)
         original_cwd = os.getcwd()
         try:
             os.chdir(temp_training_dir)
@@ -204,9 +196,7 @@ class TestTrainingPipeline:
             # Reconstruct Bond objects from metadata
             train_bonds = reconstruct_bonds_from_metadata(train_metadata)
             # Ensure we have enough bonds for training
-            assert (
-                len(train_bonds) >= 10
-            ), f"Need at least 10 bonds for training, got {len(train_bonds)}"
+            assert len(train_bonds) >= 10, f"Need at least 10 bonds for training, got {len(train_bonds)}"
         finally:
             os.chdir(original_cwd)
 
@@ -240,9 +230,7 @@ class TestTrainingPerformance:
         """Test training performance with larger dataset"""
         # Generate larger dataset
         generator = TrainingDataGenerator(seed=42)
-        dataset = generator.generate_comprehensive_dataset(
-            total_bonds=100, time_periods=10, bonds_per_period=20
-        )
+        dataset = generator.generate_comprehensive_dataset(total_bonds=100, time_periods=10, bonds_per_period=20)
 
         # Train model
         adjuster = MLBondAdjuster(model_type="random_forest")
@@ -252,9 +240,7 @@ class TestTrainingPerformance:
         train_metadata = dataset.get("train", {}).get("metadata", [])
         # Reconstruct Bond objects from metadata
         train_bonds = reconstruct_bonds_from_metadata(train_metadata)
-        assert (
-            len(train_bonds) >= 10
-        ), f"Need at least 10 bonds for training, got {len(train_bonds)}"
+        assert len(train_bonds) >= 10, f"Need at least 10 bonds for training, got {len(train_bonds)}"
 
         start_time = time.time()
         metrics = adjuster.train(train_bonds, test_size=0.2, random_state=42)

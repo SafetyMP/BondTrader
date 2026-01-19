@@ -17,9 +17,7 @@ from scripts.api_helpers import handle_service_result
 router = APIRouter(tags=["Bonds"])
 
 
-@router.post(
-    "", response_model=BondResponse, status_code=201, dependencies=[Depends(verify_api_key)]
-)
+@router.post("", response_model=BondResponse, status_code=201, dependencies=[Depends(verify_api_key)])
 async def create_bond(bond: BondCreate):
     """
     Create a new bond
@@ -95,12 +93,8 @@ async def create_bond(bond: BondCreate):
 @router.get("", response_model=List[BondResponse], dependencies=[Depends(verify_api_key)])
 async def list_bonds(
     skip: int = Query(0, ge=0, description="Number of records to skip (for pagination)", example=0),
-    limit: int = Query(
-        100, ge=1, le=1000, description="Maximum number of records to return", example=100
-    ),
-    issuer: Optional[str] = Query(
-        None, description="Filter by issuer name (case-insensitive partial match)", example="Corp"
-    ),
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of records to return", example=100),
+    issuer: Optional[str] = Query(None, description="Filter by issuer name (case-insensitive partial match)", example="Corp"),
     bond_type: Optional[str] = Query(None, description="Filter by bond type", example="CORPORATE"),
 ):
     """

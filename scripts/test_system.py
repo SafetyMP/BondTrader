@@ -55,9 +55,7 @@ def test_arbitrage_detection(bonds):
 
     print(f"Found {len(opportunities)} arbitrage opportunities")
     if opportunities:
-        print(
-            f"Top opportunity: {opportunities[0]['bond_id']} - {opportunities[0]['profit_percentage']:.2f}%"
-        )
+        print(f"Top opportunity: {opportunities[0]['bond_id']} - {opportunities[0]['profit_percentage']:.2f}%")
     print("✓ Arbitrage detection works!\n")
 
 
@@ -75,9 +73,7 @@ def test_ml_adjuster(bonds):
     ml_adjuster = MLBondAdjuster(model_type=config.ml_model_type)
 
     try:
-        metrics = ml_adjuster.train(
-            bonds, test_size=config.ml_test_size, random_state=config.ml_random_state
-        )
+        metrics = ml_adjuster.train(bonds, test_size=config.ml_test_size, random_state=config.ml_random_state)
         print(f"Train R²: {metrics['train_r2']:.4f}")
         print(f"Test R²: {metrics['test_r2']:.4f}")
         print("✓ ML adjuster works!\n")

@@ -20,8 +20,7 @@ def validate_bond_input(func: Callable) -> Callable:
             # If method, second arg is bond; if function, first arg is bond
             bond = (
                 args[1]
-                if len(args) > 1
-                and args[0].__class__.__name__ in ["BondValuator", "ArbitrageDetector"]
+                if len(args) > 1 and args[0].__class__.__name__ in ["BondValuator", "ArbitrageDetector"]
                 else (args[0] if len(args) > 0 else None)
             )
 
@@ -107,9 +106,7 @@ def validate_percentage(value: float, name: str = "percentage") -> None:
     # Also check if it's in decimal form (0-1)
     if value > 1.0 and value <= 100.0:
         # Likely a percentage, but check if should be decimal
-        logger.warning(
-            f"{name} appears to be in percentage form ({value}), consider using decimal form (0-1)"
-        )
+        logger.warning(f"{name} appears to be in percentage form ({value}), consider using decimal form (0-1)")
 
 
 def validate_probability(value: float, name: str = "probability") -> None:
@@ -189,9 +186,7 @@ def validate_file_path(
     # Check for absolute paths if not allowed
     if not allow_absolute:
         if os.path.isabs(filepath):
-            raise ValueError(
-                f"{name} cannot be an absolute path for security reasons. Use relative paths."
-            )
+            raise ValueError(f"{name} cannot be an absolute path for security reasons. Use relative paths.")
     else:
         # Warn about absolute paths even if allowed
         if os.path.isabs(filepath):
@@ -202,9 +197,7 @@ def validate_file_path(
         path_obj = Path(filepath)
         ext = path_obj.suffix.lower()
         if ext not in [e.lower() for e in allowed_extensions]:
-            raise ValueError(
-                f"{name} must have one of these extensions: {allowed_extensions}, got: {ext}"
-            )
+            raise ValueError(f"{name} must have one of these extensions: {allowed_extensions}, got: {ext}")
 
     # Validate path components don't contain dangerous characters
     # Windows: < > : " | ? *
@@ -320,6 +313,4 @@ def validate_credit_rating(rating: str, name: str = "credit_rating") -> None:
     ]
 
     if rating.upper() not in valid_ratings:
-        logger.warning(
-            f"{name} '{rating}' not in standard ratings list, allowing but may cause issues"
-        )
+        logger.warning(f"{name} '{rating}' not in standard ratings list, allowing but may cause issues")

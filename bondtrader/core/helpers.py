@@ -112,9 +112,7 @@ def validate_bond_data(data: Dict) -> Result[Dict, Exception]:
     return Result.ok(data)
 
 
-def calculate_portfolio_value(
-    bonds: List[Bond], weights: Optional[List[float]] = None
-) -> Dict[str, float]:
+def calculate_portfolio_value(bonds: List[Bond], weights: Optional[List[float]] = None) -> Dict[str, float]:
     """
     Calculate portfolio value metrics
 
@@ -161,9 +159,7 @@ def calculate_portfolio_value(
         "total_market_value": total_market_value,
         "total_fair_value": total_fair_value,
         "mismatch_percentage": (
-            ((total_market_value - total_fair_value) / total_fair_value * 100)
-            if total_fair_value > 0
-            else 0
+            ((total_market_value - total_fair_value) / total_fair_value * 100) if total_fair_value > 0 else 0
         ),
         "num_bonds": len(bonds),
     }

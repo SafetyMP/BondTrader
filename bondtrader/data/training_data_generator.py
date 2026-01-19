@@ -184,9 +184,7 @@ class TrainingDataGenerator:
 
         # Generate time series data across regimes
         print("  Step 2: Generating time series data across market regimes...")
-        time_series_data = self._generate_time_series_data(
-            base_bonds, time_periods, bonds_per_period
-        )
+        time_series_data = self._generate_time_series_data(base_bonds, time_periods, bonds_per_period)
 
         # Create feature matrices
         print("  Step 3: Creating feature matrices...")
@@ -194,9 +192,7 @@ class TrainingDataGenerator:
 
         # Split data (time-based, not random - critical for financial data)
         print("  Step 4: Creating time-based splits...")
-        splits = self._create_time_based_splits(
-            features, targets, metadata, train_split, validation_split, test_split
-        )
+        splits = self._create_time_based_splits(features, targets, metadata, train_split, validation_split, test_split)
 
         # Data quality validation
         print("  Step 5: Validating data quality...")
@@ -375,9 +371,7 @@ class TrainingDataGenerator:
                 coupon_rate = np.random.uniform(6.0, 12.0)
             else:
                 # Corporate bonds: higher rating = lower coupon
-                base_coupon = (
-                    2.0 if rating.startswith("A") else 3.0 if rating.startswith("BBB") else 5.0
-                )
+                base_coupon = 2.0 if rating.startswith("A") else 3.0 if rating.startswith("BBB") else 5.0
                 coupon_rate = np.random.uniform(base_coupon, base_coupon + 2.0)
 
             # Issuer
@@ -418,9 +412,7 @@ class TrainingDataGenerator:
 
         return bonds
 
-    def _generate_time_series_data(
-        self, base_bonds: List[Bond], time_periods: int, bonds_per_period: int
-    ) -> List[Dict]:
+    def _generate_time_series_data(self, base_bonds: List[Bond], time_periods: int, bonds_per_period: int) -> List[Dict]:
         """
         Generate time series data across multiple market regimes
 
@@ -464,12 +456,8 @@ class TrainingDataGenerator:
         for period in range(time_periods):
             # Transition to new regime
             if period > 0:
-                transition_probs = regime_transitions.get(
-                    current_regime, regime_transitions["normal"]
-                )
-                current_regime = np.random.choice(
-                    list(transition_probs.keys()), p=list(transition_probs.values())
-                )
+                transition_probs = regime_transitions.get(current_regime, regime_transitions["normal"])
+                current_regime = np.random.choice(list(transition_probs.keys()), p=list(transition_probs.values()))
 
             regime = self.regimes[current_regime]
             period_date = start_date + timedelta(days=period * 30)
@@ -496,9 +484,7 @@ class TrainingDataGenerator:
                 sentiment_impact = regime.market_sentiment * 0.01
 
                 # Market price with regime effects
-                market_price = fair_value * (
-                    1 + liquidity_noise + sentiment_impact + np.random.normal(0, volatility * 0.5)
-                )
+                market_price = fair_value * (1 + liquidity_noise + sentiment_impact + np.random.normal(0, volatility * 0.5))
 
                 # Ensure price is reasonable
                 market_price = np.clip(market_price, fair_value * 0.5, fair_value * 1.5)
@@ -520,9 +506,7 @@ class TrainingDataGenerator:
 
         return time_series_data
 
-    def _create_feature_matrices(
-        self, time_series_data: List[Dict]
-    ) -> Tuple[np.ndarray, np.ndarray, List[Dict]]:
+    def _create_feature_matrices(self, time_series_data: List[Dict]) -> Tuple[np.ndarray, np.ndarray, List[Dict]]:
         """
         Create feature matrices for ML models
 
@@ -540,12 +524,8 @@ class TrainingDataGenerator:
         # This leverages caching and reduces redundant calculations
         bonds_list = [dp["bond"] for dp in time_series_data]
         ytms = [self.valuator.calculate_yield_to_maturity(bond) for bond in bonds_list]
-        durations = [
-            self.valuator.calculate_duration(bond, ytm) for bond, ytm in zip(bonds_list, ytms)
-        ]
-        convexities = [
-            self.valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds_list, ytms)
-        ]
+        durations = [self.valuator.calculate_duration(bond, ytm) for bond, ytm in zip(bonds_list, ytms)]
+        convexities = [self.valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds_list, ytms)]
 
         # OPTIMIZED: Cache current_time for consistent datetime usage
         from datetime import datetime
@@ -573,8 +553,7 @@ class TrainingDataGenerator:
                 char["coupon_rate"],
                 char["time_to_maturity"],
                 char["credit_rating_numeric"],
-                char["current_price"]
-                / char["face_value"],  # Price to par (OK - different from target)
+                char["current_price"] / char["face_value"],  # Price to par (OK - different from target)
                 char["years_since_issue"],
                 char["frequency"],
                 char["callable"],
@@ -726,22 +705,16 @@ class TrainingDataGenerator:
         stress_scenarios = {}
 
         # Scenario 1: Interest rate shock (+200 bps)
-        stress_scenarios["rate_shock_up"] = self._apply_stress_scenario(
-            bonds, risk_free_rate_change=0.02
-        )
+        stress_scenarios["rate_shock_up"] = self._apply_stress_scenario(bonds, risk_free_rate_change=0.02)
 
         # Scenario 2: Interest rate shock (-200 bps)
-        stress_scenarios["rate_shock_down"] = self._apply_stress_scenario(
-            bonds, risk_free_rate_change=-0.02
-        )
+        stress_scenarios["rate_shock_down"] = self._apply_stress_scenario(bonds, risk_free_rate_change=-0.02)
 
         # Scenario 3: Credit spread widening (+100 bps)
         stress_scenarios["spread_widening"] = self._apply_stress_scenario(bonds, spread_change=0.01)
 
         # Scenario 4: Liquidity crisis
-        stress_scenarios["liquidity_crisis"] = self._apply_stress_scenario(
-            bonds, liquidity_multiplier=0.3
-        )
+        stress_scenarios["liquidity_crisis"] = self._apply_stress_scenario(bonds, liquidity_multiplier=0.3)
 
         return stress_scenarios
 
@@ -774,9 +747,7 @@ class TrainingDataGenerator:
                     "bond": bond,
                     "fair_value": fair_value,
                     "market_price": market_price,
-                    "stress_adjustment": (
-                        market_price / bond.current_price if bond.current_price > 0 else 1.0
-                    ),
+                    "stress_adjustment": (market_price / bond.current_price if bond.current_price > 0 else 1.0),
                 }
             )
 
@@ -784,9 +755,7 @@ class TrainingDataGenerator:
 
         return scenario_data
 
-    def generate_bonds_for_training(
-        self, num_bonds: int = 1000, include_regimes: List[str] = None
-    ) -> List[Bond]:
+    def generate_bonds_for_training(self, num_bonds: int = 1000, include_regimes: List[str] = None) -> List[Bond]:
         """
         Generate bonds specifically formatted for model training
 
@@ -860,9 +829,7 @@ if __name__ == "__main__":
     print()
 
     # Generate dataset
-    dataset = generator.generate_comprehensive_dataset(
-        total_bonds=5000, time_periods=60, bonds_per_period=100
-    )
+    dataset = generator.generate_comprehensive_dataset(total_bonds=5000, time_periods=60, bonds_per_period=100)
 
     # Print summary
     print("\n" + "=" * 60)
@@ -885,9 +852,7 @@ if __name__ == "__main__":
         print(f"\n{split_name.upper()}:")
         print(f"  Samples: {quality['n_samples']}")
         print(f"  Missing values: {quality['missing_values']}")
-        print(
-            f"  Target range: [{quality['target_range'][0]:.3f}, {quality['target_range'][1]:.3f}]"
-        )
+        print(f"  Target range: [{quality['target_range'][0]:.3f}, {quality['target_range'][1]:.3f}]")
         print(f"  Target mean: {quality['target_mean']:.3f}")
 
     # Save dataset

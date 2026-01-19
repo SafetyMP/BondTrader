@@ -27,9 +27,7 @@ def migrate_schema_to_postgresql():
     db_type = get_database_type()
 
     if db_type != "postgresql":
-        logger.warning(
-            f"Database type is {db_type}, not PostgreSQL. Set DATABASE_TYPE=postgresql to migrate."
-        )
+        logger.warning(f"Database type is {db_type}, not PostgreSQL. Set DATABASE_TYPE=postgresql to migrate.")
         logger.info("Creating PostgreSQL schema anyway for testing...")
 
     try:
@@ -85,9 +83,7 @@ def migrate_data_from_sqlite(sqlite_path: str = "bonds.db"):
                     from bondtrader.data.data_persistence import BondModel
 
                     # Check if bond exists
-                    existing = (
-                        session.query(BondModel).filter(BondModel.bond_id == bond.bond_id).first()
-                    )
+                    existing = session.query(BondModel).filter(BondModel.bond_id == bond.bond_id).first()
                     if existing:
                         logger.debug(f"Bond {bond.bond_id} already exists, skipping")
                         continue
@@ -132,12 +128,8 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Migrate to PostgreSQL")
-    parser.add_argument(
-        "--schema-only", action="store_true", help="Only create schema, don't migrate data"
-    )
-    parser.add_argument(
-        "--data-only", action="store_true", help="Only migrate data, assume schema exists"
-    )
+    parser.add_argument("--schema-only", action="store_true", help="Only create schema, don't migrate data")
+    parser.add_argument("--data-only", action="store_true", help="Only migrate data, assume schema exists")
     parser.add_argument("--sqlite-path", default="bonds.db", help="Path to SQLite database file")
 
     args = parser.parse_args()

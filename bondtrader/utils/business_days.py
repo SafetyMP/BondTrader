@@ -80,9 +80,7 @@ class BusinessDayCalculator:
         """Count business days between two dates"""
         if self.calendar:
             # Use market calendar
-            valid_days = self.calendar.valid_days(
-                start_date=start_date.date(), end_date=end_date.date()
-            )
+            valid_days = self.calendar.valid_days(start_date=start_date.date(), end_date=end_date.date())
             return len(valid_days)
         else:
             # Fallback: count weekdays
@@ -107,9 +105,7 @@ class BusinessDayCalculator:
                 return current
 
 
-def calculate_business_days(
-    start_date: datetime, end_date: datetime, calendar_name: str = "NYSE"
-) -> int:
+def calculate_business_days(start_date: datetime, end_date: datetime, calendar_name: str = "NYSE") -> int:
     """
     Convenience function to calculate business days between two dates
 

@@ -58,9 +58,7 @@ class TestBondValuationProperties:
         risk_free_rate=st.floats(min_value=0, max_value=0.1),
     )
     @settings(max_examples=100, deadline=5000)
-    def test_fair_value_properties(
-        self, face_value, coupon_rate, years_to_maturity, risk_free_rate
-    ):
+    def test_fair_value_properties(self, face_value, coupon_rate, years_to_maturity, risk_free_rate):
         """
         Property: Fair value should be positive and reasonable relative to face value.
         """
@@ -115,9 +113,7 @@ class TestBondValuationProperties:
         assert duration >= 0, f"Duration should be non-negative, got {duration}"
 
         # Property 2: Duration should be less than or equal to time to maturity
-        assert (
-            duration <= years_to_maturity * 1.1
-        ), f"Duration should be <= time to maturity, got {duration}"
+        assert duration <= years_to_maturity * 1.1, f"Duration should be <= time to maturity, got {duration}"
 
     @given(
         face_value1=st.floats(min_value=100, max_value=1e6),
@@ -157,6 +153,4 @@ class TestBondValuationProperties:
         fair_value2 = valuator.calculate_fair_value(bond2)
 
         # Property: Fair value should increase with face value
-        assert (
-            fair_value2 >= fair_value1
-        ), f"Fair value should be monotonic: {fair_value1} vs {fair_value2}"
+        assert fair_value2 >= fair_value1, f"Fair value should be monotonic: {fair_value1} vs {fair_value2}"

@@ -115,9 +115,7 @@ class TestEvaluationPipeline:
 
             # Compare
             assert "theoretical_fair_value" in ml_result
-            assert (
-                abs(ml_result["theoretical_fair_value"] - theoretical_fv) < 1.0
-            )  # Should be close
+            assert abs(ml_result["theoretical_fair_value"] - theoretical_fv) < 1.0  # Should be close
 
     def test_model_metrics_calculation(self, training_bonds, evaluation_bonds):
         """Test calculating evaluation metrics"""

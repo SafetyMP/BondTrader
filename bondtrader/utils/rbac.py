@@ -215,9 +215,7 @@ class RBACManager:
 
         return decorator
 
-    def check_permission(
-        self, roles: List[str], permission: Permission, resource_id: Optional[str] = None
-    ) -> bool:
+    def check_permission(self, roles: List[str], permission: Permission, resource_id: Optional[str] = None) -> bool:
         """
         Check permission and log the access attempt.
 

@@ -36,20 +36,11 @@ def test_price_floating_rate_bond(floating_rate_pricer):
     bond = create_test_bond()
     next_reset = datetime.now() + timedelta(days=90)
 
-    result = floating_rate_pricer.price_floating_rate_bond(
-        bond, next_reset_date=next_reset, spread=0.01
-    )
+    result = floating_rate_pricer.price_floating_rate_bond(bond, next_reset_date=next_reset, spread=0.01)
 
     # Result should contain pricing information (clean_price, dirty_price, or price)
-    assert (
-        "clean_price" in result or "dirty_price" in result or "price" in result or "value" in result
-    )
-    price = (
-        result.get("price")
-        or result.get("clean_price")
-        or result.get("dirty_price")
-        or result.get("value", 0)
-    )
+    assert "clean_price" in result or "dirty_price" in result or "price" in result or "value" in result
+    price = result.get("price") or result.get("clean_price") or result.get("dirty_price") or result.get("value", 0)
     assert price > 0
 
 
@@ -60,9 +51,7 @@ def test_calculate_floating_coupon(floating_rate_pricer):
     bond = create_test_bond()
     reset_date = datetime.now() + timedelta(days=30)
 
-    result = floating_rate_pricer.calculate_floating_coupon(
-        bond, reset_date, reference_rate=0.03, spread=0.01
-    )
+    result = floating_rate_pricer.calculate_floating_coupon(bond, reset_date, reference_rate=0.03, spread=0.01)
 
     assert "coupon_rate" in result
     assert "coupon_payment" in result

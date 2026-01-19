@@ -95,11 +95,7 @@ def verify_password(password: str, hashed_password: str, salt: str) -> bool:
             try:
                 # bcrypt includes salt in hash, so we don't need separate salt
                 # Convert hashed_password to bytes if it's a string
-                hash_bytes = (
-                    hashed_password.encode("utf-8")
-                    if isinstance(hashed_password, str)
-                    else hashed_password
-                )
+                hash_bytes = hashed_password.encode("utf-8") if isinstance(hashed_password, str) else hashed_password
                 return bcrypt.checkpw(password.encode("utf-8"), hash_bytes)
             except Exception:
                 return False

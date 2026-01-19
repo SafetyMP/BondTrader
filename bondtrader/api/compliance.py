@@ -23,9 +23,7 @@ class ComplianceReporter:
         """Initialize compliance reporter"""
         self.audit_logger = get_audit_logger()
 
-    def generate_sox_report(
-        self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
-    ) -> Dict:
+    def generate_sox_report(self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None) -> Dict:
         """
         Generate SOX compliance report.
 
@@ -103,9 +101,7 @@ class ComplianceReporter:
 
         return report
 
-    def generate_mifid_report(
-        self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
-    ) -> Dict:
+    def generate_mifid_report(self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None) -> Dict:
         """
         Generate MiFID II transaction report.
 

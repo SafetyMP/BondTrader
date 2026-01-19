@@ -29,9 +29,7 @@ def verify_api_key(credentials: HTTPAuthorizationCredentials = None) -> bool:
     if not API_KEY:
         from fastapi import HTTPException
 
-        raise HTTPException(
-            status_code=500, detail="API key authentication required but not configured"
-        )
+        raise HTTPException(status_code=500, detail="API key authentication required but not configured")
     if not credentials:
         from fastapi import HTTPException
 
@@ -73,9 +71,7 @@ async def rate_limit_middleware(request: Request, call_next: Callable):
 
 def setup_cors(app):
     """Setup CORS middleware"""
-    allowed_origins = os.getenv(
-        "CORS_ALLOWED_ORIGINS", "http://localhost:8000,http://localhost:8501"
-    ).split(",")
+    allowed_origins = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:8000,http://localhost:8501").split(",")
     if os.getenv("CORS_ALLOW_ALL", "false").lower() == "true":
         # Only allow wildcard in development with explicit flag
         allowed_origins = ["*"]

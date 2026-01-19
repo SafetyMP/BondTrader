@@ -82,9 +82,7 @@ class PerformanceMonitor:
         """Setup default performance thresholds"""
         # Response time thresholds (milliseconds)
         self.add_threshold("api.response_time", 1000, 5000, "greater")  # 1s warning, 5s critical
-        self.add_threshold(
-            "valuation.calculation_time", 500, 2000, "greater"
-        )  # 500ms warning, 2s critical
+        self.add_threshold("valuation.calculation_time", 500, 2000, "greater")  # 500ms warning, 2s critical
         self.add_threshold("ml.prediction_time", 1000, 5000, "greater")  # 1s warning, 5s critical
 
         # Error rate thresholds (percentage)
@@ -110,9 +108,7 @@ class PerformanceMonitor:
             critical_threshold: Critical threshold value
             comparison: "greater" for upper bound, "less" for lower bound
         """
-        threshold = PerformanceThreshold(
-            metric_name, warning_threshold, critical_threshold, comparison
-        )
+        threshold = PerformanceThreshold(metric_name, warning_threshold, critical_threshold, comparison)
         self.thresholds[metric_name] = threshold
 
     def check_threshold(self, metric_name: str, value: float) -> Optional[Alert]:
@@ -154,9 +150,7 @@ class PerformanceMonitor:
                 f"({threshold.critical_threshold if severity == 'critical' else threshold.warning_threshold})"
             )
 
-            alert = Alert(
-                severity, metric_name, value, threshold.critical_threshold, message, datetime.now()
-            )
+            alert = Alert(severity, metric_name, value, threshold.critical_threshold, message, datetime.now())
             self.alerts.append(alert)
 
             # Keep only last 1000 alerts

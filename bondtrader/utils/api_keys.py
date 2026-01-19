@@ -77,9 +77,7 @@ class APIKey:
             key_hash=data["key_hash"],
             user_id=data["user_id"],
             created_at=datetime.fromisoformat(data["created_at"]),
-            expires_at=(
-                datetime.fromisoformat(data["expires_at"]) if data.get("expires_at") else None
-            ),
+            expires_at=(datetime.fromisoformat(data["expires_at"]) if data.get("expires_at") else None),
             last_used=datetime.fromisoformat(data["last_used"]) if data.get("last_used") else None,
             usage_count=data.get("usage_count", 0),
             revoked=data.get("revoked", False),
@@ -351,11 +349,7 @@ class APIKeyManager:
             List of expiring keys
         """
         cutoff = datetime.now() + timedelta(days=days_ahead)
-        return [
-            key
-            for key in self.keys.values()
-            if key.expires_at and key.expires_at <= cutoff and not key.revoked
-        ]
+        return [key for key in self.keys.values() if key.expires_at and key.expires_at <= cutoff and not key.revoked]
 
 
 # Global API key manager instance

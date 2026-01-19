@@ -206,9 +206,7 @@ class DataLineageTracker:
             self.registry["datasets"][dataset_id] = {}
 
         self.registry["datasets"][dataset_id][version] = asdict(dataset_version)
-        self.registry["datasets"][dataset_id][version][
-            "created_at"
-        ] = dataset_version.created_at.isoformat()
+        self.registry["datasets"][dataset_id][version]["created_at"] = dataset_version.created_at.isoformat()
 
         # Add to lineage graph
         node_id = f"dataset_{dataset_id}_{version}"
@@ -259,9 +257,7 @@ class DataLineageTracker:
         feature_key = f"{feature_name}_{feature_version}"
         if feature_key not in self.registry["features"]:
             self.registry["features"][feature_key] = asdict(feature_lineage)
-            self.registry["features"][feature_key][
-                "created_at"
-            ] = feature_lineage.created_at.isoformat()
+            self.registry["features"][feature_key]["created_at"] = feature_lineage.created_at.isoformat()
 
         # Add to lineage graph
         node_id = f"feature_{feature_name}_{feature_version}"

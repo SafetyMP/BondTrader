@@ -201,9 +201,7 @@ class TailRiskAnalyzer:
             "tail_probability": tail_probability,
             "tail_threshold": tail_threshold,
             "tail_expectation": tail_expectation,
-            "tail_expectation_pct": (
-                (tail_expectation / portfolio_value) * 100 if portfolio_value > 0 else 0
-            ),
+            "tail_expectation_pct": ((tail_expectation / portfolio_value) * 100 if portfolio_value > 0 else 0),
             "expected_tail_loss": tail_expectation,
         }
 

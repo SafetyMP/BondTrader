@@ -127,9 +127,7 @@ class Metrics:
             "business": {
                 "total_trading_volume": self._trading_volume,
                 "total_pnl": self._total_pnl,
-                "current_portfolio_value": (
-                    self._portfolio_values[-1] if self._portfolio_values else None
-                ),
+                "current_portfolio_value": (self._portfolio_values[-1] if self._portfolio_values else None),
                 "risk_metrics": self._risk_metrics.copy(),
             },
         }
@@ -243,9 +241,7 @@ def trace_context(operation_name: str):
     start_time = time.time()
     span_id = f"{int(time.time() * 1000000)}"
 
-    logger.info(
-        f"TRACE START: {operation_name}", extra={"span_id": span_id, "operation": operation_name}
-    )
+    logger.info(f"TRACE START: {operation_name}", extra={"span_id": span_id, "operation": operation_name})
 
     try:
         yield span_id

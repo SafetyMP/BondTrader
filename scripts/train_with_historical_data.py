@@ -245,9 +245,7 @@ def create_training_dataset_from_bonds(
                 "n_features": train_features.shape[1] if len(train_features) > 0 else 0,
                 "missing_values": 0,
                 "infinite_values": 0,
-                "target_range": (
-                    (train_targets.min(), train_targets.max()) if len(train_targets) > 0 else (0, 1)
-                ),
+                "target_range": ((train_targets.min(), train_targets.max()) if len(train_targets) > 0 else (0, 1)),
                 "target_mean": train_targets.mean() if len(train_targets) > 0 else 0,
             },
             "validation": {
@@ -255,9 +253,7 @@ def create_training_dataset_from_bonds(
                 "n_features": val_features.shape[1] if len(val_features) > 0 else 0,
                 "missing_values": 0,
                 "infinite_values": 0,
-                "target_range": (
-                    (val_targets.min(), val_targets.max()) if len(val_targets) > 0 else (0, 1)
-                ),
+                "target_range": ((val_targets.min(), val_targets.max()) if len(val_targets) > 0 else (0, 1)),
                 "target_mean": val_targets.mean() if len(val_targets) > 0 else 0,
             },
             "test": {
@@ -265,9 +261,7 @@ def create_training_dataset_from_bonds(
                 "n_features": test_features.shape[1] if len(test_features) > 0 else 0,
                 "missing_values": 0,
                 "infinite_values": 0,
-                "target_range": (
-                    (test_targets.min(), test_targets.max()) if len(test_targets) > 0 else (0, 1)
-                ),
+                "target_range": ((test_targets.min(), test_targets.max()) if len(test_targets) > 0 else (0, 1)),
                 "target_mean": test_targets.mean() if len(test_targets) > 0 else 0,
             },
         },
@@ -285,9 +279,7 @@ def create_training_dataset_from_bonds(
     }
 
     # Save dataset
-    os.makedirs(
-        os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True
-    )
+    os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True)
     save_training_dataset(dataset, output_path)
     print(f"Saved training dataset to {output_path}")
 
@@ -334,9 +326,7 @@ def train_models_with_bonds(bonds: List[Bond], model_dir: str = None):
     print("-" * 60)
     try:
         ml_adjuster = MLBondAdjuster(model_type=config.ml_model_type)
-        metrics = ml_adjuster.train(
-            train_bonds, test_size=config.ml_test_size, random_state=config.ml_random_state
-        )
+        metrics = ml_adjuster.train(train_bonds, test_size=config.ml_test_size, random_state=config.ml_random_state)
         results["ml_adjuster"] = {"model": ml_adjuster, "metrics": metrics, "status": "success"}
 
         # Save model
@@ -394,9 +384,7 @@ def train_models_with_bonds(bonds: List[Bond], model_dir: str = None):
         import joblib
 
         joblib.dump(advanced_ml, os.path.join(model_dir, "advanced_ml_adjuster.joblib"))
-        print(
-            f"✓ Trained and saved. Ensemble Test R²: {ensemble_result.get('ensemble_metrics', {}).get('test_r2', 0):.4f}"
-        )
+        print(f"✓ Trained and saved. Ensemble Test R²: {ensemble_result.get('ensemble_metrics', {}).get('test_r2', 0):.4f}")
     except Exception as e:
         print(f"✗ Failed: {e}")
         results["advanced_ml_adjuster"] = {"status": "failed", "error": str(e)}
@@ -431,9 +419,7 @@ def train_models_with_bonds(bonds: List[Bond], model_dir: str = None):
     print("TRAINING COMPLETE")
     print("=" * 60)
     print(f"Models saved to: {model_dir}")
-    print(
-        f"Successful: {sum(1 for r in results.values() if r.get('status') == 'success')}/{len(results)}"
-    )
+    print(f"Successful: {sum(1 for r in results.values() if r.get('status') == 'success')}/{len(results)}")
 
     return results
 
@@ -487,11 +473,7 @@ def main():
     try:
         # Determine which files to use
         if args.all_file:
-            csv_path = (
-                os.path.join(args.data_dir, args.all_file)
-                if not os.path.isabs(args.all_file)
-                else args.all_file
-            )
+            csv_path = os.path.join(args.data_dir, args.all_file) if not os.path.isabs(args.all_file) else args.all_file
             print(f"Loading all bonds from: {csv_path}")
             all_bonds = load_bonds_from_csv(csv_path)
 
@@ -503,16 +485,8 @@ def main():
             train_file = args.train_file or "train_bonds_2010_2020.csv"
             eval_file = args.eval_file or "eval_bonds_2010_2020.csv"
 
-            train_path = (
-                os.path.join(args.data_dir, train_file)
-                if not os.path.isabs(train_file)
-                else train_file
-            )
-            eval_path = (
-                os.path.join(args.data_dir, eval_file)
-                if not os.path.isabs(eval_file)
-                else eval_file
-            )
+            train_path = os.path.join(args.data_dir, train_file) if not os.path.isabs(train_file) else train_file
+            eval_path = os.path.join(args.data_dir, eval_file) if not os.path.isabs(eval_file) else eval_file
 
             print(f"Loading training bonds from: {train_path}")
             train_bonds = load_bonds_from_csv(train_path)
@@ -533,16 +507,10 @@ def main():
 
         # Create dataset if requested
         if args.create_dataset:
-            default_dataset_path = os.path.join(
-                config.data_dir, "historical_training_dataset.joblib"
-            )
+            default_dataset_path = os.path.join(config.data_dir, "historical_training_dataset.joblib")
             dataset = create_training_dataset_from_bonds(
                 train_bonds=train_bonds,
-                validation_bonds=(
-                    eval_bonds[: len(eval_bonds) // 2]
-                    if eval_bonds
-                    else train_bonds[: len(train_bonds) // 10]
-                ),
+                validation_bonds=(eval_bonds[: len(eval_bonds) // 2] if eval_bonds else train_bonds[: len(train_bonds) // 10]),
                 test_bonds=(
                     eval_bonds[len(eval_bonds) // 2 :]
                     if eval_bonds

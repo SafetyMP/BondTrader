@@ -334,9 +334,7 @@ class FINRADataProvider(MarketDataProvider):
         """Get OAuth2 access token, refreshing if needed"""
         # Check if we have a valid token
         if self._access_token and self._token_expires_at:
-            if datetime.now() < self._token_expires_at - timedelta(
-                seconds=60
-            ):  # Refresh 1 min early
+            if datetime.now() < self._token_expires_at - timedelta(seconds=60):  # Refresh 1 min early
                 return self._access_token
 
         if not self.api_key or not self.api_password:
@@ -381,9 +379,7 @@ class FINRADataProvider(MarketDataProvider):
             if e.response.status_code == 400:
                 error_data = e.response.json() if e.response.text else {}
                 error_msg = error_data.get("error_message", "Unknown error")
-                if "Invalid Credentials" in error_msg or "invalid_client" in error_data.get(
-                    "error", ""
-                ):
+                if "Invalid Credentials" in error_msg or "invalid_client" in error_data.get("error", ""):
                     logger.error(
                         f"FINRA API authentication failed: Invalid credentials. "
                         f"Please verify FINRA_API_KEY and FINRA_API_PASSWORD in your .env file. "
@@ -514,9 +510,7 @@ class FINRADataProvider(MarketDataProvider):
                             all_data.append(df)
                             logger.info(f"  ✓ Fetched {len(df)} records from {dataset_name}")
                     elif response.status_code == 403:
-                        logger.warning(
-                            f"  ✗ Access forbidden for {dataset_name} - may need permissions"
-                        )
+                        logger.warning(f"  ✗ Access forbidden for {dataset_name} - may need permissions")
                     elif response.status_code == 404:
                         logger.warning(f"  ✗ Dataset {dataset_name} not found")
                     else:
@@ -580,9 +574,7 @@ class MarketDataManager:
         self, start_date: datetime, end_date: datetime, maturities: Optional[List[str]] = None
     ) -> Optional[pd.DataFrame]:
         """Fetch historical Treasury data from FRED"""
-        return self.providers["fred"].fetch_historical_treasury_data(
-            start_date, end_date, maturities
-        )
+        return self.providers["fred"].fetch_historical_treasury_data(start_date, end_date, maturities)
 
     def convert_market_data_to_bond(self, market_data: Dict, bond_id: str) -> Optional[Bond]:
         """Convert market data to Bond object"""

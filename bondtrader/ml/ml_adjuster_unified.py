@@ -117,14 +117,10 @@ class MLBondAdjuster:
             available_models.append("catboost")
 
         if model_type not in available_models:
-            raise ValueError(
-                f"Model type '{model_type}' not available. Available: {', '.join(available_models)}"
-            )
+            raise ValueError(f"Model type '{model_type}' not available. Available: {', '.join(available_models)}")
 
         if use_ensemble and feature_level != "advanced":
-            logger.warning(
-                "Ensemble mode requires feature_level='advanced'. Setting feature_level='advanced'"
-            )
+            logger.warning("Ensemble mode requires feature_level='advanced'. Setting feature_level='advanced'")
             self.feature_level = "advanced"
 
         # Model versioning (for advanced features)
@@ -134,22 +130,16 @@ class MLBondAdjuster:
         self._previous_ensemble = None
         self._previous_scaler = None
 
-    def _create_features(
-        self, bonds: List[Bond], fair_values: List[float]
-    ) -> Tuple[np.ndarray, Optional[List[str]]]:
+    def _create_features(self, bonds: List[Bond], fair_values: List[float]) -> Tuple[np.ndarray, Optional[List[str]]]:
         """Create features using shared feature engineering module"""
         if self.feature_level == "basic":
             features = BondFeatureEngineer.create_basic_features(bonds, fair_values, self.valuator)
             return features, None
         elif self.feature_level == "enhanced":
-            features, feature_names = BondFeatureEngineer.create_enhanced_features(
-                bonds, fair_values, self.valuator
-            )
+            features, feature_names = BondFeatureEngineer.create_enhanced_features(bonds, fair_values, self.valuator)
             return features, feature_names
         else:  # advanced
-            features, feature_names = BondFeatureEngineer.create_advanced_features(
-                bonds, fair_values, self.valuator
-            )
+            features, feature_names = BondFeatureEngineer.create_advanced_features(bonds, fair_values, self.valuator)
             return features, feature_names
 
     def _create_targets(self, bonds: List[Bond], fair_values: List[float]) -> np.ndarray:
@@ -191,8 +181,7 @@ class MLBondAdjuster:
             try:
                 mlflow_tracker = MLflowTracker()
                 run_name = (
-                    mlflow_run_name
-                    or f"ml_{self.model_type}_{self.feature_level}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                    mlflow_run_name or f"ml_{self.model_type}_{self.feature_level}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
                 )
                 mlflow_tracker.start_run(
                     run_name=run_name,
@@ -213,9 +202,7 @@ class MLBondAdjuster:
             y = self._create_targets(bonds, fair_values)
 
             # Split data
-            X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=test_size, random_state=random_state
-            )
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
 
             # Scale features
             X_train_scaled = self.scaler.fit_transform(X_train)
@@ -271,9 +258,7 @@ class MLBondAdjuster:
             # Cross-validation for enhanced/advanced
             if self.feature_level in ["enhanced", "advanced"]:
                 tscv = TimeSeriesSplit(n_splits=5)
-                cv_scores = cross_val_score(
-                    self.model, X_train_scaled, y_train, cv=tscv, scoring="r2"
-                )
+                cv_scores = cross_val_score(self.model, X_train_scaled, y_train, cv=tscv, scoring="r2")
                 metrics["cv_r2_mean"] = cv_scores.mean()
                 metrics["cv_r2_std"] = cv_scores.std()
 
@@ -287,9 +272,7 @@ class MLBondAdjuster:
             if mlflow_tracker:
                 mlflow_tracker.log_metrics(metrics)
                 input_example = X_test_scaled[:1] if len(X_test_scaled) > 0 else None
-                mlflow_tracker.log_model(
-                    model=self.model, artifact_path="model", input_example=input_example
-                )
+                mlflow_tracker.log_model(model=self.model, artifact_path="model", input_example=input_example)
                 mlflow_tracker.end_run()
 
             return metrics
@@ -299,9 +282,7 @@ class MLBondAdjuster:
                 mlflow_tracker.end_run()
             raise
 
-    def train_ensemble(
-        self, bonds: List[Bond], test_size: float = 0.2, random_state: int = 42
-    ) -> Dict:
+    def train_ensemble(self, bonds: List[Bond], test_size: float = 0.2, random_state: int = 42) -> Dict:
         """Train ensemble of multiple models (advanced feature)"""
         if len(bonds) < 20:
             raise ValueError("Need at least 20 bonds for ensemble training")
@@ -318,9 +299,7 @@ class MLBondAdjuster:
         y = self._create_targets(bonds, fair_values)
 
         # Split data
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=test_size, random_state=random_state
-        )
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
 
         # Scale features
         X_train_scaled = self.scaler.fit_transform(X_train)
@@ -367,12 +346,8 @@ class MLBondAdjuster:
 
         # Create ensemble (stacking)
         base_models = [("rf", rf_model), ("gb", gb_model), ("nn", nn_model)]
-        meta_model = GradientBoostingRegressor(
-            n_estimators=100, max_depth=4, learning_rate=0.1, random_state=random_state
-        )
-        self.ensemble_model = StackingRegressor(
-            estimators=base_models, final_estimator=meta_model, cv=5
-        )
+        meta_model = GradientBoostingRegressor(n_estimators=100, max_depth=4, learning_rate=0.1, random_state=random_state)
+        self.ensemble_model = StackingRegressor(estimators=base_models, final_estimator=meta_model, cv=5)
         self.ensemble_model.fit(X_train_scaled, y_train)
 
         # Evaluate
@@ -405,9 +380,7 @@ class MLBondAdjuster:
             "n_train": len(X_train),
             "n_test": len(X_test),
             "n_features": len(feature_names),
-            "improvement_over_best": (
-                ensemble_metrics["test_r2"] - max(m["test_r2"] for m in models_eval.values())
-            ),
+            "improvement_over_best": (ensemble_metrics["test_r2"] - max(m["test_r2"] for m in models_eval.values())),
             "model_version": self.current_model_version,
         }
 
@@ -476,9 +449,7 @@ class MLBondAdjuster:
         else:
             raise ValueError(f"Model type '{self.model_type}' not available")
 
-    def _tune_hyperparameters(
-        self, X_train: np.ndarray, y_train: np.ndarray, random_state: int = 42
-    ) -> Dict:
+    def _tune_hyperparameters(self, X_train: np.ndarray, y_train: np.ndarray, random_state: int = 42) -> Dict:
         """Tune hyperparameters using randomized search"""
         if self.model_type == "random_forest":
             param_distributions = {

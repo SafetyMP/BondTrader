@@ -188,9 +188,7 @@ class ComprehensiveDemo:
                 print(f"     Type: {opp['bond_type']}")
                 print(f"     Market Price: ${opp['market_price']:,.2f}")
                 print(f"     Fair Value: ${opp['adjusted_fair_value']:,.2f}")
-                print(
-                    f"     Profit: ${opp['net_profit']:,.2f} ({opp['net_profit_percentage']:.2f}%)"
-                )
+                print(f"     Profit: ${opp['net_profit']:,.2f} ({opp['net_profit_percentage']:.2f}%)")
                 print(f"     Recommendation: {opp['recommendation']}")
                 print(f"     Arbitrage Type: {opp['arbitrage_type']}")
 
@@ -214,9 +212,7 @@ class ComprehensiveDemo:
         """Demo 3: Machine Learning Models"""
         self.print_section("DEMO 3: Machine Learning Models")
 
-        self.log(
-            f"\n🤖 Training ML Model ({self.config.ml_model_type}) on {len(bonds)} bonds...", "blue"
-        )
+        self.log(f"\n🤖 Training ML Model ({self.config.ml_model_type}) on {len(bonds)} bonds...", "blue")
         ml_adjuster = MLBondAdjuster(model_type=self.config.ml_model_type)
 
         try:
@@ -344,9 +340,7 @@ class ComprehensiveDemo:
         print(f"\n🔗 Correlation Analysis:")
         correlation_analyzer = CorrelationAnalyzer(valuator=self.valuator)
         try:
-            corr_result = correlation_analyzer.calculate_correlation_matrix(
-                bonds, method="characteristics"
-            )
+            corr_result = correlation_analyzer.calculate_correlation_matrix(bonds, method="characteristics")
             print(f"  Average Correlation: {corr_result['average_correlation']:.3f}")
             print(f"  Diversification Ratio: {corr_result['diversification_ratio']:.3f}")
         except Exception as e:
@@ -560,9 +554,7 @@ class ComprehensiveDemo:
             self.log(f"\n✅ All critical system capabilities demonstrated!", "green")
             self.log(f"\n📊 Summary:")
             self.log(f"  Bonds Analyzed: {len(bonds)}")
-            self.log(
-                f"  Arbitrage Opportunities: {len(self.results.get('arbitrage', {}).get('opportunities', []))}"
-            )
+            self.log(f"  Arbitrage Opportunities: {len(self.results.get('arbitrage', {}).get('opportunities', []))}")
             self.log(f"  ML Model: {'Trained' if self.results.get('ml') else 'Not Trained'}")
             self.log(f"  Risk Metrics: Calculated")
             self.log(f"  Portfolio Optimization: Completed")
@@ -601,9 +593,7 @@ def main():
     args = parser.parse_args()
 
     demo = ComprehensiveDemo(output_file=args.report_file)
-    demo.run_complete_demo(
-        auto_launch_dashboard=args.launch_dashboard, save_report=not args.no_report
-    )
+    demo.run_complete_demo(auto_launch_dashboard=args.launch_dashboard, save_report=not args.no_report)
 
 
 if __name__ == "__main__":

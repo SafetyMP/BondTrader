@@ -231,9 +231,7 @@ class TestCircuitBreaker:
     def test_circuit_breaker_decorator(self):
         """Test circuit breaker decorator"""
 
-        @circuit_breaker(
-            "decorator_test", config=CircuitBreakerConfig(failure_threshold=5, timeout=60)
-        )
+        @circuit_breaker("decorator_test", config=CircuitBreakerConfig(failure_threshold=5, timeout=60))
         def test_func():
             return 42
 

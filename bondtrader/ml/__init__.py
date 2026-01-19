@@ -25,9 +25,7 @@ def EnhancedMLBondAdjuster(model_type: str = "random_forest", valuator=None):
         DeprecationWarning,
         stacklevel=2,
     )
-    return UnifiedMLBondAdjuster(
-        model_type=model_type, feature_level="enhanced", valuator=valuator, use_ensemble=False
-    )
+    return UnifiedMLBondAdjuster(model_type=model_type, feature_level="enhanced", valuator=valuator, use_ensemble=False)
 
 
 def AdvancedMLBondAdjuster(valuator=None, use_ensemble: bool = True):

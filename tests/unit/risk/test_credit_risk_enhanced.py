@@ -54,9 +54,7 @@ def test_credit_migration_analysis(credit_risk_enhanced):
     """Test credit migration analysis"""
     bond = create_test_bond(credit_rating="BBB")
 
-    result = credit_risk_enhanced.credit_migration_analysis(
-        bond, time_horizon=1.0, num_scenarios=100
-    )
+    result = credit_risk_enhanced.credit_migration_analysis(bond, time_horizon=1.0, num_scenarios=100)
 
     assert "value_distribution" in result
     assert "mean_value" in result

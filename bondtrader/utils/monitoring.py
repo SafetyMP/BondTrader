@@ -76,9 +76,7 @@ if PROMETHEUS_AVAILABLE:
     )
 
     # Bond valuation metrics
-    bond_valuations_total = Counter(
-        "bondtrader_valuations_total", "Total number of bond valuations", ["bond_type"]
-    )
+    bond_valuations_total = Counter("bondtrader_valuations_total", "Total number of bond valuations", ["bond_type"])
 
     valuation_duration = Histogram(
         "bondtrader_valuation_duration_seconds", "Bond valuation duration in seconds", ["bond_type"]
@@ -104,20 +102,14 @@ if PROMETHEUS_AVAILABLE:
     )
 
     # Risk metrics
-    risk_calculations_total = Counter(
-        "bondtrader_risk_calculations_total", "Total number of risk calculations", ["risk_type"]
-    )
+    risk_calculations_total = Counter("bondtrader_risk_calculations_total", "Total number of risk calculations", ["risk_type"])
 
     # System metrics
     active_connections = Gauge("bondtrader_active_connections", "Number of active connections")
 
-    cache_hits = Counter(
-        "bondtrader_cache_hits_total", "Total number of cache hits", ["cache_type"]
-    )
+    cache_hits = Counter("bondtrader_cache_hits_total", "Total number of cache hits", ["cache_type"])
 
-    cache_misses = Counter(
-        "bondtrader_cache_misses_total", "Total number of cache misses", ["cache_type"]
-    )
+    cache_misses = Counter("bondtrader_cache_misses_total", "Total number of cache misses", ["cache_type"])
 else:
     # Dummy metrics when prometheus_client is not available
     api_requests_total = Counter()
@@ -228,9 +220,7 @@ def track_ml_prediction(model_type: str, model_version: str = "unknown"):
                 return result
             finally:
                 duration = time.time() - start_time
-                ml_predictions_total.labels(
-                    model_type=model_type, model_version=model_version
-                ).inc()
+                ml_predictions_total.labels(model_type=model_type, model_version=model_version).inc()
                 ml_prediction_duration.labels(model_type=model_type).observe(duration)
 
         return wrapper

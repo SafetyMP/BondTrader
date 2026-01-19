@@ -140,10 +140,7 @@ def test_ml_adjuster_save_load(training_bonds, ml_adjuster, tmp_path):
         original_pred = ml_adjuster.predict_adjusted_value(test_bond)
         loaded_pred = new_adjuster.predict_adjusted_value(test_bond)
 
-        assert (
-            abs(original_pred["ml_adjusted_fair_value"] - loaded_pred["ml_adjusted_fair_value"])
-            < 1e-6
-        )
+        assert abs(original_pred["ml_adjusted_fair_value"] - loaded_pred["ml_adjusted_fair_value"]) < 1e-6
     finally:
         os.chdir(original_cwd)
 

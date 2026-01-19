@@ -88,9 +88,7 @@ class BondCreate(BaseModel):
         example=2,
     )
     callable: bool = Field(default=False, description="Whether the bond is callable", example=False)
-    convertible: bool = Field(
-        default=False, description="Whether the bond is convertible", example=False
-    )
+    convertible: bool = Field(default=False, description="Whether the bond is convertible", example=False)
 
     @validator("maturity_date")
     def validate_maturity_date(cls, v):
@@ -169,15 +167,11 @@ class ValuationResponse(BaseModel):
 
     bond_id: str = Field(..., description="Bond identifier", example="BOND-001")
     fair_value: float = Field(..., description="Calculated fair value using DCF", example=975.50)
-    yield_to_maturity: float = Field(
-        ..., description="Yield to maturity as decimal", example=0.0523
-    )
+    yield_to_maturity: float = Field(..., description="Yield to maturity as decimal", example=0.0523)
     duration: float = Field(..., description="Macaulay duration in years", example=4.5)
     convexity: float = Field(..., description="Convexity measure", example=22.3)
     market_price: float = Field(..., description="Current market price", example=950.0)
-    mismatch_percentage: float = Field(
-        ..., description="Percentage difference between market and fair value", example=-2.61
-    )
+    mismatch_percentage: float = Field(..., description="Percentage difference between market and fair value", example=-2.61)
 
     class Config:
         schema_extra = {
@@ -202,9 +196,7 @@ class ArbitrageOpportunity(BaseModel):
     profit: float = Field(..., description="Potential profit per bond", example=25.50)
     profit_percentage: float = Field(..., description="Profit as percentage", example=2.68)
     recommendation: str = Field(..., description="Trading recommendation", example="BUY")
-    arbitrage_type: str = Field(
-        ..., description="Type of arbitrage opportunity", example="UNDERVALUED"
-    )
+    arbitrage_type: str = Field(..., description="Type of arbitrage opportunity", example="UNDERVALUED")
 
     class Config:
         schema_extra = {
@@ -224,9 +216,7 @@ class MLPredictionResponse(BaseModel):
     """ML-enhanced bond prediction response"""
 
     bond_id: str = Field(..., description="Bond identifier", example="BOND-001")
-    theoretical_fair_value: float = Field(
-        ..., description="Theoretical fair value from DCF", example=975.50
-    )
+    theoretical_fair_value: float = Field(..., description="Theoretical fair value from DCF", example=975.50)
     ml_adjusted_fair_value: float = Field(..., description="ML-adjusted fair value", example=980.25)
     adjustment_factor: float = Field(..., description="ML adjustment factor", example=1.0049)
     ml_confidence: float = Field(..., description="ML model confidence score (0-1)", example=0.85)
@@ -247,15 +237,9 @@ class RiskMetricsResponse(BaseModel):
     """Risk metrics response"""
 
     bond_id: str = Field(..., description="Bond identifier", example="BOND-001")
-    var_historical: Optional[float] = Field(
-        None, description="Value at Risk (Historical method)", example=45.2
-    )
-    var_parametric: Optional[float] = Field(
-        None, description="Value at Risk (Parametric method)", example=42.8
-    )
-    var_monte_carlo: Optional[float] = Field(
-        None, description="Value at Risk (Monte Carlo method)", example=46.1
-    )
+    var_historical: Optional[float] = Field(None, description="Value at Risk (Historical method)", example=45.2)
+    var_parametric: Optional[float] = Field(None, description="Value at Risk (Parametric method)", example=42.8)
+    var_monte_carlo: Optional[float] = Field(None, description="Value at Risk (Monte Carlo method)", example=46.1)
     credit_risk: dict = Field(
         ...,
         description="Credit risk metrics",

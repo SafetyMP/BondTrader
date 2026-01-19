@@ -145,9 +145,7 @@ class AlternativeDataAnalyzer:
 
         return {
             "news_sentiment": news_score,
-            "sentiment_label": (
-                "Positive" if news_score > 0 else "Negative" if news_score < 0 else "Neutral"
-            ),
+            "sentiment_label": ("Positive" if news_score > 0 else "Negative" if news_score < 0 else "Neutral"),
             "sentiment_spread_adjustment_bps": sentiment_spread_adjustment * 10000,
             "base_fair_value": base_fair_value,
             "sentiment_adjusted_value": sentiment_adjusted_value,

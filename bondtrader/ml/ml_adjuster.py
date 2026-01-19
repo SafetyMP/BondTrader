@@ -40,6 +40,4 @@ class MLBondAdjuster(UnifiedMLBondAdjuster):
             model_type: 'random_forest', 'gradient_boosting', 'xgboost', 'lightgbm', or 'catboost'
             valuator: Optional BondValuator instance. If None, gets from container.
         """
-        super().__init__(
-            model_type=model_type, feature_level="basic", valuator=valuator, use_ensemble=False
-        )
+        super().__init__(model_type=model_type, feature_level="basic", valuator=valuator, use_ensemble=False)

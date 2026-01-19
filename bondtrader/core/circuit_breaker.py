@@ -78,10 +78,7 @@ class CircuitBreaker:
             # Check circuit state
             if self.state == CircuitState.OPEN:
                 # Check if timeout has passed
-                if (
-                    self.last_failure_time
-                    and (time.time() - self.last_failure_time) >= self.config.timeout
-                ):
+                if self.last_failure_time and (time.time() - self.last_failure_time) >= self.config.timeout:
                     self.state = CircuitState.HALF_OPEN
                     self.success_count = 0
                     logger.info(f"Circuit breaker {self.name} transitioning to HALF_OPEN")
@@ -167,9 +164,7 @@ def get_circuit_breaker(name: str, config: Optional[CircuitBreakerConfig] = None
     return _circuit_breakers[name]
 
 
-def circuit_breaker(
-    name: str, config: Optional[CircuitBreakerConfig] = None, fallback: Optional[Callable] = None
-):
+def circuit_breaker(name: str, config: Optional[CircuitBreakerConfig] = None, fallback: Optional[Callable] = None):
     """
     Decorator for circuit breaker pattern
 

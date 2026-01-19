@@ -90,9 +90,7 @@ def test_set_config():
 def test_config_directories_created():
     """Test that config creates necessary directories"""
     with tempfile.TemporaryDirectory() as tmpdir:
-        config = Config(
-            model_dir=os.path.join(tmpdir, "models"), data_dir=os.path.join(tmpdir, "data")
-        )
+        config = Config(model_dir=os.path.join(tmpdir, "models"), data_dir=os.path.join(tmpdir, "data"))
 
         assert Path(config.model_dir).exists()
         assert Path(config.data_dir).exists()

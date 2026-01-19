@@ -66,9 +66,7 @@ class KeyRateDuration:
 
         for key_rate in key_rates:
             # Calculate KRD at this key rate point
-            krd = self._calculate_krd_at_point(
-                bond, key_rate, base_price, base_ytm, time_to_maturity
-            )
+            krd = self._calculate_krd_at_point(bond, key_rate, base_price, base_ytm, time_to_maturity)
             krd_values.append(krd)
             krd_results[f"{key_rate}y"] = krd
 
@@ -279,9 +277,7 @@ class KeyRateDuration:
                 if i < len(krd_values):
                     portfolio_change += krd_values[i] * shock * portfolio_value
 
-            portfolio_change_pct = (
-                (portfolio_change / portfolio_value) * 100 if portfolio_value > 0 else 0
-            )
+            portfolio_change_pct = (portfolio_change / portfolio_value) * 100 if portfolio_value > 0 else 0
 
             scenarios[scenario] = {
                 "shocks": scenario_shocks,

@@ -160,9 +160,7 @@ class ExecutionStrategy:
 
         # Implementation shortfall
         implementation_shortfall = total_cost - benchmark_cost
-        implementation_shortfall_pct = (
-            (implementation_shortfall / benchmark_cost) * 100 if benchmark_cost > 0 else 0
-        )
+        implementation_shortfall_pct = (implementation_shortfall / benchmark_cost) * 100 if benchmark_cost > 0 else 0
 
         # Price impact
         price_impact = average_execution_price - benchmark_price
@@ -180,9 +178,7 @@ class ExecutionStrategy:
             "num_trades": len(execution_prices),
         }
 
-    def optimal_execution(
-        self, bond: Bond, total_quantity: float, urgency: float = 0.5, volatility: float = 0.01
-    ) -> Dict:
+    def optimal_execution(self, bond: Bond, total_quantity: float, urgency: float = 0.5, volatility: float = 0.01) -> Dict:
         """
         Optimal execution using Almgren-Chriss model
 

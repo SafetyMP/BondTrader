@@ -128,9 +128,7 @@ class TestPerformanceBenchmarks:
         # Multiple operations
         fair_values = [valuator.calculate_fair_value(bond) for bond in benchmark_bonds]
         ytms = [valuator.calculate_yield_to_maturity(bond) for bond in benchmark_bonds]
-        durations = [
-            valuator.calculate_duration(bond, ytm) for bond, ytm in zip(benchmark_bonds, ytms)
-        ]
+        durations = [valuator.calculate_duration(bond, ytm) for bond, ytm in zip(benchmark_bonds, ytms)]
 
         elapsed_time = time.time() - start_time
         avg_time_per_bond = elapsed_time / len(benchmark_bonds)

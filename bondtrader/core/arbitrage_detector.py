@@ -41,9 +41,7 @@ class ArbitrageDetector:
         else:
             self.valuator = valuator
         self.ml_adjuster = ml_adjuster
-        self.transaction_costs = (
-            transaction_costs if transaction_costs else TransactionCostCalculator()
-        )
+        self.transaction_costs = transaction_costs if transaction_costs else TransactionCostCalculator()
         self.min_profit_threshold = min_profit_threshold
         self.include_transaction_costs = include_transaction_costs
 
@@ -63,9 +61,7 @@ class ArbitrageDetector:
         # OPTIMIZED: Pre-calculate YTM for all bonds in batch (leverages caching)
         # This allows us to reuse YTM for duration calculation and avoid redundant calculations
         # Only calculate YTM once per bond upfront
-        bond_ytms = {
-            bond.bond_id: self.valuator.calculate_yield_to_maturity(bond) for bond in bonds
-        }
+        bond_ytms = {bond.bond_id: self.valuator.calculate_yield_to_maturity(bond) for bond in bonds}
 
         for bond in bonds:
             # Get fair value
@@ -84,9 +80,7 @@ class ArbitrageDetector:
 
             # Calculate net profit after transaction costs
             if self.include_transaction_costs:
-                net_profit_data = self.transaction_costs.net_profit_after_costs(
-                    bond, fair_value, quantity=1.0
-                )
+                net_profit_data = self.transaction_costs.net_profit_after_costs(bond, fair_value, quantity=1.0)
                 net_profit = net_profit_data["net_profit"]
                 net_profit_pct = net_profit_data["net_profit_pct"]
                 is_profitable_after_costs = net_profit_data["is_profitable"]
@@ -111,23 +105,11 @@ class ArbitrageDetector:
                     "gross_profit": profit,
                     "gross_profit_percentage": profit_pct,
                     "net_profit": net_profit if self.include_transaction_costs else profit,
-                    "net_profit_percentage": (
-                        net_profit_pct if self.include_transaction_costs else profit_pct
-                    ),
-                    "profit_opportunity": (
-                        net_profit if self.include_transaction_costs else profit
-                    ),  # For sorting
-                    "profit_percentage": (
-                        net_profit_pct if self.include_transaction_costs else profit_pct
-                    ),  # For sorting
-                    "transaction_costs": (
-                        net_profit_data["round_trip_cost"] if self.include_transaction_costs else 0
-                    ),
-                    "transaction_costs_pct": (
-                        net_profit_data["round_trip_cost_pct"]
-                        if self.include_transaction_costs
-                        else 0
-                    ),
+                    "net_profit_percentage": (net_profit_pct if self.include_transaction_costs else profit_pct),
+                    "profit_opportunity": (net_profit if self.include_transaction_costs else profit),  # For sorting
+                    "profit_percentage": (net_profit_pct if self.include_transaction_costs else profit_pct),  # For sorting
+                    "transaction_costs": (net_profit_data["round_trip_cost"] if self.include_transaction_costs else 0),
+                    "transaction_costs_pct": (net_profit_data["round_trip_cost_pct"] if self.include_transaction_costs else 0),
                     "ytm": ytm * 100,  # Convert to percentage
                     "duration": duration,
                     "maturity_date": bond.maturity_date.strftime("%Y-%m-%d"),
@@ -155,9 +137,7 @@ class ArbitrageDetector:
         else:
             return "High-Arbitrage Opportunity"
 
-    def compare_equivalent_bonds(
-        self, bonds: List[Bond], grouping_key: str = "bond_type"
-    ) -> List[Dict]:
+    def compare_equivalent_bonds(self, bonds: List[Bond], grouping_key: str = "bond_type") -> List[Dict]:
         """
         Compare bonds with similar characteristics to find relative mispricing
 
@@ -265,9 +245,7 @@ class ArbitrageDetector:
                 total_fair_value += self.valuator.calculate_fair_value(bond) * weight
 
         portfolio_profit = total_fair_value - total_market_value
-        portfolio_profit_pct = (
-            (portfolio_profit / total_market_value) * 100 if total_market_value > 0 else 0
-        )
+        portfolio_profit_pct = (portfolio_profit / total_market_value) * 100 if total_market_value > 0 else 0
 
         return {
             "total_market_value": total_market_value,
@@ -275,9 +253,5 @@ class ArbitrageDetector:
             "portfolio_profit": portfolio_profit,
             "portfolio_profit_pct": portfolio_profit_pct,
             "num_opportunities": len(opportunities),
-            "avg_opportunity_pct": (
-                np.mean([abs(o["profit_percentage"]) for o in opportunities])
-                if opportunities
-                else 0
-            ),
+            "avg_opportunity_pct": (np.mean([abs(o["profit_percentage"]) for o in opportunities]) if opportunities else 0),
         }

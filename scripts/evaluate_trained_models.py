@@ -154,9 +154,7 @@ def main():
     print(f"\nLoading evaluation bonds from {args.eval_file}...")
     if not os.path.exists(args.eval_file):
         print(f"ERROR: Evaluation file not found: {args.eval_file}")
-        print(
-            "Please run: python scripts/fetch_historical_data.py --start-year 2010 --end-year 2020"
-        )
+        print("Please run: python scripts/fetch_historical_data.py --start-year 2010 --end-year 2020")
         sys.exit(1)
 
     eval_bonds = load_bonds_from_csv(args.eval_file)

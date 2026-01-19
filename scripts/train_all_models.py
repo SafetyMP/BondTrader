@@ -332,9 +332,7 @@ class ModelTrainer:
         pbar = tqdm(total=total_steps, desc="Training Progress", unit="model")
 
         # Helper function to train a model with timing and validation
-        def train_with_timing(
-            step_num: int, model_name: str, train_func, *args, validation_func=None, **kwargs
-        ):
+        def train_with_timing(step_num: int, model_name: str, train_func, *args, validation_func=None, **kwargs):
             """
             Train a model with progress tracking, checkpointing, and validation
 
@@ -370,21 +368,15 @@ class ModelTrainer:
                             # Validation failed
                             elapsed = time.time() - step_start
                             result["status"] = "validation_failed"
-                            result["validation_error"] = validation_result.get(
-                                "error", "Validation failed"
-                            )
+                            result["validation_error"] = validation_result.get("error", "Validation failed")
                             self._save_checkpoint(model_name, result)
                             pbar.set_description(f"✗ {model_name} (validation failed)")
-                            logger.warning(
-                                f"{model_name} failed validation: {result.get('validation_error')}"
-                            )
+                            logger.warning(f"{model_name} failed validation: {result.get('validation_error')}")
                             print(f"\n  ✗ {model_name} failed validation")
                             return result
                     except Exception as validation_error:
                         # Validation function itself failed
-                        logger.warning(
-                            f"Validation function failed for {model_name}: {validation_error}"
-                        )
+                        logger.warning(f"Validation function failed for {model_name}: {validation_error}")
                         # Continue with model anyway, but log the issue
                         result["validation"] = {"passed": False, "error": str(validation_error)}
                         elapsed = time.time() - step_start
@@ -458,9 +450,7 @@ class ModelTrainer:
             print(f"  ✓ Test R²: {ml_metrics['test_r2']:.4f}")
             return result
 
-        results["ml_adjuster"] = train_with_timing(
-            1, "ml_adjuster", train_ml_adjuster, validation_func=validate_ml_model
-        )
+        results["ml_adjuster"] = train_with_timing(1, "ml_adjuster", train_ml_adjuster, validation_func=validate_ml_model)
 
         # 2. Enhanced ML Adjuster
         print("\n[2/9] Training Enhanced ML Adjuster...")
@@ -479,9 +469,7 @@ class ModelTrainer:
             }
             print(f"  ✓ Train R²: {enhanced_metrics['train_r2']:.4f}")
             print(f"  ✓ Test R²: {enhanced_metrics['test_r2']:.4f}")
-            print(
-                f"  ✓ CV R²: {enhanced_metrics['cv_r2_mean']:.4f} ± {enhanced_metrics['cv_r2_std']:.4f}"
-            )
+            print(f"  ✓ CV R²: {enhanced_metrics['cv_r2_mean']:.4f} ± {enhanced_metrics['cv_r2_std']:.4f}")
         except Exception as e:
             results["enhanced_ml_adjuster"] = {"status": "failed", "error": str(e)}
             print(f"  ✗ Failed: {e}")
@@ -531,9 +519,7 @@ class ModelTrainer:
         print("\n[5/9] Training Regime Detector...")
         try:
             regime_detector = RegimeDetector(self.valuator)
-            regime_results = regime_detector.detect_regimes(
-                self.train_bonds, num_regimes=4, method="kmeans"
-            )
+            regime_results = regime_detector.detect_regimes(self.train_bonds, num_regimes=4, method="kmeans")
             results["regime_detector"] = {
                 "results": regime_results,
                 "model": regime_detector,
@@ -541,9 +527,7 @@ class ModelTrainer:
             }
             print(f"  ✓ Detected {regime_results['num_regimes']} regimes")
             for regime_name, regime_info in regime_results["regime_analysis"].items():
-                print(
-                    f"    - {regime_name}: {regime_info['num_bonds']} bonds, {regime_info['regime_type']}"
-                )
+                print(f"    - {regime_name}: {regime_info['num_bonds']} bonds, {regime_info['regime_type']}")
         except Exception as e:
             results["regime_detector"] = {"status": "failed", "error": str(e)}
             print(f"  ✗ Failed: {e}")
@@ -552,18 +536,14 @@ class ModelTrainer:
         print("\n[6/9] Training Factor Model...")
         try:
             factor_model = FactorModel(self.valuator)
-            factor_results = factor_model.extract_bond_factors(
-                self.train_bonds, num_factors=None
-            )  # Auto-select
+            factor_results = factor_model.extract_bond_factors(self.train_bonds, num_factors=None)  # Auto-select
             results["factor_model"] = {
                 "results": factor_results,
                 "model": factor_model,
                 "status": "success",
             }
             print(f"  ✓ Extracted {factor_results['num_factors']} factors")
-            print(
-                f"  ✓ Explained variance: {sum(factor_results['explained_variance'][:3]):.1%} (top 3)"
-            )
+            print(f"  ✓ Explained variance: {sum(factor_results['explained_variance'][:3]):.1%} (top 3)")
         except Exception as e:
             results["factor_model"] = {"status": "failed", "error": str(e)}
             print(f"  ✗ Failed: {e}")
@@ -576,9 +556,7 @@ class ModelTrainer:
             sample_bonds = self.train_bonds[:100]
             weights = [1.0 / len(sample_bonds)] * len(sample_bonds)
 
-            cvar_result = tail_risk.calculate_cvar(
-                sample_bonds, weights=weights, confidence_level=0.95, method="monte_carlo"
-            )
+            cvar_result = tail_risk.calculate_cvar(sample_bonds, weights=weights, confidence_level=0.95, method="monte_carlo")
             results["tail_risk"] = {"cvar": cvar_result, "model": tail_risk, "status": "success"}
             print(f"  ✓ CVaR (95%): {cvar_result['cvar_pct']:.2f}%")
             print(f"  ✓ Tail Ratio: {cvar_result['tail_ratio']:.2f}")
@@ -947,9 +925,7 @@ def main() -> None:
 
     # Initialize trainer
     default_dataset_path = os.path.join(config.data_dir, "training_dataset.joblib")
-    trainer = ModelTrainer(
-        dataset_path=default_dataset_path, generate_new=False
-    )  # Set to True to generate new dataset
+    trainer = ModelTrainer(dataset_path=default_dataset_path, generate_new=False)  # Set to True to generate new dataset
 
     # Train all models
     results = trainer.train_all_models()
@@ -999,9 +975,7 @@ def main() -> None:
 
         if drift_scores:
             best_model = min(drift_scores, key=drift_scores.get)
-            print(
-                f"\n✓ Best model (lowest drift): {best_model} (drift score: {drift_scores[best_model]:.4f})"
-            )
+            print(f"\n✓ Best model (lowest drift): {best_model} (drift score: {drift_scores[best_model]:.4f})")
 
     # Print tuning results summary
     if "tuned_models" in results:

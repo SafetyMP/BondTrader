@@ -300,9 +300,7 @@ class EnhancedBondDatabase:
         try:
             # Get existing bond IDs in one query for efficiency
             existing_ids = set(
-                session.query(BondModel.bond_id)
-                .filter(BondModel.bond_id.in_([b.bond_id for b in bonds]))
-                .all()
+                session.query(BondModel.bond_id).filter(BondModel.bond_id.in_([b.bond_id for b in bonds])).all()
             )
             existing_ids = {id_tuple[0] for id_tuple in existing_ids}
 
@@ -344,11 +342,7 @@ class EnhancedBondDatabase:
 
             # Batch update existing bonds
             if update_map:
-                existing_bonds = (
-                    session.query(BondModel)
-                    .filter(BondModel.bond_id.in_(list(update_map.keys())))
-                    .all()
-                )
+                existing_bonds = session.query(BondModel).filter(BondModel.bond_id.in_(list(update_map.keys()))).all()
 
                 for existing in existing_bonds:
                     bond = update_map[existing.bond_id]
@@ -443,16 +437,11 @@ class EnhancedBondDatabase:
                 .limit(limit)
                 .all()
             )
-            return [
-                {"price": h.price, "fair_value": h.fair_value, "timestamp": h.timestamp}
-                for h in histories
-            ]
+            return [{"price": h.price, "fair_value": h.fair_value, "timestamp": h.timestamp} for h in histories]
         finally:
             session.close()
 
-    def save_valuation(
-        self, bond_id: str, fair_value: float, ytm: float, duration: float, convexity: float
-    ):
+    def save_valuation(self, bond_id: str, fair_value: float, ytm: float, duration: float, convexity: float):
         """Save valuation data"""
         session = self._get_session()
         try:

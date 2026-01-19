@@ -323,8 +323,4 @@ class TestValidationIntegration:
         assert "test_value" in str(exc_info.value)
         # Error message contains "must be positive" or "must be >= 0.0" depending on implementation
         error_msg = str(exc_info.value)
-        assert (
-            "must be positive" in error_msg
-            or "must be >= 0.0" in error_msg
-            or "greater than 0" in error_msg
-        )
+        assert "must be positive" in error_msg or "must be >= 0.0" in error_msg or "greater than 0" in error_msg

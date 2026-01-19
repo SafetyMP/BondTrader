@@ -59,9 +59,7 @@ class FactorModel:
         # Build feature matrix with batched calculations
         ytms = [self.valuator.calculate_yield_to_maturity(bond) for bond in bonds]
         durations = [self.valuator.calculate_duration(bond, ytm) for bond, ytm in zip(bonds, ytms)]
-        convexities = [
-            self.valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds, ytms)
-        ]
+        convexities = [self.valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds, ytms)]
 
         # Build feature matrix using pre-calculated values
         features = []
@@ -145,9 +143,7 @@ class FactorModel:
 
         return factor_names
 
-    def calculate_factor_exposures(
-        self, bonds: List[Bond], portfolio_weights: Optional[np.ndarray] = None
-    ) -> Dict:
+    def calculate_factor_exposures(self, bonds: List[Bond], portfolio_weights: Optional[np.ndarray] = None) -> Dict:
         """
         Calculate portfolio factor exposures
 
@@ -186,9 +182,7 @@ class FactorModel:
             "dominant_factor": np.argmax(np.abs(portfolio_exposure)),
         }
 
-    def risk_attribution(
-        self, bonds: List[Bond], portfolio_weights: Optional[np.ndarray] = None
-    ) -> Dict:
+    def risk_attribution(self, bonds: List[Bond], portfolio_weights: Optional[np.ndarray] = None) -> Dict:
         """
         Risk attribution by factor
 
@@ -226,14 +220,10 @@ class FactorModel:
             factor_variances = [1.0] * len(portfolio_exposures)
 
         # Vectorized calculation: factor risk = exposure^2 * factor_variance
-        factor_risks = [
-            (exposure**2) * var for exposure, var in zip(portfolio_exposures, factor_variances)
-        ]
+        factor_risks = [(exposure**2) * var for exposure, var in zip(portfolio_exposures, factor_variances)]
 
         total_factor_risk = sum(factor_risks)
-        factor_risk_pct = [
-            r / portfolio_variance * 100 if portfolio_variance > 0 else 0 for r in factor_risks
-        ]
+        factor_risk_pct = [r / portfolio_variance * 100 if portfolio_variance > 0 else 0 for r in factor_risks]
 
         return {
             "portfolio_variance": portfolio_variance,
@@ -243,15 +233,11 @@ class FactorModel:
             "total_factor_risk": total_factor_risk,
             "idiosyncratic_risk": portfolio_variance - total_factor_risk,
             "idiosyncratic_risk_pct": (
-                ((portfolio_variance - total_factor_risk) / portfolio_variance * 100)
-                if portfolio_variance > 0
-                else 0
+                ((portfolio_variance - total_factor_risk) / portfolio_variance * 100) if portfolio_variance > 0 else 0
             ),
         }
 
-    def statistical_factors(
-        self, bonds: List[Bond], return_data: Optional[np.ndarray] = None, num_factors: int = 3
-    ) -> Dict:
+    def statistical_factors(self, bonds: List[Bond], return_data: Optional[np.ndarray] = None, num_factors: int = 3) -> Dict:
         """
         Extract statistical factors from return data
 

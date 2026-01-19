@@ -56,11 +56,7 @@ class LoadTestResults:
             "total_requests": self.total_requests,
             "successful_requests": self.successful_requests,
             "failed_requests": self.failed_requests,
-            "success_rate": (
-                (self.successful_requests / self.total_requests * 100)
-                if self.total_requests > 0
-                else 0
-            ),
+            "success_rate": ((self.successful_requests / self.total_requests * 100) if self.total_requests > 0 else 0),
             "total_time_seconds": total_time,
             "requests_per_second": self.total_requests / total_time if total_time > 0 else 0,
             "response_time": {
@@ -161,12 +157,8 @@ class TestLoadValuation:
 
         # Assertions
         assert stats["success_rate"] >= 95, f"Success rate too low: {stats['success_rate']}%"
-        assert (
-            stats["response_time"]["p95"] < 1.0
-        ), f"P95 response time too high: {stats['response_time']['p95']}s"
-        assert (
-            stats["requests_per_second"] >= 10
-        ), f"Throughput too low: {stats['requests_per_second']} req/s"
+        assert stats["response_time"]["p95"] < 1.0, f"P95 response time too high: {stats['response_time']['p95']}s"
+        assert stats["requests_per_second"] >= 10, f"Throughput too low: {stats['requests_per_second']} req/s"
 
         print(f"\nLoad Test Results:")
         print(f"  Success Rate: {stats['success_rate']:.1f}%")
@@ -199,9 +191,7 @@ class TestLoadArbitrage:
         # Note: Success rate may be low if no bonds exist in database
         if stats["successful_requests"] > 0:
             assert stats["success_rate"] >= 90, f"Success rate too low: {stats['success_rate']}%"
-            assert (
-                stats["response_time"]["p95"] < 5.0
-            ), f"P95 response time too high: {stats['response_time']['p95']}s"
+            assert stats["response_time"]["p95"] < 5.0, f"P95 response time too high: {stats['response_time']['p95']}s"
         else:
             # If no successful requests, just verify test framework works
             assert stats["total_requests"] > 0, "No requests executed"

@@ -38,9 +38,7 @@ class AdvancedAnalytics:
         else:
             self.valuator = valuator
 
-    def fit_yield_curve(
-        self, bonds: List[Bond], method: str = "nelson_siegel", use_statsmodels: bool = False
-    ) -> Dict:
+    def fit_yield_curve(self, bonds: List[Bond], method: str = "nelson_siegel", use_statsmodels: bool = False) -> Dict:
         """
         Fit yield curve to bond data
 
@@ -302,10 +300,7 @@ class AdvancedAnalytics:
         bond_duration = self.valuator.calculate_duration(bond, bond_ytm)
 
         benchmark_ytms = [self.valuator.calculate_yield_to_maturity(b) for b in benchmark_bonds]
-        benchmark_durations = [
-            self.valuator.calculate_duration(b, ytm)
-            for b, ytm in zip(benchmark_bonds, benchmark_ytms)
-        ]
+        benchmark_durations = [self.valuator.calculate_duration(b, ytm) for b, ytm in zip(benchmark_bonds, benchmark_ytms)]
 
         avg_benchmark_ytm = np.mean(benchmark_ytms)
         avg_benchmark_duration = np.mean(benchmark_durations)
@@ -315,9 +310,7 @@ class AdvancedAnalytics:
 
         # Duration-adjusted yield
         duration_adjusted_yield = (
-            bond_ytm * (bond_duration / avg_benchmark_duration)
-            if avg_benchmark_duration > 0
-            else bond_ytm
+            bond_ytm * (bond_duration / avg_benchmark_duration) if avg_benchmark_duration > 0 else bond_ytm
         )
 
         # Relative value score (higher is better)

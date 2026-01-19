@@ -37,9 +37,7 @@ class BondService:
     Encapsulates business logic and orchestrates domain operations
     """
 
-    def __init__(
-        self, repository: Optional[IBondRepository] = None, valuator: Optional[BondValuator] = None
-    ):
+    def __init__(self, repository: Optional[IBondRepository] = None, valuator: Optional[BondValuator] = None):
         """Initialize service with dependencies"""
         self.repository = repository or BondRepository()
         self.valuator = valuator or BondValuator()
@@ -129,15 +127,11 @@ class BondService:
             }
 
             # Audit log
-            self.audit_logger.log_valuation(
-                bond_id, fair_value, ytm, duration=duration, convexity=convexity
-            )
+            self.audit_logger.log_valuation(bond_id, fair_value, ytm, duration=duration, convexity=convexity)
 
             # Metrics
             get_metrics().histogram("valuation.fair_value", fair_value)
-            get_metrics().histogram(
-                "valuation.mismatch_percentage", abs(valuation["mismatch_percentage"])
-            )
+            get_metrics().histogram("valuation.mismatch_percentage", abs(valuation["mismatch_percentage"]))
 
             return Result.ok(valuation)
 
@@ -199,15 +193,11 @@ class BondService:
             }
 
             # Audit log
-            self.audit_logger.log_valuation(
-                bond.bond_id, fair_value, ytm, duration=duration, convexity=convexity
-            )
+            self.audit_logger.log_valuation(bond.bond_id, fair_value, ytm, duration=duration, convexity=convexity)
 
             # Metrics
             get_metrics().histogram("valuation.fair_value", fair_value)
-            get_metrics().histogram(
-                "valuation.mismatch_percentage", abs(valuation["mismatch_percentage"])
-            )
+            get_metrics().histogram("valuation.mismatch_percentage", abs(valuation["mismatch_percentage"]))
 
             return Result.ok(valuation)
 
@@ -216,9 +206,7 @@ class BondService:
             return Result.err(ValuationError(f"Valuation calculation failed: {e}"))
 
     @trace
-    def calculate_valuations_batch(
-        self, bonds: List[Bond]
-    ) -> Result[List[Dict[str, Any]], Exception]:
+    def calculate_valuations_batch(self, bonds: List[Bond]) -> Result[List[Dict[str, Any]], Exception]:
         """
         Calculate valuations for multiple bonds
 
@@ -325,14 +313,10 @@ class BondService:
                     }
                 except Exception as ml_error:
                     # CRITICAL: Graceful degradation - fallback to simple DCF
-                    logger.warning(
-                        f"ML prediction failed for bond {bond_id}, using DCF fallback: {ml_error}"
-                    )
+                    logger.warning(f"ML prediction failed for bond {bond_id}, using DCF fallback: {ml_error}")
                     valuation_result = self.calculate_valuation_for_bond(bond)
                     if valuation_result.is_err():
-                        return valuation_result.map_err(
-                            lambda e: MLError(f"Both ML and DCF failed: {e}")
-                        )
+                        return valuation_result.map_err(lambda e: MLError(f"Both ML and DCF failed: {e}"))
 
                     valuation = valuation_result.value
                     prediction = {
@@ -426,9 +410,7 @@ class BondService:
             )
 
             # Metrics
-            get_metrics().increment(
-                "arbitrage.search", tags={"found": str(len(opportunities)), "used_ml": str(use_ml)}
-            )
+            get_metrics().increment("arbitrage.search", tags={"found": str(len(opportunities)), "used_ml": str(use_ml)})
 
             return Result.ok(opportunities)
 
@@ -460,9 +442,7 @@ class BondService:
             for bond_id in bond_ids:
                 bond_result = self.get_bond(bond_id)
                 if bond_result.is_err():
-                    return bond_result.map_err(
-                        lambda e: RiskCalculationError(f"Failed to get bond {bond_id}: {e}")
-                    )
+                    return bond_result.map_err(lambda e: RiskCalculationError(f"Failed to get bond {bond_id}: {e}"))
                 bonds.append(bond_result.value)
 
             # Default to equal weights
@@ -528,9 +508,7 @@ class BondService:
             if risk_metrics["var_historical"]:
                 get_metrics().track_risk_metric("var_95", risk_metrics["var_historical"])
             if portfolio_credit_risk:
-                get_metrics().track_risk_metric(
-                    "credit_risk", portfolio_credit_risk.get("expected_loss", 0)
-                )
+                get_metrics().track_risk_metric("credit_risk", portfolio_credit_risk.get("expected_loss", 0))
 
             return Result.ok(risk_metrics)
 
@@ -558,9 +536,7 @@ class BondService:
             for bond_id in bond_ids:
                 bond_result = self.get_bond(bond_id)
                 if bond_result.is_err():
-                    return bond_result.map_err(
-                        lambda e: ValuationError(f"Failed to get bond {bond_id}: {e}")
-                    )
+                    return bond_result.map_err(lambda e: ValuationError(f"Failed to get bond {bond_id}: {e}"))
                 bonds.append(bond_result.value)
 
             # Default to equal weights
@@ -604,9 +580,7 @@ class BondService:
                 "total_fair_value": total_fair_value,
                 "total_market_value": total_market_value,
                 "mismatch_percentage": (
-                    ((total_market_value - total_fair_value) / total_fair_value * 100)
-                    if total_fair_value > 0
-                    else 0
+                    ((total_market_value - total_fair_value) / total_fair_value * 100) if total_fair_value > 0 else 0
                 ),
                 "num_bonds": len(bonds),
                 "weights": weights,
@@ -670,11 +644,7 @@ class BondService:
 
                     if errors and not created_bonds:
                         # All failed validation - transaction will rollback on exception
-                        return Result.err(
-                            BusinessRuleViolation(
-                                f"All bonds failed validation: {'; '.join(errors)}"
-                            )
-                        )
+                        return Result.err(BusinessRuleViolation(f"All bonds failed validation: {'; '.join(errors)}"))
 
                     # Save all bonds within transaction (pass session for atomicity)
                     for bond in created_bonds:
@@ -697,9 +667,7 @@ class BondService:
                         created_bonds.append(result.value)
 
                 if errors and not created_bonds:
-                    return Result.err(
-                        BusinessRuleViolation(f"All bonds failed to create: {'; '.join(errors)}")
-                    )
+                    return Result.err(BusinessRuleViolation(f"All bonds failed to create: {'; '.join(errors)}"))
 
             # Audit log
             self.audit_logger.log(

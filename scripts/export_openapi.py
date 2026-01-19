@@ -46,9 +46,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Export OpenAPI specification from BondTrader API")
-    parser.add_argument(
-        "--format", choices=["json", "yaml"], default="json", help="Output format (default: json)"
-    )
+    parser.add_argument("--format", choices=["json", "yaml"], default="json", help="Output format (default: json)")
     parser.add_argument("--output", help="Output file path (default: openapi.json or openapi.yaml)")
 
     args = parser.parse_args()

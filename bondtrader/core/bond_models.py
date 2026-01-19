@@ -126,14 +126,10 @@ class BondClassifier:
     def __init__(self):
         self.bond_type_map = {
             BondType.ZERO_COUPON: lambda b: b.coupon_rate == 0,
-            BondType.FIXED_RATE: lambda b: b.coupon_rate > 0
-            and b.bond_type != BondType.FLOATING_RATE,
-            BondType.TREASURY: lambda b: "treasury" in b.issuer.lower()
-            or b.credit_rating in ["AAA", "AA+"],
-            BondType.CORPORATE: lambda b: b.bond_type == BondType.CORPORATE
-            or ("corp" in b.issuer.lower()),
-            BondType.HIGH_YIELD: lambda b: b.credit_rating
-            in ["BB", "BB+", "BB-", "B", "B+", "B-", "CCC"],
+            BondType.FIXED_RATE: lambda b: b.coupon_rate > 0 and b.bond_type != BondType.FLOATING_RATE,
+            BondType.TREASURY: lambda b: "treasury" in b.issuer.lower() or b.credit_rating in ["AAA", "AA+"],
+            BondType.CORPORATE: lambda b: b.bond_type == BondType.CORPORATE or ("corp" in b.issuer.lower()),
+            BondType.HIGH_YIELD: lambda b: b.credit_rating in ["BB", "BB+", "BB-", "B", "B+", "B-", "CCC"],
         }
 
     def classify(self, bond: Bond) -> BondType:

@@ -72,9 +72,7 @@ class AutoMLBondAdjuster:
         # Use enhanced ML adjuster for feature extraction
         advanced_ml = AdvancedMLBondAdjuster(self.valuator)
         X, feature_names = advanced_ml._create_advanced_features(bonds, fair_values)
-        y = np.array(
-            [bond.current_price / fv if fv > 0 else 1.0 for bond, fv in zip(bonds, fair_values)]
-        )
+        y = np.array([bond.current_price / fv if fv > 0 else 1.0 for bond, fv in zip(bonds, fair_values)])
 
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
@@ -128,9 +126,7 @@ class AutoMLBondAdjuster:
                 "subsample": [0.8, 0.85, 0.9, 0.95, 1.0],
             }
             # Add early stopping for gradient boosting
-            gb_base = GradientBoostingRegressor(
-                random_state=42, validation_fraction=0.1, n_iter_no_change=10, tol=1e-4
-            )
+            gb_base = GradientBoostingRegressor(random_state=42, validation_fraction=0.1, n_iter_no_change=10, tol=1e-4)
             gb_search = RandomizedSearchCV(
                 gb_base,
                 param_distributions,
@@ -165,9 +161,7 @@ class AutoMLBondAdjuster:
                 "learning_rate": ["constant", "adaptive"],
                 "learning_rate_init": [0.001, 0.01, 0.1],
             }
-            nn_base = MLPRegressor(
-                max_iter=1000, random_state=42, early_stopping=True, validation_fraction=0.1
-            )
+            nn_base = MLPRegressor(max_iter=1000, random_state=42, early_stopping=True, validation_fraction=0.1)
             nn_search = RandomizedSearchCV(
                 nn_base,
                 param_distributions,

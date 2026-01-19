@@ -55,9 +55,7 @@ def test_backtest_engine_with_valuator():
 
 def test_backtest_arbitrage_strategy(backtest_engine, historical_bonds):
     """Test backtesting arbitrage strategy"""
-    result = backtest_engine.backtest_arbitrage_strategy(
-        historical_bonds, initial_capital=1000000, transaction_costs=True
-    )
+    result = backtest_engine.backtest_arbitrage_strategy(historical_bonds, initial_capital=1000000, transaction_costs=True)
 
     assert "final_capital" in result
     assert "total_return" in result
@@ -69,9 +67,7 @@ def test_backtest_arbitrage_strategy(backtest_engine, historical_bonds):
 
 def test_backtest_arbitrage_strategy_no_transaction_costs(backtest_engine, historical_bonds):
     """Test backtesting without transaction costs"""
-    result = backtest_engine.backtest_arbitrage_strategy(
-        historical_bonds, initial_capital=1000000, transaction_costs=False
-    )
+    result = backtest_engine.backtest_arbitrage_strategy(historical_bonds, initial_capital=1000000, transaction_costs=False)
 
     assert "final_capital" in result
     assert result["final_capital"] >= 0

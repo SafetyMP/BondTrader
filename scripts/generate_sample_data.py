@@ -83,9 +83,7 @@ class BondDataGenerator:
             face_value = random.choice([1000, 5000, 10000, 25000])
             time_to_maturity = random.uniform(0.5, 30.0)  # 6 months to 30 years
             maturity_date = datetime.now() + timedelta(days=int(time_to_maturity * 365.25))
-            issue_date = datetime.now() - timedelta(
-                days=random.randint(30, 3650)
-            )  # Up to 10 years ago
+            issue_date = datetime.now() - timedelta(days=random.randint(30, 3650))  # Up to 10 years ago
 
             # Coupon rate based on bond type
             if bond_type == BondType.ZERO_COUPON:
@@ -211,9 +209,7 @@ def generate_sample_dataset(
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Generate sample bond dataset for Streamlit dashboard"
-    )
+    parser = argparse.ArgumentParser(description="Generate sample bond dataset for Streamlit dashboard")
     parser.add_argument(
         "--num-bonds",
         type=int,

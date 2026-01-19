@@ -149,16 +149,10 @@ class UnifiedTrainingFramework:
 
                     current_date = datetime.now()
                     if not maturity_date:
-                        time_to_maturity = metadata.get(
-                            "time_to_maturity", features[1] if len(features) > 1 else 5.0
-                        )
-                        maturity_date = current_date + timedelta(
-                            days=int(time_to_maturity * 365.25)
-                        )
+                        time_to_maturity = metadata.get("time_to_maturity", features[1] if len(features) > 1 else 5.0)
+                        maturity_date = current_date + timedelta(days=int(time_to_maturity * 365.25))
                     if not issue_date:
-                        years_since_issue = metadata.get(
-                            "years_since_issue", features[4] if len(features) > 4 else 0.0
-                        )
+                        years_since_issue = metadata.get("years_since_issue", features[4] if len(features) > 4 else 0.0)
                         issue_date = current_date - timedelta(days=int(years_since_issue * 365.25))
 
                     price_to_par = features[3] if len(features) > 3 else 1.0
@@ -293,11 +287,7 @@ class UnifiedTrainingFramework:
             Dictionary of training results
         """
         results = {}
-        pbar = (
-            tqdm(total=len(configs), desc="Training Models", unit="model")
-            if show_progress
-            else None
-        )
+        pbar = tqdm(total=len(configs), desc="Training Models", unit="model") if show_progress else None
 
         for model_name, config in configs:
             try:

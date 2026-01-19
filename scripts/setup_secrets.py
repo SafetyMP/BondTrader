@@ -16,9 +16,7 @@ def setup_file_backend():
     print("Setting up encrypted file backend for secrets...")
 
     # Get configuration
-    secrets_file = (
-        input("Secrets file path (default: .secrets.encrypted): ").strip() or ".secrets.encrypted"
-    )
+    secrets_file = input("Secrets file path (default: .secrets.encrypted): ").strip() or ".secrets.encrypted"
     master_password = input("Master password (for encryption): ").strip()
 
     if not master_password:
@@ -53,9 +51,7 @@ def setup_file_backend():
                 manager.set_secret(test_key, test_value)
                 retrieved = manager.get_secret(test_key)
                 if retrieved == test_value:
-                    print(
-                        f"✅ Test successful! Secret '{test_key}' stored and retrieved correctly."
-                    )
+                    print(f"✅ Test successful! Secret '{test_key}' stored and retrieved correctly.")
                 else:
                     print(f"❌ Test failed! Retrieved value doesn't match.")
                     return False

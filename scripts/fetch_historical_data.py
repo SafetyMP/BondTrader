@@ -39,9 +39,7 @@ from bondtrader.data.market_data import FINRADataProvider, MarketDataManager
 from bondtrader.utils.utils import logger
 
 
-def fetch_historical_treasury_bonds(
-    start_date: datetime, end_date: datetime, save_path: Optional[str] = None
-) -> List[Bond]:
+def fetch_historical_treasury_bonds(start_date: datetime, end_date: datetime, save_path: Optional[str] = None) -> List[Bond]:
     """
     Fetch historical Treasury bond data from FRED and convert to Bond objects
 
@@ -105,9 +103,7 @@ def fetch_historical_treasury_bonds(
             coupon_rate = yield_rate * 100  # Convert to percentage
 
             # Calculate dates
-            issue_date = date - pd.Timedelta(
-                days=365 * maturity_years
-            )  # Assume issued maturity_years ago
+            issue_date = date - pd.Timedelta(days=365 * maturity_years)  # Assume issued maturity_years ago
             maturity_date = date + pd.Timedelta(days=365 * maturity_years)
 
             # Calculate bond price from yield
@@ -244,9 +240,7 @@ def _generate_synthetic_treasury_bonds(
     return bonds
 
 
-def fetch_finra_bonds(
-    start_date: datetime, end_date: datetime, save_path: Optional[str] = None
-) -> List[Bond]:
+def fetch_finra_bonds(start_date: datetime, end_date: datetime, save_path: Optional[str] = None) -> List[Bond]:
     """
     Fetch historical bond data from FINRA TRACE and convert to Bond objects
 
@@ -412,19 +406,11 @@ def _generate_synthetic_corporate_bonds(
             issuer = np.random.choice(issuers)
 
             # Coupon rate based on rating and maturity
-            base_rate = (
-                0.02
-                if rating in ["AAA", "AA"]
-                else 0.03 if rating == "A" else 0.04 if rating == "BBB" else 0.06
-            )
-            coupon_rate = (
-                base_rate + (maturity_years / 30) * 0.01 + np.random.uniform(-0.005, 0.005)
-            ) * 100
+            base_rate = 0.02 if rating in ["AAA", "AA"] else 0.03 if rating == "A" else 0.04 if rating == "BBB" else 0.06
+            coupon_rate = (base_rate + (maturity_years / 30) * 0.01 + np.random.uniform(-0.005, 0.005)) * 100
 
             # Calculate dates
-            issue_date = current_date - timedelta(
-                days=int(365 * np.random.randint(1, int(maturity_years)))
-            )
+            issue_date = current_date - timedelta(days=int(365 * np.random.randint(1, int(maturity_years))))
             maturity_date = current_date + timedelta(days=int(365 * maturity_years))
 
             face_value = np.random.choice([1000, 5000, 10000])
@@ -563,12 +549,8 @@ def fetch_for_training_evaluation(
     # Save combined data
     os.makedirs(output_dir, exist_ok=True)
     save_bonds_to_csv(all_bonds, os.path.join(output_dir, f"all_bonds_{start_year}_{end_year}.csv"))
-    save_bonds_to_csv(
-        train_bonds, os.path.join(output_dir, f"train_bonds_{start_year}_{end_year}.csv")
-    )
-    save_bonds_to_csv(
-        eval_bonds, os.path.join(output_dir, f"eval_bonds_{start_year}_{end_year}.csv")
-    )
+    save_bonds_to_csv(train_bonds, os.path.join(output_dir, f"train_bonds_{start_year}_{end_year}.csv"))
+    save_bonds_to_csv(eval_bonds, os.path.join(output_dir, f"eval_bonds_{start_year}_{end_year}.csv"))
 
     return {
         "all_bonds": all_bonds,
@@ -591,21 +573,15 @@ def main():
         default=2010,
         help="Start year for historical data (default: 2010)",
     )
-    parser.add_argument(
-        "--end-year", type=int, default=2020, help="End year for historical data (default: 2020)"
-    )
+    parser.add_argument("--end-year", type=int, default=2020, help="End year for historical data (default: 2020)")
     parser.add_argument(
         "--output-dir",
         type=str,
         default="historical_data",
         help="Output directory for saved data (default: historical_data)",
     )
-    parser.add_argument(
-        "--fred-only", action="store_true", help="Only fetch from FRED (skip FINRA)"
-    )
-    parser.add_argument(
-        "--finra-only", action="store_true", help="Only fetch from FINRA (skip FRED)"
-    )
+    parser.add_argument("--fred-only", action="store_true", help="Only fetch from FRED (skip FINRA)")
+    parser.add_argument("--finra-only", action="store_true", help="Only fetch from FINRA (skip FRED)")
 
     args = parser.parse_args()
 

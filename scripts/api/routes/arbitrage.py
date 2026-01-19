@@ -27,9 +27,7 @@ async def get_arbitrage_opportunities(
         description="Minimum profit percentage threshold (as decimal, e.g., 0.01 for 1%)",
         example=0.01,
     ),
-    limit: int = Query(
-        10, ge=1, le=100, description="Maximum number of opportunities to return", example=10
-    ),
+    limit: int = Query(10, ge=1, le=100, description="Maximum number of opportunities to return", example=10),
 ):
     """
     Get arbitrage opportunities

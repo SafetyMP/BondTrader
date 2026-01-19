@@ -37,9 +37,7 @@ class RegimeDetector:
         self.regimes = None
         self.regime_model = None
 
-    def detect_regimes(
-        self, bonds: List[Bond], num_regimes: int = 3, method: str = "kmeans"
-    ) -> Dict:
+    def detect_regimes(self, bonds: List[Bond], num_regimes: int = 3, method: str = "kmeans") -> Dict:
         """
         Detect market regimes from bond data
 
@@ -88,12 +86,8 @@ class RegimeDetector:
             regime_bonds = [b for b, label in zip(bonds, regime_labels) if label == regime_id]
 
             if len(regime_bonds) > 0:
-                avg_ytm = np.mean(
-                    [self.valuator.calculate_yield_to_maturity(b) for b in regime_bonds]
-                )
-                avg_spread = np.mean(
-                    [self.valuator._get_credit_spread(b.credit_rating) for b in regime_bonds]
-                )
+                avg_ytm = np.mean([self.valuator.calculate_yield_to_maturity(b) for b in regime_bonds])
+                avg_spread = np.mean([self.valuator._get_credit_spread(b.credit_rating) for b in regime_bonds])
                 avg_duration = np.mean([self.valuator.calculate_duration(b) for b in regime_bonds])
 
                 regime_analysis[f"Regime {regime_id}"] = {
@@ -146,9 +140,7 @@ class RegimeDetector:
             spread = self.valuator._get_credit_spread(bond.credit_rating)
             duration = self.valuator.calculate_duration(bond, ytm)
 
-            features = np.array(
-                [[ytm * 100, spread * 10000, duration, bond.current_price / bond.face_value]]
-            )
+            features = np.array([[ytm * 100, spread * 10000, duration, bond.current_price / bond.face_value]])
             current_regime = self.regime_model.predict(features)[0]
 
         # Base fair value
@@ -174,9 +166,7 @@ class RegimeDetector:
             "adjustment_pct": adjustment * 100,
         }
 
-    def adaptive_risk_metrics(
-        self, bonds: List[Bond], weights: Optional[List[float]] = None
-    ) -> Dict:
+    def adaptive_risk_metrics(self, bonds: List[Bond], weights: Optional[List[float]] = None) -> Dict:
         """
         Calculate risk metrics that adapt to current regime
 
@@ -214,9 +204,7 @@ class RegimeDetector:
             risk_mgr = RiskManager(self.valuator)
 
             try:
-                var_result = risk_mgr.calculate_var(
-                    regime_bonds, regime_weights, confidence_level=0.95, method="monte_carlo"
-                )
+                var_result = risk_mgr.calculate_var(regime_bonds, regime_weights, confidence_level=0.95, method="monte_carlo")
 
                 regime_risks[f"Regime {int(regime_id)}"] = {
                     "var_value": var_result["var_value"],

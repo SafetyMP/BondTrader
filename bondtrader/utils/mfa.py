@@ -40,10 +40,7 @@ class MFAManager:
     def __init__(self):
         """Initialize MFA manager"""
         if not HAS_MFA_LIBS:
-            logger.warning(
-                "MFA libraries (pyotp, qrcode) not available. "
-                "Install with: pip install pyotp qrcode[pil]"
-            )
+            logger.warning("MFA libraries (pyotp, qrcode) not available. " "Install with: pip install pyotp qrcode[pil]")
 
     def generate_secret(self, username: str, issuer: str = "BondTrader") -> str:
         """
@@ -63,9 +60,7 @@ class MFAManager:
         secret = pyotp.random_base32()
         return secret
 
-    def generate_qr_code(
-        self, username: str, secret: str, issuer: str = "BondTrader"
-    ) -> Tuple[str, bytes]:
+    def generate_qr_code(self, username: str, secret: str, issuer: str = "BondTrader") -> Tuple[str, bytes]:
         """
         Generate QR code for MFA setup.
 

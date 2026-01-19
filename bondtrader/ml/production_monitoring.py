@@ -82,9 +82,7 @@ class ModelMonitor:
         """
         self.model_name = model_name
         self.config = get_config()
-        self.monitoring_dir = monitoring_dir or os.path.join(
-            self.config.model_dir, "monitoring", model_name
-        )
+        self.monitoring_dir = monitoring_dir or os.path.join(self.config.model_dir, "monitoring", model_name)
         os.makedirs(self.monitoring_dir, exist_ok=True)
 
         # Default alert thresholds
@@ -269,9 +267,7 @@ class ModelMonitor:
         logger.warning(f"ALERT [{self.model_name}]: {alert_type} - {alert_data}")
 
         # Save alert to file
-        alert_file = os.path.join(
-            self.monitoring_dir, f"alerts_{datetime.now().strftime('%Y%m%d')}.jsonl"
-        )
+        alert_file = os.path.join(self.monitoring_dir, f"alerts_{datetime.now().strftime('%Y%m%d')}.jsonl")
         with open(alert_file, "a") as f:
             f.write(json.dumps(alert) + "\n")
 
@@ -292,9 +288,7 @@ class ModelMonitor:
             return None
         return self._compute_metrics()
 
-    def get_metrics_history(
-        self, start_time: datetime = None, end_time: datetime = None
-    ) -> List[MonitoringMetrics]:
+    def get_metrics_history(self, start_time: datetime = None, end_time: datetime = None) -> List[MonitoringMetrics]:
         """Get metrics history within time range"""
         if start_time is None:
             start_time = datetime.now() - timedelta(days=1)
@@ -306,16 +300,12 @@ class ModelMonitor:
     def save_metrics(self, filepath: str = None):
         """Save metrics to file"""
         if filepath is None:
-            filepath = os.path.join(
-                self.monitoring_dir, f"metrics_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-            )
+            filepath = os.path.join(self.monitoring_dir, f"metrics_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
 
         metrics_data = {
             "model_name": self.model_name,
             "timestamp": datetime.now().isoformat(),
-            "current_metrics": (
-                asdict(self.get_current_metrics()) if self.get_current_metrics() else None
-            ),
+            "current_metrics": (asdict(self.get_current_metrics()) if self.get_current_metrics() else None),
             "metrics_history": [asdict(m) for m in self.metrics_history[-100:]],  # Last 100
         }
 
@@ -397,9 +387,7 @@ def create_slack_alert_callback(webhook_url: str) -> Callable[[Dict], None]:
     return callback
 
 
-def create_email_alert_callback(
-    email_address: str, smtp_server: str = None, smtp_port: int = 587
-) -> Callable[[Dict], None]:
+def create_email_alert_callback(email_address: str, smtp_server: str = None, smtp_port: int = 587) -> Callable[[Dict], None]:
     """
     Create email alert callback
 

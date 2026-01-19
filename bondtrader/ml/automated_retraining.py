@@ -99,9 +99,7 @@ class AutomatedRetrainingPipeline:
         self.data_source = data_source
         self.config_obj = get_config()
 
-        self.model_save_path = model_save_path or os.path.join(
-            self.config_obj.model_dir, config.model_name
-        )
+        self.model_save_path = model_save_path or os.path.join(self.config_obj.model_dir, config.model_name)
         os.makedirs(self.model_save_path, exist_ok=True)
 
         # Retraining history
@@ -124,9 +122,7 @@ class AutomatedRetrainingPipeline:
         self.mlflow_tracker = None
         if config.enable_mlflow:
             try:
-                self.mlflow_tracker = MLflowTracker(
-                    experiment_name=f"{config.model_name}_retraining"
-                )
+                self.mlflow_tracker = MLflowTracker(experiment_name=f"{config.model_name}_retraining")
             except Exception as e:
                 logger.warning(f"Failed to initialize MLflow tracker: {e}")
 
@@ -216,7 +212,9 @@ class AutomatedRetrainingPipeline:
             validation_passed = metrics.get("test_r2", 0.0) >= self.config.validation_threshold
 
             if not validation_passed and not force:
-                error_msg = f"Validation failed: test_r2={metrics.get('test_r2', 0.0):.4f} < {self.config.validation_threshold}"
+                error_msg = (
+                    f"Validation failed: test_r2={metrics.get('test_r2', 0.0):.4f} < {self.config.validation_threshold}"
+                )
                 logger.warning(error_msg)
 
                 if self.mlflow_tracker:
@@ -234,9 +232,7 @@ class AutomatedRetrainingPipeline:
 
             # Save model
             model_version = f"v{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-            model_path = os.path.join(
-                self.model_save_path, f"{self.config.model_name}_{model_version}.joblib"
-            )
+            model_path = os.path.join(self.model_save_path, f"{self.config.model_name}_{model_version}.joblib")
             ml_adjuster.save_model(model_path)
 
             # Register in MLflow if enabled
@@ -281,9 +277,7 @@ class AutomatedRetrainingPipeline:
             self.retraining_history.append(result)
             self._save_history()
 
-            logger.info(
-                f"Retraining completed successfully: {model_version} (R²={metrics.get('test_r2', 0.0):.4f})"
-            )
+            logger.info(f"Retraining completed successfully: {model_version} (R²={metrics.get('test_r2', 0.0):.4f})")
 
             return result
 
@@ -331,9 +325,7 @@ class AutomatedRetrainingPipeline:
             model.save_model(production_model_path)
 
             # 2. Create symlink to latest model (for easy access)
-            latest_model_path = os.path.join(
-                self.model_save_path, "production", f"{self.config.model_name}_latest.joblib"
-            )
+            latest_model_path = os.path.join(self.model_save_path, "production", f"{self.config.model_name}_latest.joblib")
             if os.path.exists(latest_model_path):
                 os.remove(latest_model_path)
             os.symlink(production_model_path, latest_model_path)

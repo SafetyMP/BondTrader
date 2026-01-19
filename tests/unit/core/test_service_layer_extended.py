@@ -86,9 +86,7 @@ class TestBondServiceExtended:
             mock_container = MagicMock()
             mock_detector = MagicMock()
             # min_profit_percentage is not a parameter to find_arbitrage_opportunities
-            mock_detector.find_arbitrage_opportunities.return_value = [
-                {"bond_id": "TEST-001", "profit_percentage": 5.0}
-            ]
+            mock_detector.find_arbitrage_opportunities.return_value = [{"bond_id": "TEST-001", "profit_percentage": 5.0}]
             mock_container.get_arbitrage_detector.return_value = mock_detector
             mock_get_container.return_value = mock_container
 
@@ -104,9 +102,7 @@ class TestBondServiceExtended:
         with patch("bondtrader.core.container.get_container") as mock_get_container:
             mock_container = MagicMock()
             mock_detector = MagicMock()
-            opportunities_list = [
-                {"bond_id": f"TEST-00{i}", "profit_percentage": 5.0 - i} for i in range(1, 6)
-            ]
+            opportunities_list = [{"bond_id": f"TEST-00{i}", "profit_percentage": 5.0 - i} for i in range(1, 6)]
             mock_detector.find_arbitrage_opportunities.return_value = opportunities_list
             mock_container.get_arbitrage_detector.return_value = mock_detector
             mock_get_container.return_value = mock_container
