@@ -116,24 +116,33 @@ def test_ml_adjuster_predict_before_training(ml_adjuster):
 
 def test_ml_adjuster_save_load(training_bonds, ml_adjuster, tmp_path):
     """Test saving and loading model"""
+    import os
+
     ml_adjuster.train(training_bonds, test_size=0.2, random_state=42)
 
-    model_path = tmp_path / "test_model.pkl"
-    ml_adjuster.save_model(str(model_path))
+    # Change to tmp_path directory and use relative filename for security check
+    original_cwd = os.getcwd()
+    try:
+        os.chdir(tmp_path)
+        # Use just the filename (relative path) to avoid absolute path validation error
+        model_filename = "test_model.pkl"
+        ml_adjuster.save_model(model_filename)
 
-    # Create new adjuster and load
-    new_adjuster = MLBondAdjuster(model_type=ml_adjuster.model_type)
-    new_adjuster.load_model(str(model_path))
+        # Create new adjuster and load
+        new_adjuster = MLBondAdjuster(model_type=ml_adjuster.model_type)
+        new_adjuster.load_model(model_filename)
 
-    assert new_adjuster.is_trained
-    assert new_adjuster.model is not None
+        assert new_adjuster.is_trained
+        assert new_adjuster.model is not None
 
-    # Test prediction works
-    test_bond = create_test_bond()
-    original_pred = ml_adjuster.predict_adjusted_value(test_bond)
-    loaded_pred = new_adjuster.predict_adjusted_value(test_bond)
+        # Test prediction works
+        test_bond = create_test_bond()
+        original_pred = ml_adjuster.predict_adjusted_value(test_bond)
+        loaded_pred = new_adjuster.predict_adjusted_value(test_bond)
 
-    assert abs(original_pred["ml_adjusted_fair_value"] - loaded_pred["ml_adjusted_fair_value"]) < 1e-6
+        assert abs(original_pred["ml_adjusted_fair_value"] - loaded_pred["ml_adjusted_fair_value"]) < 1e-6
+    finally:
+        os.chdir(original_cwd)
 
 
 def test_ml_adjuster_gradient_boosting(training_bonds):
@@ -150,5 +159,5 @@ def test_ml_adjuster_invalid_model_type(training_bonds):
     adjuster = MLBondAdjuster(model_type="random_forest")
     adjuster.model_type = "invalid_type"
 
-    with pytest.raises(ValueError, match="Unknown model type"):
+    with pytest.raises(ValueError, match="Model type 'invalid_type' not available"):
         adjuster.train(training_bonds)

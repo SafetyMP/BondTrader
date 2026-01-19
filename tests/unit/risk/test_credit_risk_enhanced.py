@@ -64,8 +64,8 @@ def test_credit_migration_analysis(credit_risk_enhanced):
 
 def test_get_recovery_rate_enhanced(credit_risk_enhanced):
     """Test recovery rate lookup"""
-    rate_aaa = credit_risk_enhanced._get_recovery_rate("AAA")
-    rate_bbb = credit_risk_enhanced._get_recovery_rate("BBB")
+    rate_aaa = credit_risk_enhanced.risk_manager._get_recovery_rate("AAA")
+    rate_bbb = credit_risk_enhanced.risk_manager._get_recovery_rate("BBB")
 
     assert rate_aaa > rate_bbb
     assert 0 < rate_aaa <= 1
