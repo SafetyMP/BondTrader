@@ -111,14 +111,16 @@ def create_prediction_comparison_chart(df: pd.DataFrame):
         for col in prediction_cols:
             if pd.notna(row[col]):
                 model_name = col.replace("_predicted_value", "").replace("_", " ").title()
+                difference = row[col] - base_value
+                diff_percentage = (difference / base_value * 100) if base_value > 0 else 0
                 comparison_data.append(
                     {
                         "Bond ID": row["bond_id"],
                         "Model": model_name,
                         "Predicted Value": row[col],
                         "Theoretical Value": base_value,
-                        "Difference": row[col] - base_value,
-                        "Difference %": (((row[col] - base_value) / base_value * 100) if base_value > 0 else 0),
+                        "Difference": difference,
+                        "Difference %": diff_percentage,
                     }
                 )
 
