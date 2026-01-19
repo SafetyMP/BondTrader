@@ -319,17 +319,84 @@ class RiskManager:
     def _get_default_migration_matrix(self) -> Dict:
         """Get default credit migration matrix (annual transition probabilities)"""
         return {
-            "AAA": {"AAA": 0.9360, "AA": 0.0600, "A": 0.0030, "BBB": 0.0010, "BB": 0.0000, "B": 0.0000, "CCC": 0.0000, "D": 0.0000},
-            "AA": {"AAA": 0.0070, "AA": 0.9250, "A": 0.0610, "BBB": 0.0050, "BB": 0.0010, "B": 0.0000, "CCC": 0.0000, "D": 0.0010},
-            "A": {"AAA": 0.0000, "AA": 0.0230, "A": 0.9150, "BBB": 0.0550, "BB": 0.0040, "B": 0.0020, "CCC": 0.0000, "D": 0.0010},
-            "BBB": {"AAA": 0.0000, "AA": 0.0020, "A": 0.0310, "BBB": 0.9040, "BB": 0.0520, "B": 0.0070, "CCC": 0.0020, "D": 0.0020},
-            "BB": {"AAA": 0.0000, "AA": 0.0000, "A": 0.0020, "BBB": 0.0480, "BB": 0.8250, "B": 0.1000, "CCC": 0.0150, "D": 0.0100},
-            "B": {"AAA": 0.0000, "AA": 0.0000, "A": 0.0010, "BBB": 0.0040, "BB": 0.0750, "B": 0.7750, "CCC": 0.1000, "D": 0.0450},
-            "CCC": {"AAA": 0.0000, "AA": 0.0000, "A": 0.0000, "BBB": 0.0020, "BB": 0.0100, "B": 0.0830, "CCC": 0.6250, "D": 0.2800},
+            "AAA": {
+                "AAA": 0.9360,
+                "AA": 0.0600,
+                "A": 0.0030,
+                "BBB": 0.0010,
+                "BB": 0.0000,
+                "B": 0.0000,
+                "CCC": 0.0000,
+                "D": 0.0000,
+            },
+            "AA": {
+                "AAA": 0.0070,
+                "AA": 0.9250,
+                "A": 0.0610,
+                "BBB": 0.0050,
+                "BB": 0.0010,
+                "B": 0.0000,
+                "CCC": 0.0000,
+                "D": 0.0010,
+            },
+            "A": {
+                "AAA": 0.0000,
+                "AA": 0.0230,
+                "A": 0.9150,
+                "BBB": 0.0550,
+                "BB": 0.0040,
+                "B": 0.0020,
+                "CCC": 0.0000,
+                "D": 0.0010,
+            },
+            "BBB": {
+                "AAA": 0.0000,
+                "AA": 0.0020,
+                "A": 0.0310,
+                "BBB": 0.9040,
+                "BB": 0.0520,
+                "B": 0.0070,
+                "CCC": 0.0020,
+                "D": 0.0020,
+            },
+            "BB": {
+                "AAA": 0.0000,
+                "AA": 0.0000,
+                "A": 0.0020,
+                "BBB": 0.0480,
+                "BB": 0.8250,
+                "B": 0.1000,
+                "CCC": 0.0150,
+                "D": 0.0100,
+            },
+            "B": {
+                "AAA": 0.0000,
+                "AA": 0.0000,
+                "A": 0.0010,
+                "BBB": 0.0040,
+                "BB": 0.0750,
+                "B": 0.7750,
+                "CCC": 0.1000,
+                "D": 0.0450,
+            },
+            "CCC": {
+                "AAA": 0.0000,
+                "AA": 0.0000,
+                "A": 0.0000,
+                "BBB": 0.0020,
+                "BB": 0.0100,
+                "B": 0.0830,
+                "CCC": 0.6250,
+                "D": 0.2800,
+            },
         }
 
     def merton_structural_model(
-        self, bond: Bond, asset_value: Optional[float] = None, asset_volatility: float = 0.25, debt_value: Optional[float] = None
+        self,
+        bond: Bond,
+        asset_value: Optional[float] = None,
+        asset_volatility: float = 0.25,
+        debt_value: Optional[float] = None,
     ) -> Dict:
         """
         Calculate default probability using Merton structural model
@@ -458,7 +525,11 @@ class RiskManager:
         }
 
     def calculate_credit_var(
-        self, bonds: List[Bond], weights: Optional[List[float]] = None, confidence_level: float = 0.95, time_horizon: float = 1.0
+        self,
+        bonds: List[Bond],
+        weights: Optional[List[float]] = None,
+        confidence_level: float = 0.95,
+        time_horizon: float = 1.0,
     ) -> Dict:
         """
         Calculate Credit Value at Risk (CVaR)
