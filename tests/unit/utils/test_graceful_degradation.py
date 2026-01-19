@@ -43,7 +43,11 @@ class TestGracefulDegradation:
         manager = GracefulDegradation()
         manager.mark_service_down("non_critical_service")
         # Should enter degraded mode if critical services are up
-        assert manager.mode in [DegradationMode.DEGRADED, DegradationMode.FULL, DegradationMode.MINIMAL]
+        assert manager.mode in [
+            DegradationMode.DEGRADED,
+            DegradationMode.FULL,
+            DegradationMode.MINIMAL,
+        ]
 
     def test_update_mode_minimal(self):
         """Test updating mode to minimal"""

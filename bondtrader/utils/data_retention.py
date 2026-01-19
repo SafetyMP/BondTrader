@@ -33,7 +33,9 @@ class RetentionPolicy:
         """
         self.retention_years = retention_years
         self.archival_enabled = archival_enabled
-        self.archival_path = archival_path or os.path.join("archived_data", datetime.now().strftime("%Y"))
+        self.archival_path = archival_path or os.path.join(
+            "archived_data", datetime.now().strftime("%Y")
+        )
 
         if archival_enabled:
             os.makedirs(self.archival_path, exist_ok=True)
@@ -92,7 +94,9 @@ class DataRetentionManager:
             os.makedirs(archive_dir, exist_ok=True)
 
             # Save archived data
-            archive_file = os.path.join(archive_dir, f"{record_id}_{datetime.now().isoformat()}.json")
+            archive_file = os.path.join(
+                archive_dir, f"{record_id}_{datetime.now().isoformat()}.json"
+            )
             with open(archive_file, "w") as f:
                 json.dump(data, f, indent=2, default=str)
 
@@ -110,7 +114,9 @@ class DataRetentionManager:
             logger.error(f"Failed to archive data: {e}")
             return False
 
-    def get_expired_records(self, records: List[Dict], date_field: str = "created_at") -> List[Dict]:
+    def get_expired_records(
+        self, records: List[Dict], date_field: str = "created_at"
+    ) -> List[Dict]:
         """
         Get records that have exceeded retention period.
 

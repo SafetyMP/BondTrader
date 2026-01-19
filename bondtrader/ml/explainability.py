@@ -99,7 +99,11 @@ class ModelExplainer:
         try:
             model_type = type(self.model).__name__.lower()
 
-            if "randomforest" in model_type or "gradientboosting" in model_type or "xgboost" in model_type:
+            if (
+                "randomforest" in model_type
+                or "gradientboosting" in model_type
+                or "xgboost" in model_type
+            ):
                 # Tree-based models
                 self.shap_explainer = shap.TreeExplainer(self.model)
                 logger.info("Initialized TreeExplainer for SHAP")
@@ -108,7 +112,9 @@ class ModelExplainer:
                 if self.background_data is not None:
                     self.shap_explainer = shap.LinearExplainer(self.model, self.background_data)
                 else:
-                    self.shap_explainer = shap.LinearExplainer(self.model, np.zeros((1, len(self.feature_names))))
+                    self.shap_explainer = shap.LinearExplainer(
+                        self.model, np.zeros((1, len(self.feature_names)))
+                    )
                 logger.info("Initialized LinearExplainer for SHAP")
             else:
                 # Generic explainer (kernel or permutation)
@@ -185,7 +191,9 @@ class ModelExplainer:
             feature_contributions = self._fallback_explanation(features)
 
         # Sort features by absolute contribution
-        top_features = sorted(feature_contributions.items(), key=lambda x: abs(x[1]), reverse=True)[:10]  # Top 10 features
+        top_features = sorted(feature_contributions.items(), key=lambda x: abs(x[1]), reverse=True)[
+            :10
+        ]  # Top 10 features
 
         return Explanation(
             bond_id=bond.bond_id,
@@ -215,7 +223,9 @@ class ModelExplainer:
             # Equal contributions if no importance available
             for i, feature_name in enumerate(self.feature_names):
                 if i < len(features.flatten()):
-                    feature_contributions[feature_name] = float(features.flatten()[i] / len(self.feature_names))
+                    feature_contributions[feature_name] = float(
+                        features.flatten()[i] / len(self.feature_names)
+                    )
 
         return feature_contributions
 
@@ -256,7 +266,9 @@ class ModelExplainer:
         if HAS_SHAP and self.shap_explainer is not None and len(sample_data) > 0:
             try:
                 # Sample data for efficiency
-                sample_indices = np.random.choice(len(sample_data), min(sample_size, len(sample_data)), replace=False)
+                sample_indices = np.random.choice(
+                    len(sample_data), min(sample_size, len(sample_data)), replace=False
+                )
                 sample = sample_data[sample_indices]
 
                 # Compute SHAP values
@@ -315,7 +327,9 @@ class ModelExplainer:
                 "base_value": explanation.base_value,
             },
             "feature_contributions": explanation.feature_contributions,
-            "top_features": [{"feature": name, "contribution": value} for name, value in explanation.top_features],
+            "top_features": [
+                {"feature": name, "contribution": value} for name, value in explanation.top_features
+            ],
             "shap_available": explanation.shap_values is not None,
         }
 
@@ -357,7 +371,11 @@ class ModelExplainer:
             # Create SHAP explanation object
             explanation = shap.Explanation(
                 values=shap_values.reshape(1, -1),
-                base_values=self.shap_explainer.expected_value if hasattr(self.shap_explainer, "expected_value") else 0.0,
+                base_values=(
+                    self.shap_explainer.expected_value
+                    if hasattr(self.shap_explainer, "expected_value")
+                    else 0.0
+                ),
                 data=features.reshape(1, -1),
                 feature_names=self.feature_names,
             )

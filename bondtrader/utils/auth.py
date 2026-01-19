@@ -95,7 +95,11 @@ def verify_password(password: str, hashed_password: str, salt: str) -> bool:
             try:
                 # bcrypt includes salt in hash, so we don't need separate salt
                 # Convert hashed_password to bytes if it's a string
-                hash_bytes = hashed_password.encode("utf-8") if isinstance(hashed_password, str) else hashed_password
+                hash_bytes = (
+                    hashed_password.encode("utf-8")
+                    if isinstance(hashed_password, str)
+                    else hashed_password
+                )
                 return bcrypt.checkpw(password.encode("utf-8"), hash_bytes)
             except Exception:
                 return False
@@ -156,7 +160,11 @@ class UserManager:
                 if ":" in user_pass:
                     username, password = user_pass.split(":", 1)
                     hashed, salt = hash_password(password)
-                    self.users[username] = {"password_hash": hashed, "salt": salt, "roles": ["user"]}
+                    self.users[username] = {
+                        "password_hash": hashed,
+                        "salt": salt,
+                        "roles": ["user"],
+                    }
 
         # Default admin user if no users configured (for development only)
         # SECURITY: Only enable in development, never in production
@@ -168,7 +176,11 @@ class UserManager:
                     "ENABLE_DEFAULT_ADMIN=true. Never use default passwords in production."
                 )
             hashed, salt = hash_password(default_password)
-            self.users["admin"] = {"password_hash": hashed, "salt": salt, "roles": ["admin", "user"]}
+            self.users["admin"] = {
+                "password_hash": hashed,
+                "salt": salt,
+                "roles": ["admin", "user"],
+            }
 
     def authenticate(self, username: str, password: str, mfa_token: Optional[str] = None) -> bool:
         """

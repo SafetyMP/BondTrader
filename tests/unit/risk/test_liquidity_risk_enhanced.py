@@ -2,8 +2,9 @@
 Unit tests for enhanced liquidity risk
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 
 from bondtrader.core.bond_models import Bond, BondType
 from bondtrader.core.bond_valuation import BondValuator
@@ -89,7 +90,7 @@ class TestLiquidityRiskEnhanced:
         """Test calculating Liquidity-adjusted VaR"""
         bonds = [sample_bond]
         weights = [1.0]
-        
+
         result = liquidity_risk.calculate_lvar(bonds, weights, confidence_level=0.95)
         assert "lvar_value" in result
         assert "lvar_pct" in result
@@ -111,10 +112,10 @@ class TestLiquidityRiskEnhanced:
             issuer="Test Corp 2",
             frequency=2,
         )
-        
+
         bonds = [sample_bond, bond2]
         weights = [0.6, 0.4]
-        
+
         result = liquidity_risk.calculate_lvar(bonds, weights)
         assert "lvar_value" in result
         assert result["lvar_value"] >= 0
@@ -131,7 +132,7 @@ class TestLiquidityRiskEnhanced:
         """Test comprehensive liquidity risk assessment"""
         bonds = [sample_bond]
         weights = [1.0]
-        
+
         result = liquidity_risk.assess_liquidity_risk(bonds, weights)
         assert "lvar_value" in result
         assert "avg_spread_bps" in result

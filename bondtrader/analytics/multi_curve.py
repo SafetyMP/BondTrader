@@ -41,7 +41,9 @@ class MultiCurveFramework:
         self.libor_curve = None  # LIBOR/SOFR curve (forwarding)
         self.treasury_curve = None  # Treasury curve (benchmark)
 
-    def build_ois_curve(self, maturities: List[float], rates: List[float], interpolation_method: str = "cubic") -> Dict:
+    def build_ois_curve(
+        self, maturities: List[float], rates: List[float], interpolation_method: str = "cubic"
+    ) -> Dict:
         """
         Build OIS (Overnight Index Swap) discounting curve
 
@@ -61,13 +63,19 @@ class MultiCurveFramework:
 
         # Create interpolation function
         if interpolation_method == "linear":
-            interp_func = interp1d(maturities, rates, kind="linear", fill_value="extrapolate", bounds_error=False)
+            interp_func = interp1d(
+                maturities, rates, kind="linear", fill_value="extrapolate", bounds_error=False
+            )
         elif interpolation_method == "cubic":
-            interp_func = interp1d(maturities, rates, kind="cubic", fill_value="extrapolate", bounds_error=False)
+            interp_func = interp1d(
+                maturities, rates, kind="cubic", fill_value="extrapolate", bounds_error=False
+            )
         elif interpolation_method == "log_linear":
             # Log-linear interpolation on rates
             log_rates = np.log(1 + rates)
-            interp_func_log = interp1d(maturities, log_rates, kind="linear", fill_value="extrapolate", bounds_error=False)
+            interp_func_log = interp1d(
+                maturities, log_rates, kind="linear", fill_value="extrapolate", bounds_error=False
+            )
 
             def interp_func(t):
                 return np.exp(interp_func_log(t)) - 1
@@ -85,7 +93,9 @@ class MultiCurveFramework:
 
         return self.ois_curve
 
-    def build_libor_curve(self, maturities: List[float], rates: List[float], interpolation_method: str = "cubic") -> Dict:
+    def build_libor_curve(
+        self, maturities: List[float], rates: List[float], interpolation_method: str = "cubic"
+    ) -> Dict:
         """
         Build LIBOR/SOFR forwarding curve
 
@@ -104,11 +114,17 @@ class MultiCurveFramework:
         rates = np.array(rates)
 
         if interpolation_method == "linear":
-            interp_func = interp1d(maturities, rates, kind="linear", fill_value="extrapolate", bounds_error=False)
+            interp_func = interp1d(
+                maturities, rates, kind="linear", fill_value="extrapolate", bounds_error=False
+            )
         elif interpolation_method == "cubic":
-            interp_func = interp1d(maturities, rates, kind="cubic", fill_value="extrapolate", bounds_error=False)
+            interp_func = interp1d(
+                maturities, rates, kind="cubic", fill_value="extrapolate", bounds_error=False
+            )
         else:
-            interp_func = interp1d(maturities, rates, kind="linear", fill_value="extrapolate", bounds_error=False)
+            interp_func = interp1d(
+                maturities, rates, kind="linear", fill_value="extrapolate", bounds_error=False
+            )
 
         self.libor_curve = {
             "maturities": maturities,

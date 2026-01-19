@@ -29,7 +29,9 @@ class RedisCache:
     CRITICAL: Provides distributed caching for production scalability.
     """
 
-    def __init__(self, host: str = "localhost", port: int = 6379, db: int = 0, password: Optional[str] = None):
+    def __init__(
+        self, host: str = "localhost", port: int = 6379, db: int = 0, password: Optional[str] = None
+    ):
         """
         Initialize Redis cache.
 
@@ -49,7 +51,12 @@ class RedisCache:
         if HAS_REDIS:
             try:
                 self._client = redis.Redis(
-                    host=host, port=port, db=db, password=password, decode_responses=True, socket_connect_timeout=5
+                    host=host,
+                    port=port,
+                    db=db,
+                    password=password,
+                    decode_responses=True,
+                    socket_connect_timeout=5,
                 )
                 # Test connection
                 self._client.ping()
@@ -231,9 +238,7 @@ def cache_result(key_prefix: str, ttl: int = 3600):
             import hashlib
             import json
 
-            cache_key = (
-                f"{key_prefix}:{func.__name__}:{hashlib.md5(json.dumps((args, kwargs), sort_keys=True).encode()).hexdigest()}"
-            )
+            cache_key = f"{key_prefix}:{func.__name__}:{hashlib.md5(json.dumps((args, kwargs), sort_keys=True).encode()).hexdigest()}"
 
             # Try to get from cache
             redis_cache = get_redis_cache()

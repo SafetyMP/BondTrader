@@ -237,7 +237,7 @@ class TestValidationIntegration:
         # validate_percentage allows values 0-100, so 1.5 is valid (150%)
         # This should not raise an error
         validate_percentage(1.5, "percentage")
-        
+
         # Values above 100 should raise
         with pytest.raises(ValueError):
             validate_percentage(150.0, "percentage")
@@ -283,7 +283,7 @@ class TestValidationIntegration:
 
         # Should pass with allowed extension
         validate_file_path("test.json", allowed_extensions=[".json", ".csv"])
-        
+
         # Should fail with disallowed extension
         with pytest.raises(ValueError):
             validate_file_path("test.exe", allowed_extensions=[".json", ".csv"])
@@ -295,7 +295,7 @@ class TestValidationIntegration:
         # Should normalize path (simple case without traversal)
         path = sanitize_file_path("test/file.txt")
         assert isinstance(path, str)
-        
+
         # Path with traversal will fail validation first
         with pytest.raises(ValueError):
             sanitize_file_path("test/../file.txt")
@@ -303,7 +303,7 @@ class TestValidationIntegration:
     def test_validate_credit_rating_invalid_warns(self):
         """Test validating invalid credit rating (warns but doesn't raise)"""
         from bondtrader.utils.validation import validate_credit_rating
-        
+
         # Should warn but not raise - just verify it doesn't crash
         validate_credit_rating("INVALID", "rating")
         # Test passes if no exception raised
@@ -323,4 +323,8 @@ class TestValidationIntegration:
         assert "test_value" in str(exc_info.value)
         # Error message contains "must be positive" or "must be >= 0.0" depending on implementation
         error_msg = str(exc_info.value)
-        assert "must be positive" in error_msg or "must be >= 0.0" in error_msg or "greater than 0" in error_msg
+        assert (
+            "must be positive" in error_msg
+            or "must be >= 0.0" in error_msg
+            or "greater than 0" in error_msg
+        )

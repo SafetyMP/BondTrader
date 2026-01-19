@@ -129,7 +129,9 @@ class LiquidityRiskEnhanced:
         estimated_spread = base_spread * maturity_factor * type_factor
         return estimated_spread
 
-    def estimate_market_depth(self, bond: Bond, trade_size: float = 100000) -> Dict:  # Trade size in face value
+    def estimate_market_depth(
+        self, bond: Bond, trade_size: float = 100000
+    ) -> Dict:  # Trade size in face value
         """
         Estimate market depth and liquidity
 
@@ -180,7 +182,9 @@ class LiquidityRiskEnhanced:
             "depth_coverage": estimated_depth / trade_size if trade_size > 0 else 0,
             "price_impact_pct": price_impact_pct * 100,
             "liquidation_time_days": liquidation_time_days,
-            "liquidity_rating": self._get_liquidity_rating(estimated_depth / trade_size if trade_size > 0 else 0),
+            "liquidity_rating": self._get_liquidity_rating(
+                estimated_depth / trade_size if trade_size > 0 else 0
+            ),
         }
 
     def _get_liquidity_rating(self, depth_ratio: float) -> str:
@@ -229,7 +233,11 @@ class LiquidityRiskEnhanced:
 
         # Calculate standard VaR
         var_result = risk_manager.calculate_var(
-            bonds, weights, confidence_level, time_horizon=int(liquidation_horizon), method="monte_carlo"
+            bonds,
+            weights,
+            confidence_level,
+            time_horizon=int(liquidation_horizon),
+            method="monte_carlo",
         )
 
         var_value = var_result["var_value"]
@@ -248,7 +256,9 @@ class LiquidityRiskEnhanced:
 
             # Get market depth impact
             depth_result = self.estimate_market_depth(bond, position_size)
-            impact_cost = (depth_result["price_impact_pct"] / 100) * position_size * bond.current_price
+            impact_cost = (
+                (depth_result["price_impact_pct"] / 100) * position_size * bond.current_price
+            )
 
             total_liquidity_cost = spread_cost + impact_cost
             liquidity_cost += total_liquidity_cost
@@ -289,7 +299,9 @@ class LiquidityRiskEnhanced:
             "liquidity_costs_by_bond": liquidity_costs_by_bond,
         }
 
-    def analyze_liquidity_risk(self, bonds: List[Bond], weights: Optional[List[float]] = None) -> Dict:
+    def analyze_liquidity_risk(
+        self, bonds: List[Bond], weights: Optional[List[float]] = None
+    ) -> Dict:
         """
         Comprehensive liquidity risk analysis
 
@@ -314,7 +326,9 @@ class LiquidityRiskEnhanced:
             depth_result = self.estimate_market_depth(bond, position_size)
 
             spread_cost = (spread_result["spread_decimal"] / 2) * position_size * bond.current_price
-            impact_cost = (depth_result["price_impact_pct"] / 100) * position_size * bond.current_price
+            impact_cost = (
+                (depth_result["price_impact_pct"] / 100) * position_size * bond.current_price
+            )
 
             total_spread_cost += spread_cost
             total_impact_cost += impact_cost
@@ -343,7 +357,9 @@ class LiquidityRiskEnhanced:
             "total_impact_cost": total_impact_cost,
             "total_liquidity_cost": total_spread_cost + total_impact_cost,
             "liquidity_cost_pct": (
-                ((total_spread_cost + total_impact_cost) / portfolio_value) * 100 if portfolio_value > 0 else 0
+                ((total_spread_cost + total_impact_cost) / portfolio_value) * 100
+                if portfolio_value > 0
+                else 0
             ),
             "avg_spread_bps": avg_spread,
             "avg_depth_ratio": avg_depth_ratio,

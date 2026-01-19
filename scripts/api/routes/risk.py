@@ -13,7 +13,9 @@ from scripts.api_helpers import handle_service_result
 router = APIRouter(tags=["Risk Management"])
 
 
-@router.get("/{bond_id}", response_model=RiskMetricsResponse, dependencies=[Depends(verify_api_key)])
+@router.get(
+    "/{bond_id}", response_model=RiskMetricsResponse, dependencies=[Depends(verify_api_key)]
+)
 async def get_risk_metrics(bond_id: str):
     """
     Get risk metrics for a bond

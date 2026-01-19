@@ -16,7 +16,9 @@ class BondFeatureEngineer:
     """Centralized feature engineering for bond ML models"""
 
     @staticmethod
-    def create_basic_features(bonds: List[Bond], fair_values: List[float], valuator: BondValuator) -> np.ndarray:
+    def create_basic_features(
+        bonds: List[Bond], fair_values: List[float], valuator: BondValuator
+    ) -> np.ndarray:
         """
         Create basic feature set (12 features)
 
@@ -32,7 +34,9 @@ class BondFeatureEngineer:
         convexities = [valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds, ytms)]
 
         features = []
-        for bond, fv, ytm, duration, convexity in zip(bonds, fair_values, ytms, durations, convexities):
+        for bond, fv, ytm, duration, convexity in zip(
+            bonds, fair_values, ytms, durations, convexities
+        ):
             char = bond.get_bond_characteristics(current_time=current_time)
 
             feature_vector = [
@@ -91,7 +95,9 @@ class BondFeatureEngineer:
         convexities = [valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds, ytms)]
 
         features = []
-        for bond, fv, ytm, duration, convexity in zip(bonds, fair_values, ytms, durations, convexities):
+        for bond, fv, ytm, duration, convexity in zip(
+            bonds, fair_values, ytms, durations, convexities
+        ):
             char = bond.get_bond_characteristics()
 
             # Base features (reuse basic feature creation)
@@ -121,7 +127,9 @@ class BondFeatureEngineer:
             quarter = current_date.month // 4 + 1
             day_of_year = current_date.timetuple().tm_yday
 
-            feature_vector.extend([modified_duration, spread_over_rf * 100, time_decay, quarter, day_of_year / 365.25])
+            feature_vector.extend(
+                [modified_duration, spread_over_rf * 100, time_decay, quarter, day_of_year / 365.25]
+            )
 
             features.append(feature_vector)
 
@@ -143,7 +151,9 @@ class BondFeatureEngineer:
         convexities = [valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds, ytms)]
 
         features = []
-        for bond, fv, ytm, duration, convexity in zip(bonds, fair_values, ytms, durations, convexities):
+        for bond, fv, ytm, duration, convexity in zip(
+            bonds, fair_values, ytms, durations, convexities
+        ):
             char = bond.get_bond_characteristics()
 
             # Base features
@@ -175,11 +185,20 @@ class BondFeatureEngineer:
 
             # Polynomial features (degree 2)
             feature_vector.extend(
-                [coupon_rate**2, ttm**2, duration**2, coupon_rate * ttm, coupon_rate * duration, ttm * duration]
+                [
+                    coupon_rate**2,
+                    ttm**2,
+                    duration**2,
+                    coupon_rate * ttm,
+                    coupon_rate * duration,
+                    ttm * duration,
+                ]
             )
 
             # Interaction features
-            feature_vector.extend([price_to_par * duration, rating_num * ttm, ytm * duration, convexity * duration])
+            feature_vector.extend(
+                [price_to_par * duration, rating_num * ttm, ytm * duration, convexity * duration]
+            )
 
             features.append(feature_vector)
 
@@ -200,7 +219,14 @@ class BondFeatureEngineer:
             "modified_duration",
             "spread_over_rf",
         ]
-        poly_names = ["coupon_rate^2", "ttm^2", "duration^2", "coupon*ttm", "coupon*duration", "ttm*duration"]
+        poly_names = [
+            "coupon_rate^2",
+            "ttm^2",
+            "duration^2",
+            "coupon*ttm",
+            "coupon*duration",
+            "ttm*duration",
+        ]
         inter_names = ["price_to_par*duration", "rating*ttm", "ytm*duration", "convexity*duration"]
         feature_names = base_names + poly_names + inter_names
 

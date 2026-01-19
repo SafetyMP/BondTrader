@@ -29,7 +29,12 @@ class ModelPersistence:
             OSError: If file I/O fails
         """
         # Validate and sanitize file path
-        validate_file_path(filepath, allow_absolute=False, allowed_extensions=[".joblib", ".pkl", ".model"], name="filepath")
+        validate_file_path(
+            filepath,
+            allow_absolute=False,
+            allowed_extensions=[".joblib", ".pkl", ".model"],
+            name="filepath",
+        )
 
         # Create directory if needed
         dir_path = os.path.dirname(filepath) if os.path.dirname(filepath) else "."
@@ -89,7 +94,11 @@ class ModelPersistence:
 
         # Validate and sanitize file path
         validate_file_path(
-            filepath, must_exist=True, allow_absolute=False, allowed_extensions=[".joblib", ".pkl", ".model"], name="filepath"
+            filepath,
+            must_exist=True,
+            allow_absolute=False,
+            allowed_extensions=[".joblib", ".pkl", ".model"],
+            name="filepath",
         )
 
         try:

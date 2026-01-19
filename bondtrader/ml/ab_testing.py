@@ -109,7 +109,9 @@ class ABTestFramework:
         self.treatment_model = treatment_model
         self.config_obj = get_config()
 
-        self.results_dir = results_dir or os.path.join(self.config_obj.model_dir, "ab_tests", config.test_name)
+        self.results_dir = results_dir or os.path.join(
+            self.config_obj.model_dir, "ab_tests", config.test_name
+        )
         os.makedirs(self.results_dir, exist_ok=True)
 
         # Prediction records
@@ -252,7 +254,9 @@ class ABTestFramework:
                     # Compute improvement percentage
                     control_mean = np.mean(control_values)
                     if control_mean != 0:
-                        improvement_pct[metric] = (control_mean - np.mean(treatment_values)) / control_mean * 100
+                        improvement_pct[metric] = (
+                            (control_mean - np.mean(treatment_values)) / control_mean * 100
+                        )
                     else:
                         improvement_pct[metric] = 0.0
 
@@ -265,9 +269,7 @@ class ABTestFramework:
         if primary_metric in significance_results and significance_results[primary_metric]:
             if primary_metric in improvement_pct and improvement_pct[primary_metric] > 0:
                 winner = Variant.TREATMENT
-                recommendation = (
-                    f"Deploy treatment model: {improvement_pct[primary_metric]:.2f}% improvement in {primary_metric}"
-                )
+                recommendation = f"Deploy treatment model: {improvement_pct[primary_metric]:.2f}% improvement in {primary_metric}"
             elif primary_metric in improvement_pct and improvement_pct[primary_metric] < 0:
                 winner = Variant.CONTROL
                 recommendation = f"Keep control model: treatment performed worse"
@@ -326,13 +328,17 @@ class ABTestFramework:
         elif metric == "mae":
             return [r.error for r in records if r.error is not None]
         elif metric == "error_rate":
-            return [1.0 if r.error and r.error > 50.0 else 0.0 for r in records if r.error is not None]
+            return [
+                1.0 if r.error and r.error > 50.0 else 0.0 for r in records if r.error is not None
+            ]
         else:
             return []
 
     def _save_results(self, result: ABTestResult):
         """Save test results to disk"""
-        result_file = os.path.join(self.results_dir, f"results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
+        result_file = os.path.join(
+            self.results_dir, f"results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
 
         result_dict = asdict(result)
         # Convert datetime to string
@@ -370,7 +376,8 @@ class ABTestFramework:
             return False
 
         has_enough_samples = (
-            len(self.control_records) >= self.config.min_samples and len(self.treatment_records) >= self.config.min_samples
+            len(self.control_records) >= self.config.min_samples
+            and len(self.treatment_records) >= self.config.min_samples
         )
 
         has_enough_duration = datetime.now() >= self.end_time

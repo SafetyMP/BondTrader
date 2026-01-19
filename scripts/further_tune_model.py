@@ -16,7 +16,11 @@ import numpy as np
 
 from bondtrader.config import get_config
 from bondtrader.core.bond_models import Bond
-from bondtrader.data.training_data_generator import TrainingDataGenerator, load_training_dataset, save_training_dataset
+from bondtrader.data.training_data_generator import (
+    TrainingDataGenerator,
+    load_training_dataset,
+    save_training_dataset,
+)
 from bondtrader.ml.automl import AutoMLBondAdjuster
 from bondtrader.ml.ml_adjuster import MLBondAdjuster
 from bondtrader.ml.ml_adjuster_enhanced import EnhancedMLBondAdjuster
@@ -58,7 +62,9 @@ def generate_additional_training_data(
 
     # Generate time series data
     print(f"\nStep 2: Generating time series data from {start_year}...")
-    time_series_data = _generate_time_series_data_from_date(generator, base_bonds, time_periods, bonds_per_period, start_year)
+    time_series_data = _generate_time_series_data_from_date(
+        generator, base_bonds, time_periods, bonds_per_period, start_year
+    )
     print(f"✓ Generated {len(time_series_data)} time series observations")
 
     # Create feature matrices
@@ -111,8 +117,16 @@ def generate_additional_training_data(
             "num_features": features.shape[1] if len(features) > 0 else 0,
             "regimes_represented": list(set([m["regime"] for m in metadata])),
             "date_range": {
-                "start": min([m["date"] for m in metadata]).isoformat() if metadata else datetime.now().isoformat(),
-                "end": max([m["date"] for m in metadata]).isoformat() if metadata else datetime.now().isoformat(),
+                "start": (
+                    min([m["date"] for m in metadata]).isoformat()
+                    if metadata
+                    else datetime.now().isoformat()
+                ),
+                "end": (
+                    max([m["date"] for m in metadata]).isoformat()
+                    if metadata
+                    else datetime.now().isoformat()
+                ),
             },
             "start_year": start_year,
         },
@@ -131,7 +145,11 @@ def generate_additional_training_data(
 
 
 def _generate_time_series_data_from_date(
-    generator: TrainingDataGenerator, base_bonds: list, time_periods: int, bonds_per_period: int, start_year: int
+    generator: TrainingDataGenerator,
+    base_bonds: list,
+    time_periods: int,
+    bonds_per_period: int,
+    start_year: int,
 ) -> list:
     """Generate time series data starting from a specific year"""
     import random
@@ -142,8 +160,20 @@ def _generate_time_series_data_from_date(
 
     # Regime transition probabilities (Markov chain)
     regime_transitions = {
-        "normal": {"normal": 0.6, "bull": 0.15, "bear": 0.15, "high_volatility": 0.05, "low_volatility": 0.05},
-        "bull": {"normal": 0.3, "bull": 0.5, "bear": 0.1, "high_volatility": 0.05, "low_volatility": 0.05},
+        "normal": {
+            "normal": 0.6,
+            "bull": 0.15,
+            "bear": 0.15,
+            "high_volatility": 0.05,
+            "low_volatility": 0.05,
+        },
+        "bull": {
+            "normal": 0.3,
+            "bull": 0.5,
+            "bear": 0.1,
+            "high_volatility": 0.05,
+            "low_volatility": 0.05,
+        },
         "bear": {"normal": 0.2, "bull": 0.1, "bear": 0.5, "high_volatility": 0.15, "crisis": 0.05},
         "high_volatility": {"normal": 0.3, "bear": 0.3, "high_volatility": 0.3, "crisis": 0.1},
         "low_volatility": {"normal": 0.4, "bull": 0.4, "low_volatility": 0.2},
@@ -157,7 +187,9 @@ def _generate_time_series_data_from_date(
     for period in range(time_periods):
         if period > 0:
             transition_probs = regime_transitions.get(current_regime, regime_transitions["normal"])
-            current_regime = np.random.choice(list(transition_probs.keys()), p=list(transition_probs.values()))
+            current_regime = np.random.choice(
+                list(transition_probs.keys()), p=list(transition_probs.values())
+            )
 
         regime = generator.regimes[current_regime]
         period_date = start_date + timedelta(days=period * 30)
@@ -175,7 +207,9 @@ def _generate_time_series_data_from_date(
             liquidity_noise = np.random.normal(0, volatility / regime.liquidity_factor)
             sentiment_impact = regime.market_sentiment * 0.01
 
-            market_price = fair_value * (1 + liquidity_noise + sentiment_impact + np.random.normal(0, volatility * 0.5))
+            market_price = fair_value * (
+                1 + liquidity_noise + sentiment_impact + np.random.normal(0, volatility * 0.5)
+            )
             market_price = np.clip(market_price, fair_value * 0.5, fair_value * 1.5)
             bond.current_price = market_price
 
@@ -197,7 +231,10 @@ def _generate_time_series_data_from_date(
 
 
 def further_tune_models(
-    existing_model_paths: dict, additional_bonds: List[Bond], model_dir: str = None, fine_tune: bool = True
+    existing_model_paths: dict,
+    additional_bonds: List[Bond],
+    model_dir: str = None,
+    fine_tune: bool = True,
 ) -> dict:
     """
     Further tune existing models with additional training data
@@ -234,7 +271,9 @@ def further_tune_models(
     print()
 
     # 1. Tune Basic ML Adjuster
-    if "ml_adjuster" in existing_model_paths and os.path.exists(existing_model_paths["ml_adjuster"]):
+    if "ml_adjuster" in existing_model_paths and os.path.exists(
+        existing_model_paths["ml_adjuster"]
+    ):
         print("-" * 70)
         print("Tuning: Basic ML Adjuster")
         print("-" * 70)
@@ -276,7 +315,9 @@ def further_tune_models(
             print("\n  Loading original training data...")
             try:
                 # Try to load original 2005 dataset
-                original_dataset_path = os.path.join(config.data_dir, "training_dataset_2005.joblib")
+                original_dataset_path = os.path.join(
+                    config.data_dir, "training_dataset_2005.joblib"
+                )
                 if os.path.exists(original_dataset_path):
                     original_dataset = load_training_dataset(original_dataset_path)
                     original_generator = TrainingDataGenerator(seed=42)
@@ -307,7 +348,9 @@ def further_tune_models(
                     fair_value = valuator.calculate_fair_value(bond)
                     pred_result = new_model.predict_adjusted_value(bond)
                     test_predictions_new.append(pred_result["adjustment_factor"])
-                    test_actuals_new.append(bond.current_price / fair_value if fair_value > 0 else 1.0)
+                    test_actuals_new.append(
+                        bond.current_price / fair_value if fair_value > 0 else 1.0
+                    )
                 except (ValueError, AttributeError, KeyError, TypeError) as e:
                     # Skip bonds that fail prediction - log if verbose
                     continue
@@ -340,7 +383,9 @@ def further_tune_models(
             results["ml_adjuster"] = {"status": "failed", "error": str(e)}
 
     # 2. Tune Enhanced ML Adjuster
-    if "enhanced_ml_adjuster" in existing_model_paths and os.path.exists(existing_model_paths["enhanced_ml_adjuster"]):
+    if "enhanced_ml_adjuster" in existing_model_paths and os.path.exists(
+        existing_model_paths["enhanced_ml_adjuster"]
+    ):
         print("\n" + "-" * 70)
         print("Tuning: Enhanced ML Adjuster (with hyperparameter tuning)")
         print("-" * 70)
@@ -382,7 +427,9 @@ def further_tune_models(
             print("\n  Loading original training data...")
             try:
                 # Try to load original 2005 dataset
-                original_dataset_path = os.path.join(config.data_dir, "training_dataset_2005.joblib")
+                original_dataset_path = os.path.join(
+                    config.data_dir, "training_dataset_2005.joblib"
+                )
                 if os.path.exists(original_dataset_path):
                     original_dataset = load_training_dataset(original_dataset_path)
                     original_generator = TrainingDataGenerator(seed=42)
@@ -403,7 +450,9 @@ def further_tune_models(
 
             print("\n  Retraining with combined data and hyperparameter tuning...")
             new_model = EnhancedMLBondAdjuster(model_type=existing_model.model_type)
-            metrics = new_model.train_with_tuning(combined_bonds, test_size=0.2, random_state=42, tune_hyperparameters=True)
+            metrics = new_model.train_with_tuning(
+                combined_bonds, test_size=0.2, random_state=42, tune_hyperparameters=True
+            )
 
             # Evaluate on new test data
             test_predictions_new = []
@@ -413,7 +462,9 @@ def further_tune_models(
                     fair_value = valuator.calculate_fair_value(bond)
                     pred_result = new_model.predict_adjusted_value(bond)
                     test_predictions_new.append(pred_result["adjustment_factor"])
-                    test_actuals_new.append(bond.current_price / fair_value if fair_value > 0 else 1.0)
+                    test_actuals_new.append(
+                        bond.current_price / fair_value if fair_value > 0 else 1.0
+                    )
                 except (ValueError, AttributeError, KeyError, TypeError) as e:
                     # Skip bonds that fail prediction - log if verbose
                     continue
@@ -440,7 +491,9 @@ def further_tune_models(
             new_model.save_model(model_path)
             print(f"\n✓ Tuned model saved to {model_path}")
             print(f"  Test R²: {metrics.get('test_r2', 0):.4f}")
-            print(f"  CV R²: {metrics.get('cv_r2_mean', 0):.4f} ± {metrics.get('cv_r2_std', 0):.4f}")
+            print(
+                f"  CV R²: {metrics.get('cv_r2_mean', 0):.4f} ± {metrics.get('cv_r2_std', 0):.4f}"
+            )
 
         except Exception as e:
             print(f"✗ Failed: {e}")
@@ -448,7 +501,9 @@ def further_tune_models(
             results["enhanced_ml_adjuster"] = {"status": "failed", "error": str(e)}
 
     # 3. Tune Advanced ML Adjuster (Ensemble)
-    if "advanced_ml_adjuster" in existing_model_paths and os.path.exists(existing_model_paths["advanced_ml_adjuster"]):
+    if "advanced_ml_adjuster" in existing_model_paths and os.path.exists(
+        existing_model_paths["advanced_ml_adjuster"]
+    ):
         print("\n" + "-" * 70)
         print("Tuning: Advanced ML Adjuster (Ensemble Methods)")
         print("-" * 70)
@@ -487,7 +542,9 @@ def further_tune_models(
             # Retrain with combined data
             print("\n  Loading original training data...")
             try:
-                original_dataset_path = os.path.join(config.data_dir, "training_dataset_2005.joblib")
+                original_dataset_path = os.path.join(
+                    config.data_dir, "training_dataset_2005.joblib"
+                )
                 if os.path.exists(original_dataset_path):
                     original_dataset = load_training_dataset(original_dataset_path)
                     original_generator = TrainingDataGenerator(seed=42)
@@ -506,7 +563,9 @@ def further_tune_models(
 
             print("\n  Retraining ensemble with combined data...")
             new_model = AdvancedMLBondAdjuster(valuator)
-            ensemble_metrics = new_model.train_ensemble(combined_bonds, test_size=0.2, random_state=42)
+            ensemble_metrics = new_model.train_ensemble(
+                combined_bonds, test_size=0.2, random_state=42
+            )
 
             # Evaluate on new test data
             test_predictions_new = []
@@ -516,7 +575,9 @@ def further_tune_models(
                     fair_value = valuator.calculate_fair_value(bond)
                     pred_result = new_model.predict_adjusted_value(bond)
                     test_predictions_new.append(pred_result["adjustment_factor"])
-                    test_actuals_new.append(bond.current_price / fair_value if fair_value > 0 else 1.0)
+                    test_actuals_new.append(
+                        bond.current_price / fair_value if fair_value > 0 else 1.0
+                    )
                 except (ValueError, AttributeError, KeyError, TypeError) as e:
                     # Skip bonds that fail prediction - log if verbose
                     continue
@@ -542,7 +603,9 @@ def further_tune_models(
             model_path = os.path.join(model_dir, "advanced_ml_adjuster_tuned.joblib")
             new_model.save_model(model_path)
             print(f"\n✓ Tuned model saved to {model_path}")
-            print(f"  Ensemble Test R²: {ensemble_metrics.get('ensemble_metrics', {}).get('test_r2', 0):.4f}")
+            print(
+                f"  Ensemble Test R²: {ensemble_metrics.get('ensemble_metrics', {}).get('test_r2', 0):.4f}"
+            )
 
         except Exception as e:
             print(f"✗ Failed: {e}")
@@ -598,7 +661,9 @@ def further_tune_models(
             # Retrain with combined data
             print("\n  Loading original training data...")
             try:
-                original_dataset_path = os.path.join(config.data_dir, "training_dataset_2005.joblib")
+                original_dataset_path = os.path.join(
+                    config.data_dir, "training_dataset_2005.joblib"
+                )
                 if os.path.exists(original_dataset_path):
                     original_dataset = load_training_dataset(original_dataset_path)
                     original_generator = TrainingDataGenerator(seed=42)
@@ -618,7 +683,9 @@ def further_tune_models(
             print("\n  Retraining AutoML with combined data...")
             new_model = AutoMLBondAdjuster(valuator)
             automl_results = new_model.automated_model_selection(
-                combined_bonds, candidate_models=["random_forest", "gradient_boosting"], max_evaluation_time=300
+                combined_bonds,
+                candidate_models=["random_forest", "gradient_boosting"],
+                max_evaluation_time=300,
             )
 
             # Evaluate on new test data
@@ -629,7 +696,9 @@ def further_tune_models(
                     fair_value = valuator.calculate_fair_value(bond)
                     pred_result = new_model.predict_adjusted_value(bond)
                     test_predictions_new.append(pred_result["adjustment_factor"])
-                    test_actuals_new.append(bond.current_price / fair_value if fair_value > 0 else 1.0)
+                    test_actuals_new.append(
+                        bond.current_price / fair_value if fair_value > 0 else 1.0
+                    )
                 except (ValueError, AttributeError, KeyError, TypeError) as e:
                     # Skip bonds that fail prediction - log if verbose
                     continue
@@ -686,12 +755,32 @@ def main():
     """Main entry point"""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Further tune models with additional training data")
-    parser.add_argument("--total-bonds", type=int, default=5000, help="Total number of bonds to generate (default: 5000)")
-    parser.add_argument("--time-periods", type=int, default=60, help="Number of time periods in months (default: 60)")
-    parser.add_argument("--start-year", type=int, default=2010, help="Starting year for additional data (default: 2010)")
+    parser = argparse.ArgumentParser(
+        description="Further tune models with additional training data"
+    )
     parser.add_argument(
-        "--model-dir", type=str, default=None, help="Directory to save tuned models (default: models/models_tuned)"
+        "--total-bonds",
+        type=int,
+        default=5000,
+        help="Total number of bonds to generate (default: 5000)",
+    )
+    parser.add_argument(
+        "--time-periods",
+        type=int,
+        default=60,
+        help="Number of time periods in months (default: 60)",
+    )
+    parser.add_argument(
+        "--start-year",
+        type=int,
+        default=2010,
+        help="Starting year for additional data (default: 2010)",
+    )
+    parser.add_argument(
+        "--model-dir",
+        type=str,
+        default=None,
+        help="Directory to save tuned models (default: models/models_tuned)",
     )
     parser.add_argument(
         "--existing-models-dir",
@@ -699,7 +788,9 @@ def main():
         default="trained_models/models_2005",
         help="Directory containing existing models (default: trained_models/models_2005)",
     )
-    parser.add_argument("--save-dataset", action="store_true", help="Save the generated additional dataset")
+    parser.add_argument(
+        "--save-dataset", action="store_true", help="Save the generated additional dataset"
+    )
 
     args = parser.parse_args()
 
@@ -717,7 +808,9 @@ def main():
 
         # Save dataset if requested
         if args.save_dataset:
-            dataset_path = os.path.join(config.data_dir, f"training_dataset_{args.start_year}.joblib")
+            dataset_path = os.path.join(
+                config.data_dir, f"training_dataset_{args.start_year}.joblib"
+            )
             save_training_dataset(additional_dataset, dataset_path)
             print(f"\n✓ Additional dataset saved to {dataset_path}")
 

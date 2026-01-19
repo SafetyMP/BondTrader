@@ -13,7 +13,11 @@ from scripts.api_helpers import handle_service_result
 router = APIRouter(tags=["Valuation"])
 
 
-@router.get("/bonds/{bond_id}/valuation", response_model=ValuationResponse, dependencies=[Depends(verify_api_key)])
+@router.get(
+    "/bonds/{bond_id}/valuation",
+    response_model=ValuationResponse,
+    dependencies=[Depends(verify_api_key)],
+)
 async def get_valuation(bond_id: str):
     """
     Get valuation metrics for a bond

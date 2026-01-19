@@ -2,10 +2,11 @@
 Unit tests for training framework
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
 
-from bondtrader.ml.training_framework import UnifiedTrainingFramework, TrainingConfig
+import pytest
+
+from bondtrader.ml.training_framework import TrainingConfig, UnifiedTrainingFramework
 
 
 @pytest.mark.unit

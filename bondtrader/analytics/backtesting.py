@@ -32,7 +32,10 @@ class BacktestEngine:
             self.valuator = valuator
 
     def backtest_arbitrage_strategy(
-        self, historical_bonds: List[List[Bond]], initial_capital: float = 1000000, transaction_costs: bool = True
+        self,
+        historical_bonds: List[List[Bond]],
+        initial_capital: float = 1000000,
+        transaction_costs: bool = True,
     ) -> Dict:
         """
         Backtest arbitrage detection strategy
@@ -144,7 +147,11 @@ class BacktestEngine:
             1
             for t in trades
             if t["action"] == "SELL"
-            and any(t2["action"] == "BUY" and t2["bond_id"] == t["bond_id"] for t2 in trades if t2["period"] < t["period"])
+            and any(
+                t2["action"] == "BUY" and t2["bond_id"] == t["bond_id"]
+                for t2 in trades
+                if t2["period"] < t["period"]
+            )
         )
         total_trades = len([t for t in trades if t["action"] == "SELL"])
         win_rate = winning_trades / total_trades if total_trades > 0 else 0
@@ -154,7 +161,11 @@ class BacktestEngine:
             "final_capital": portfolio_values[-1],
             "total_return": total_return,
             "total_return_pct": total_return * 100,
-            "annualized_return": (1 + total_return) ** (252 / len(historical_bonds)) - 1 if len(historical_bonds) > 0 else 0,
+            "annualized_return": (
+                (1 + total_return) ** (252 / len(historical_bonds)) - 1
+                if len(historical_bonds) > 0
+                else 0
+            ),
             "sharpe_ratio": sharpe_ratio,
             "max_drawdown": max_drawdown,
             "max_drawdown_pct": max_drawdown * 100,

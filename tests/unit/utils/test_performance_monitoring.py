@@ -2,9 +2,10 @@
 Unit tests for performance monitoring utilities
 """
 
-import pytest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from bondtrader.utils.performance_monitoring import (
     Alert,
@@ -84,7 +85,7 @@ class TestPerformanceMonitor:
         """Test checking threshold - warning level"""
         monitor = PerformanceMonitor()
         monitor.add_threshold("test.metric", 100, 500, "greater")
-        
+
         alert = monitor.check_threshold("test.metric", 150)
         assert alert is not None
         assert alert.severity == "warning"
@@ -94,7 +95,7 @@ class TestPerformanceMonitor:
         """Test checking threshold - critical level"""
         monitor = PerformanceMonitor()
         monitor.add_threshold("test.metric", 100, 500, "greater")
-        
+
         alert = monitor.check_threshold("test.metric", 600)
         assert alert is not None
         assert alert.severity == "critical"
@@ -103,7 +104,7 @@ class TestPerformanceMonitor:
         """Test checking threshold - no alert"""
         monitor = PerformanceMonitor()
         monitor.add_threshold("test.metric", 100, 500, "greater")
-        
+
         alert = monitor.check_threshold("test.metric", 50)
         assert alert is None
 
@@ -111,7 +112,7 @@ class TestPerformanceMonitor:
         """Test threshold with 'less' comparison"""
         monitor = PerformanceMonitor()
         monitor.add_threshold("test.throughput", 10, 5, "less")
-        
+
         alert = monitor.check_threshold("test.throughput", 3)
         assert alert is not None
         assert alert.severity == "critical"
@@ -120,11 +121,11 @@ class TestPerformanceMonitor:
         """Test getting recent alerts"""
         monitor = PerformanceMonitor()
         monitor.add_threshold("test.metric", 100, 500, "greater")
-        
+
         # Generate some alerts
         monitor.check_threshold("test.metric", 150)
         monitor.check_threshold("test.metric", 600)
-        
+
         recent = monitor.get_recent_alerts(minutes=60)
         assert len(recent) >= 2
 
@@ -132,11 +133,11 @@ class TestPerformanceMonitor:
         """Test getting critical alerts"""
         monitor = PerformanceMonitor()
         monitor.add_threshold("test.metric", 100, 500, "greater")
-        
+
         # Generate warning and critical alerts
         monitor.check_threshold("test.metric", 150)  # Warning
         monitor.check_threshold("test.metric", 600)  # Critical
-        
+
         critical = monitor.get_critical_alerts()
         assert len(critical) >= 1
         assert all(alert.severity == "critical" for alert in critical)
@@ -151,7 +152,7 @@ class TestPerformanceMonitor:
         monitor = PerformanceMonitor()
         monitor.add_threshold("api.response_time", 1000, 5000, "greater")
         monitor.check_threshold("api.response_time", 1500)
-        
+
         summary = monitor.get_performance_summary()
         assert "metrics" in summary
         assert "recent_alerts" in summary

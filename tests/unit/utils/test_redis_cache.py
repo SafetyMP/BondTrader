@@ -2,8 +2,9 @@
 Unit tests for Redis cache utilities
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 @pytest.mark.unit
@@ -36,8 +37,9 @@ class TestRedisCache:
     @patch("bondtrader.utils.redis_cache.redis")
     def test_redis_cache_get_set(self, mock_redis):
         """Test getting and setting values"""
-        from bondtrader.utils.redis_cache import RedisCache
         import json
+
+        from bondtrader.utils.redis_cache import RedisCache
 
         mock_client = MagicMock()
         mock_client.ping.return_value = True
@@ -46,7 +48,7 @@ class TestRedisCache:
         mock_redis.Redis.return_value = mock_client
 
         cache = RedisCache()
-        
+
         # Test set
         result = cache.set("test_key", {"key": "value"}, ttl=3600)
         assert result is True
@@ -90,8 +92,9 @@ class TestRedisCache:
     @patch("bondtrader.utils.redis_cache.redis")
     def test_redis_cache_ttl(self, mock_redis):
         """Test setting TTL"""
-        from bondtrader.utils.redis_cache import RedisCache
         import json
+
+        from bondtrader.utils.redis_cache import RedisCache
 
         mock_client = MagicMock()
         mock_client.ping.return_value = True

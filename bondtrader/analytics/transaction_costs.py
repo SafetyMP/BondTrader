@@ -34,7 +34,9 @@ class TransactionCostCalculator:
         self.slippage_rate = slippage_rate
         self.minimum_commission = minimum_commission
 
-    def calculate_trading_cost(self, bond: Bond, quantity: float = 1.0, is_buy: bool = True) -> Dict:
+    def calculate_trading_cost(
+        self, bond: Bond, quantity: float = 1.0, is_buy: bool = True
+    ) -> Dict:
         """
         Calculate total trading cost for a bond transaction
 

@@ -55,7 +55,9 @@ def test_calculate_returns_and_covariance_historical(optimizer, portfolio_bonds)
 
 def test_calculate_returns_and_covariance_implied(optimizer, portfolio_bonds):
     """Test returns and covariance calculation using implied method"""
-    returns, covariance = optimizer.calculate_returns_and_covariance(portfolio_bonds, method="implied")
+    returns, covariance = optimizer.calculate_returns_and_covariance(
+        portfolio_bonds, method="implied"
+    )
 
     assert len(returns) == len(portfolio_bonds)
     assert covariance.shape == (len(portfolio_bonds), len(portfolio_bonds))
@@ -76,7 +78,9 @@ def test_markowitz_optimization(optimizer, portfolio_bonds):
 
 def test_markowitz_optimization_with_target_return(optimizer, portfolio_bonds):
     """Test Markowitz optimization with target return"""
-    result = optimizer.markowitz_optimization(portfolio_bonds, target_return=0.05, risk_aversion=1.0)
+    result = optimizer.markowitz_optimization(
+        portfolio_bonds, target_return=0.05, risk_aversion=1.0
+    )
 
     assert "weights" in result
     assert abs(sum(result["weights"]) - 1.0) < 1e-6

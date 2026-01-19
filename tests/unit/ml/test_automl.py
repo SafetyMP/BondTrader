@@ -55,4 +55,9 @@ def test_automated_model_selection_basic(training_bonds, automl_adjuster):
 
     assert "best_model" in result
     assert "automl_success" in result
-    assert result["best_model"] in ["random_forest", "gradient_boosting", "neural_network", "ensemble"]
+    assert result["best_model"] in [
+        "random_forest",
+        "gradient_boosting",
+        "neural_network",
+        "ensemble",
+    ]

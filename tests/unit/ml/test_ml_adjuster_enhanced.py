@@ -50,8 +50,12 @@ def test_enhanced_ml_adjuster_train_success(training_bonds, enhanced_ml_adjuster
 
 def test_enhanced_ml_adjuster_create_enhanced_features(training_bonds, enhanced_ml_adjuster):
     """Test enhanced feature creation"""
-    fair_values = [enhanced_ml_adjuster.valuator.calculate_fair_value(bond) for bond in training_bonds]
-    features, feature_names = enhanced_ml_adjuster._create_enhanced_features(training_bonds, fair_values)
+    fair_values = [
+        enhanced_ml_adjuster.valuator.calculate_fair_value(bond) for bond in training_bonds
+    ]
+    features, feature_names = enhanced_ml_adjuster._create_enhanced_features(
+        training_bonds, fair_values
+    )
 
     assert len(feature_names) > 0
     assert features.shape[0] == len(training_bonds)

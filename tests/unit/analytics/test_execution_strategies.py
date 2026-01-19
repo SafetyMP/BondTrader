@@ -51,17 +51,25 @@ class TestExecutionStrategy:
 
         start = datetime.now()
         end = start + timedelta(hours=1)
-        volume_profile = [{"time": start + timedelta(minutes=i * 6), "expected_volume": 10.0} for i in range(10)]
-        result = strategy.vwap_execution(total_quantity=100.0, volume_profile=volume_profile, start_time=start, end_time=end)
+        volume_profile = [
+            {"time": start + timedelta(minutes=i * 6), "expected_volume": 10.0} for i in range(10)
+        ]
+        result = strategy.vwap_execution(
+            total_quantity=100.0, volume_profile=volume_profile, start_time=start, end_time=end
+        )
         assert isinstance(result, dict)
 
     def test_implementation_shortfall(self, strategy, sample_bond):
         """Test implementation shortfall"""
         execution_prices = [950.0, 951.0, 952.0, 951.5, 950.5]
-        result = strategy.implementation_shortfall(bond=sample_bond, target_quantity=100.0, execution_prices=execution_prices)
+        result = strategy.implementation_shortfall(
+            bond=sample_bond, target_quantity=100.0, execution_prices=execution_prices
+        )
         assert isinstance(result, dict)
 
     def test_optimal_execution(self, strategy, sample_bond):
         """Test optimal execution"""
-        result = strategy.optimal_execution(sample_bond, total_quantity=100.0, urgency=0.5, volatility=0.01)
+        result = strategy.optimal_execution(
+            sample_bond, total_quantity=100.0, urgency=0.5, volatility=0.01
+        )
         assert isinstance(result, dict)

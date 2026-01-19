@@ -45,7 +45,9 @@ from bondtrader.ml.ml_advanced import AdvancedMLBondAdjuster
 from bondtrader.utils.utils import logger
 
 
-def fetch_bonds_from_api(start_date: datetime, end_date: datetime, data_type: str = "treasury") -> List[Bond]:
+def fetch_bonds_from_api(
+    start_date: datetime, end_date: datetime, data_type: str = "treasury"
+) -> List[Bond]:
     """
     Fetch bond data from APIs (FRED for Treasury, FINRA for corporate)
 
@@ -64,7 +66,9 @@ def fetch_bonds_from_api(start_date: datetime, end_date: datetime, data_type: st
         # Fetch Treasury data from FRED
         print(f"Fetching Treasury data from FRED ({start_date.date()} to {end_date.date()})...")
         treasury_data = manager.fetch_historical_treasury_data(
-            start_date=start_date, end_date=end_date, maturities=["GS1", "GS2", "GS5", "GS10", "GS30"]
+            start_date=start_date,
+            end_date=end_date,
+            maturities=["GS1", "GS2", "GS5", "GS10", "GS30"],
         )
 
         if treasury_data is None or treasury_data.empty:
@@ -111,19 +115,25 @@ def fetch_bonds_from_api(start_date: datetime, end_date: datetime, data_type: st
 
     elif data_type == "corporate":
         # Fetch corporate bond data from FINRA
-        print(f"Fetching corporate bond data from FINRA ({start_date.date()} to {end_date.date()})...")
+        print(
+            f"Fetching corporate bond data from FINRA ({start_date.date()} to {end_date.date()})..."
+        )
         finra = FINRADataProvider()
         finra_data = finra.fetch_historical_bond_data(start_date=start_date, end_date=end_date)
 
         if finra_data is None or finra_data.empty:
             print("No FINRA data available, generating synthetic corporate bonds...")
-            return _generate_synthetic_bonds(start_date, end_date, BondType.CORPORATE, "Corporate Issuer")
+            return _generate_synthetic_bonds(
+                start_date, end_date, BondType.CORPORATE, "Corporate Issuer"
+            )
 
         # Convert FINRA data to Bond objects
         for idx, row in finra_data.iterrows():
             try:
                 bond_id = row.get("cusip", f"FINRA-{idx}")
-                execution_date = pd.to_datetime(row.get("executionDate", row.get("date", start_date)))
+                execution_date = pd.to_datetime(
+                    row.get("executionDate", row.get("date", start_date))
+                )
                 price = float(row.get("price", row.get("tradePrice", 1000.0)))
                 yield_rate = float(row.get("yield", row.get("yieldToMaturity", 0.05)))
 
@@ -159,7 +169,9 @@ def fetch_bonds_from_api(start_date: datetime, end_date: datetime, data_type: st
     return bonds
 
 
-def _generate_synthetic_bonds(start_date: datetime, end_date: datetime, bond_type: BondType, issuer: str) -> List[Bond]:
+def _generate_synthetic_bonds(
+    start_date: datetime, end_date: datetime, bond_type: BondType, issuer: str
+) -> List[Bond]:
     """Generate synthetic bond data when API is unavailable"""
     import random
 
@@ -179,7 +191,11 @@ def _generate_synthetic_bonds(start_date: datetime, end_date: datetime, bond_typ
             maturity_date = current_date + pd.Timedelta(days=365 * maturity_years)
 
             current_price = 1000.0 * (1 + random.uniform(-0.05, 0.05))
-            credit_rating = random.choice(["AAA", "AA", "A", "BBB", "BB"]) if bond_type == BondType.CORPORATE else "AAA"
+            credit_rating = (
+                random.choice(["AAA", "AA", "A", "BBB", "BB"])
+                if bond_type == BondType.CORPORATE
+                else "AAA"
+            )
 
             bond_id = f"SYNTH-{bond_type.value.upper()}-{current_date.strftime('%Y%m%d')}-{maturity_years}YR"
 
@@ -257,9 +273,16 @@ def train_models(bonds: List[Bond], model_dir: str) -> Dict:
         # Pass valuator from container (shared instance)
         enhanced_ml = EnhancedMLBondAdjuster(model_type=config.ml_model_type, valuator=valuator)
         metrics = enhanced_ml.train_with_tuning(
-            train_bonds, test_size=0.2, random_state=config.ml_random_state, tune_hyperparameters=True
+            train_bonds,
+            test_size=0.2,
+            random_state=config.ml_random_state,
+            tune_hyperparameters=True,
         )
-        results["enhanced_ml_adjuster"] = {"model": enhanced_ml, "metrics": metrics, "status": "success"}
+        results["enhanced_ml_adjuster"] = {
+            "model": enhanced_ml,
+            "metrics": metrics,
+            "status": "success",
+        }
         joblib.dump(enhanced_ml, os.path.join(model_dir, "enhanced_ml_adjuster.joblib"))
         print(f"✓ Trained. Test R²: {metrics.get('test_r2', 0):.4f}")
     except Exception as e:
@@ -273,10 +296,18 @@ def train_models(bonds: List[Bond], model_dir: str) -> Dict:
     try:
         # Pass valuator from container (shared instance)
         advanced_ml = AdvancedMLBondAdjuster(valuator=valuator)
-        ensemble_result = advanced_ml.train_ensemble(train_bonds, test_size=0.2, random_state=config.ml_random_state)
-        results["advanced_ml_adjuster"] = {"model": advanced_ml, "metrics": ensemble_result, "status": "success"}
+        ensemble_result = advanced_ml.train_ensemble(
+            train_bonds, test_size=0.2, random_state=config.ml_random_state
+        )
+        results["advanced_ml_adjuster"] = {
+            "model": advanced_ml,
+            "metrics": ensemble_result,
+            "status": "success",
+        }
         joblib.dump(advanced_ml, os.path.join(model_dir, "advanced_ml_adjuster.joblib"))
-        print(f"✓ Trained. Ensemble Test R²: {ensemble_result.get('ensemble_metrics', {}).get('test_r2', 0):.4f}")
+        print(
+            f"✓ Trained. Ensemble Test R²: {ensemble_result.get('ensemble_metrics', {}).get('test_r2', 0):.4f}"
+        )
     except Exception as e:
         print(f"✗ Failed: {e}")
         results["advanced_ml_adjuster"] = {"status": "failed", "error": str(e)}
@@ -289,9 +320,15 @@ def train_models(bonds: List[Bond], model_dir: str) -> Dict:
         # Pass valuator from container (shared instance)
         automl = AutoMLBondAdjuster(valuator=valuator)
         automl.automated_model_selection(
-            train_bonds, candidate_models=["random_forest", "gradient_boosting"], max_evaluation_time=300
+            train_bonds,
+            candidate_models=["random_forest", "gradient_boosting"],
+            max_evaluation_time=300,
         )
-        results["automl"] = {"model": automl, "best_model_type": automl.best_model_type, "status": "success"}
+        results["automl"] = {
+            "model": automl,
+            "best_model_type": automl.best_model_type,
+            "status": "success",
+        }
         joblib.dump(automl, os.path.join(model_dir, "automl_adjuster.joblib"))
         print(f"✓ Trained. Best model: {automl.best_model_type}")
     except Exception as e:
@@ -324,7 +361,9 @@ def fine_tune_models(models: Dict, fine_tune_bonds: List[Bond], model_dir: str) 
             # Fine-tune by continuing training on new data
             if hasattr(model, "train_with_tuning"):
                 # Enhanced model - use train_with_tuning
-                metrics = model.train_with_tuning(fine_tune_bonds, test_size=0.2, random_state=42, tune_hyperparameters=False)
+                metrics = model.train_with_tuning(
+                    fine_tune_bonds, test_size=0.2, random_state=42, tune_hyperparameters=False
+                )
             elif hasattr(model, "train"):
                 # Basic model - retrain with combined data
                 # Get original training bonds if available, otherwise just use fine-tune data
@@ -338,7 +377,11 @@ def fine_tune_models(models: Dict, fine_tune_bonds: List[Bond], model_dir: str) 
 
             # Save fine-tuned model
             joblib.dump(model, os.path.join(model_dir, f"{model_name}_fine_tuned.joblib"))
-            fine_tuned_results[model_name] = {"model": model, "metrics": metrics, "status": "success"}
+            fine_tuned_results[model_name] = {
+                "model": model,
+                "metrics": metrics,
+                "status": "success",
+            }
             print(
                 f"✓ Fine-tuned. Test R²: {metrics.get('test_r2', metrics.get('ensemble_metrics', {}).get('test_r2', 0)):.4f}"
             )
@@ -392,12 +435,16 @@ def make_predictions(models: Dict, prediction_bonds: List[Bond], output_path: st
                     bond_pred[f"{model_name}_predicted_value"] = pred.get(
                         "ml_adjusted_fair_value", pred.get("ml_adjusted_value", None)
                     )
-                    bond_pred[f"{model_name}_adjustment_factor"] = pred.get("adjustment_factor", None)
+                    bond_pred[f"{model_name}_adjustment_factor"] = pred.get(
+                        "adjustment_factor", None
+                    )
                 elif hasattr(model, "predict"):
                     # Direct prediction - use service layer
                     valuation_result = bond_service.calculate_valuation_for_bond(bond)
                     if valuation_result.is_ok():
-                        bond_pred[f"{model_name}_predicted_value"] = valuation_result.value["fair_value"]
+                        bond_pred[f"{model_name}_predicted_value"] = valuation_result.value[
+                            "fair_value"
+                        ]
                     else:
                         bond_pred[f"{model_name}_predicted_value"] = None
             except Exception as e:
@@ -409,7 +456,9 @@ def make_predictions(models: Dict, prediction_bonds: List[Bond], output_path: st
     df = pd.DataFrame(predictions)
 
     # Save predictions
-    os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True)
+    os.makedirs(
+        os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True
+    )
     df.to_csv(output_path, index=False)
     print(f"✓ Saved predictions to {output_path}")
 

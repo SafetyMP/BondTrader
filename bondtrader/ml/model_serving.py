@@ -381,13 +381,17 @@ class ModelServer:
 
         # Compute average latency
         if self.stats["total_predictions"] > 0:
-            health["avg_latency_ms"] = self.stats["total_latency_ms"] / self.stats["total_predictions"]
+            health["avg_latency_ms"] = (
+                self.stats["total_latency_ms"] / self.stats["total_predictions"]
+            )
         else:
             health["avg_latency_ms"] = 0.0
 
         # Compute cache hit rate
         if self.stats["total_predictions"] > 0:
-            health["cache_hit_rate"] = self.stats["cached_predictions"] / self.stats["total_predictions"]
+            health["cache_hit_rate"] = (
+                self.stats["cached_predictions"] / self.stats["total_predictions"]
+            )
         else:
             health["cache_hit_rate"] = 0.0
 

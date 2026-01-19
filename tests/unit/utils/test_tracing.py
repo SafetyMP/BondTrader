@@ -2,8 +2,9 @@
 Unit tests for distributed tracing
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 @pytest.mark.unit
@@ -97,7 +98,7 @@ class TestDistributedTracer:
 
         tracer = DistributedTracer()
         span = tracer.start_span("test_span", attributes={"test_key": "test_value"})
-        
+
         if span and hasattr(span, "set_attribute"):
             # Attributes should be set in start_span
             assert True

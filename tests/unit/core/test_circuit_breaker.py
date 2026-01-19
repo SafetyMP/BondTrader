@@ -88,7 +88,11 @@ class TestCircuitBreaker:
         def fallback_func():
             return "fallback_value"
 
-        cb = CircuitBreaker("test", config=CircuitBreakerConfig(failure_threshold=2, timeout=60), fallback=fallback_func)
+        cb = CircuitBreaker(
+            "test",
+            config=CircuitBreakerConfig(failure_threshold=2, timeout=60),
+            fallback=fallback_func,
+        )
 
         # Open the circuit
         def failing_func():
@@ -138,7 +142,10 @@ class TestCircuitBreaker:
 
     def test_circuit_breaker_half_open_success(self):
         """Test half-open state with success"""
-        cb = CircuitBreaker("test", config=CircuitBreakerConfig(failure_threshold=2, timeout=0.1, success_threshold=1))
+        cb = CircuitBreaker(
+            "test",
+            config=CircuitBreakerConfig(failure_threshold=2, timeout=0.1, success_threshold=1),
+        )
 
         # Open the circuit
         def failing_func():
@@ -224,7 +231,9 @@ class TestCircuitBreaker:
     def test_circuit_breaker_decorator(self):
         """Test circuit breaker decorator"""
 
-        @circuit_breaker("decorator_test", config=CircuitBreakerConfig(failure_threshold=5, timeout=60))
+        @circuit_breaker(
+            "decorator_test", config=CircuitBreakerConfig(failure_threshold=5, timeout=60)
+        )
         def test_func():
             return 42
 

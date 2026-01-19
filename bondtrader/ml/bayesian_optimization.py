@@ -109,7 +109,9 @@ class BayesianOptimizer:
         """
         # Use Optuna if requested and available
         if use_optuna and HAS_OPTUNA:
-            return self._optimize_hyperparameters_optuna(bonds, param_bounds, num_iterations, model_type)
+            return self._optimize_hyperparameters_optuna(
+                bonds, param_bounds, num_iterations, model_type
+            )
 
         import numpy as np
         from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
@@ -147,7 +149,12 @@ class BayesianOptimizer:
                         model_params[param] = int(params_dict[param])
 
                 # Handle float parameters
-                float_params = ["learning_rate", "subsample", "min_samples_split", "min_samples_leaf"]
+                float_params = [
+                    "learning_rate",
+                    "subsample",
+                    "min_samples_split",
+                    "min_samples_leaf",
+                ]
                 for param in float_params:
                     if param in params_dict and param not in model_params:
                         model_params[param] = float(params_dict[param])
@@ -235,7 +242,9 @@ class BayesianOptimizer:
 
             # Log progress every 5 iterations
             if (iteration + 1) % 5 == 0:
-                logger.info(f"Bayesian optimization iteration {iteration + 1}/{num_iterations}, best R²: {-best_value:.4f}")
+                logger.info(
+                    f"Bayesian optimization iteration {iteration + 1}/{num_iterations}, best R²: {-best_value:.4f}"
+                )
 
         return {
             "optimal_parameters": best_params,
@@ -246,7 +255,11 @@ class BayesianOptimizer:
         }
 
     def _optimize_hyperparameters_optuna(
-        self, bonds: List[Bond], param_bounds: Dict[str, tuple], num_iterations: int, model_type: str = "random_forest"
+        self,
+        bonds: List[Bond],
+        param_bounds: Dict[str, tuple],
+        num_iterations: int,
+        model_type: str = "random_forest",
     ) -> Dict:
         """Optimize hyperparameters using Optuna (if available)"""
         if not HAS_OPTUNA:
@@ -337,7 +350,9 @@ class BayesianOptimizer:
             "method": "Optuna",
         }
 
-    def robust_portfolio_optimization(self, bonds: List[Bond], uncertainty_bounds: Optional[Dict] = None) -> Dict:
+    def robust_portfolio_optimization(
+        self, bonds: List[Bond], uncertainty_bounds: Optional[Dict] = None
+    ) -> Dict:
         """
         Robust portfolio optimization under uncertainty
 
@@ -379,7 +394,9 @@ class BayesianOptimizer:
         x0 = np.ones(n) / n
 
         # Optimize
-        result = minimize(robust_objective, x0, method="SLSQP", bounds=bounds, constraints=constraints)
+        result = minimize(
+            robust_objective, x0, method="SLSQP", bounds=bounds, constraints=constraints
+        )
 
         if not result.success:
             weights = x0
@@ -393,7 +410,9 @@ class BayesianOptimizer:
             "weights": weights.tolist(),
             "portfolio_return": portfolio_return,
             "portfolio_volatility": portfolio_volatility,
-            "sharpe_ratio": portfolio_return / portfolio_volatility if portfolio_volatility > 0 else 0,
+            "sharpe_ratio": (
+                portfolio_return / portfolio_volatility if portfolio_volatility > 0 else 0
+            ),
             "method": "Robust Optimization",
             "optimization_success": result.success,
         }

@@ -80,11 +80,11 @@ def retry_with_backoff(
                     wait=wait_exponential(multiplier=initial_wait, min=initial_wait, max=max_wait),
                     reraise=True,
                 )
-            
+
             # Wrap function with retry and preserve metadata
             wrapped = retry_decorator(func)
             wrapped = wraps(func)(wrapped)
-            
+
             return wrapped
 
         return decorator
@@ -158,7 +158,11 @@ def circuit_breaker(
         from collections import deque
         from datetime import datetime, timedelta
 
-        circuit_state = {"open": False, "failures": deque(maxlen=failure_threshold), "last_failure": None}
+        circuit_state = {
+            "open": False,
+            "failures": deque(maxlen=failure_threshold),
+            "last_failure": None,
+        }
         lock = threading.Lock()
 
         def decorator(func: Callable[..., T]) -> Callable[..., T]:
@@ -168,7 +172,9 @@ def circuit_breaker(
                     # Check if circuit is open
                     if circuit_state["open"]:
                         if circuit_state["last_failure"]:
-                            time_since_failure = (datetime.now() - circuit_state["last_failure"]).total_seconds()
+                            time_since_failure = (
+                                datetime.now() - circuit_state["last_failure"]
+                            ).total_seconds()
                             if time_since_failure < recovery_timeout:
                                 raise RuntimeError(
                                     f"Circuit breaker is OPEN for {func.__name__}. "
@@ -178,7 +184,9 @@ def circuit_breaker(
                                 # Attempt recovery
                                 circuit_state["open"] = False
                                 circuit_state["failures"].clear()
-                                logger.info(f"Circuit breaker attempting recovery for {func.__name__}")
+                                logger.info(
+                                    f"Circuit breaker attempting recovery for {func.__name__}"
+                                )
                         else:
                             # No last failure time, attempt recovery anyway
                             circuit_state["open"] = False
@@ -199,7 +207,9 @@ def circuit_breaker(
 
                         if len(circuit_state["failures"]) >= failure_threshold:
                             circuit_state["open"] = True
-                            logger.error(f"Circuit breaker OPENED for {func.__name__} after {failure_threshold} failures")
+                            logger.error(
+                                f"Circuit breaker OPENED for {func.__name__} after {failure_threshold} failures"
+                            )
 
                     raise
 

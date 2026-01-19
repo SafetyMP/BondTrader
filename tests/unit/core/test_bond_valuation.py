@@ -121,21 +121,25 @@ def test_calculate_duration_with_ytm(sample_bond, valuator):
     duration = valuator.calculate_duration(sample_bond, ytm=ytm)
     assert duration > 0
 
+
 def test_calculate_convexity_with_ytm(sample_bond, valuator):
     """Test convexity calculation with provided YTM"""
     ytm = valuator.calculate_yield_to_maturity(sample_bond)
     convexity = valuator.calculate_convexity(sample_bond, ytm=ytm)
     assert convexity > 0
 
+
 def test_calculate_fair_value_with_required_yield(sample_bond, valuator):
     """Test fair value calculation with required yield"""
     fair_value = valuator.calculate_fair_value(sample_bond, required_yield=0.05)
     assert fair_value > 0
 
+
 def test_calculate_fair_value_with_risk_free_rate(sample_bond, valuator):
     """Test fair value calculation with risk-free rate override"""
     fair_value = valuator.calculate_fair_value(sample_bond, risk_free_rate=0.04)
     assert fair_value > 0
+
 
 def test_batch_calculate_ytm(sample_bond, valuator):
     """Test batch YTM calculation"""
@@ -144,6 +148,7 @@ def test_batch_calculate_ytm(sample_bond, valuator):
     assert len(ytms) == 1
     assert ytms[0] > 0
 
+
 def test_batch_calculate_duration(sample_bond, valuator):
     """Test batch duration calculation"""
     bonds = [sample_bond]
@@ -151,6 +156,7 @@ def test_batch_calculate_duration(sample_bond, valuator):
     durations = valuator.batch_calculate_duration(bonds, ytms=ytms)
     assert len(durations) == 1
     assert durations[0] > 0
+
 
 def test_caching_enabled(valuator):
     """Test that caching works when enabled"""
@@ -169,10 +175,12 @@ def test_caching_enabled(valuator):
     ytm2 = valuator.calculate_yield_to_maturity(bond)
     assert ytm1 == ytm2
 
+
 def test_caching_disabled():
     """Test that caching can be disabled"""
     valuator_no_cache = BondValuator(enable_caching=False)
     assert valuator_no_cache._calculation_cache is None
+
 
 def test_clear_cache(valuator):
     """Test clearing cache"""
@@ -190,6 +198,7 @@ def test_clear_cache(valuator):
     # Cache should be empty
     assert len(valuator._calculation_cache) == 0
 
+
 def test_get_credit_spread(valuator):
     """Test getting credit spread for different ratings"""
     spreads = {}
@@ -197,6 +206,7 @@ def test_get_credit_spread(valuator):
         spread = valuator._get_credit_spread(rating)
         spreads[rating] = spread
         assert spread >= 0
+
 
 def test_price_mismatch_details(sample_bond, valuator):
     """Test price mismatch calculation details"""

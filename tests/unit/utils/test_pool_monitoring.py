@@ -2,8 +2,9 @@
 Unit tests for pool monitoring utilities
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from bondtrader.utils.pool_monitoring import PoolMonitor, get_pool_monitor
 
@@ -20,7 +21,7 @@ class TestPoolMonitor:
     def test_get_pool_stats(self):
         """Test getting pool statistics"""
         monitor = PoolMonitor()
-        
+
         # Mock database with engine
         mock_database = MagicMock()
         mock_pool = MagicMock()
@@ -49,7 +50,7 @@ class TestPoolMonitor:
     def test_get_pool_stats_high_utilization(self):
         """Test pool stats with high utilization"""
         monitor = PoolMonitor()
-        
+
         mock_database = MagicMock()
         mock_pool = MagicMock()
         mock_pool.size.return_value = 10
@@ -65,7 +66,7 @@ class TestPoolMonitor:
     def test_check_pool_health(self):
         """Test checking pool health"""
         monitor = PoolMonitor()
-        
+
         mock_database = MagicMock()
         mock_pool = MagicMock()
         mock_pool.size.return_value = 10
@@ -83,7 +84,7 @@ class TestPoolMonitor:
     def test_check_pool_health_critical(self):
         """Test pool health with critical utilization"""
         monitor = PoolMonitor()
-        
+
         mock_database = MagicMock()
         mock_pool = MagicMock()
         mock_pool.size.return_value = 10
@@ -100,7 +101,7 @@ class TestPoolMonitor:
     def test_check_pool_health_invalid_connections(self):
         """Test pool health with invalid connections"""
         monitor = PoolMonitor()
-        
+
         mock_database = MagicMock()
         mock_pool = MagicMock()
         mock_pool.size.return_value = 10

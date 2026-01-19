@@ -111,7 +111,9 @@ class BondRepository(IBondRepository):
         if "bond_type" in filters:
             filtered = [b for b in filtered if b.bond_type == filters["bond_type"]]
         if "issuer" in filters:
-            filtered = [b for b in filtered if b.issuer and filters["issuer"].lower() in b.issuer.lower()]
+            filtered = [
+                b for b in filtered if b.issuer and filters["issuer"].lower() in b.issuer.lower()
+            ]
         if "credit_rating" in filters:
             filtered = [b for b in filtered if b.credit_rating == filters["credit_rating"]]
 
@@ -164,7 +166,9 @@ class InMemoryBondRepository(IBondRepository):
         if "bond_type" in filters:
             filtered = [b for b in filtered if b.bond_type == filters["bond_type"]]
         if "issuer" in filters:
-            filtered = [b for b in filtered if b.issuer and filters["issuer"].lower() in b.issuer.lower()]
+            filtered = [
+                b for b in filtered if b.issuer and filters["issuer"].lower() in b.issuer.lower()
+            ]
         if "credit_rating" in filters:
             filtered = [b for b in filtered if b.credit_rating == filters["credit_rating"]]
 

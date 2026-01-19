@@ -55,7 +55,9 @@ class Config:
 
     # Arbitrage detection settings
     min_profit_threshold: float = float(os.getenv("MIN_PROFIT_THRESHOLD", "0.01"))
-    include_transaction_costs: bool = os.getenv("INCLUDE_TRANSACTION_COSTS", "true").lower() == "true"
+    include_transaction_costs: bool = (
+        os.getenv("INCLUDE_TRANSACTION_COSTS", "true").lower() == "true"
+    )
 
     def __post_init__(self):
         """Validate configuration values"""

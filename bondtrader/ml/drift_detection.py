@@ -100,13 +100,18 @@ class BenchmarkGenerator:
         volatility_adjustment = 1.0 + (duration * 0.0001)  # Duration impact
 
         # Bloomberg benchmark value
-        benchmark_value = base_fair_value * self.bloomberg_factor * liquidity_adjustment * volatility_adjustment
+        benchmark_value = (
+            base_fair_value * self.bloomberg_factor * liquidity_adjustment * volatility_adjustment
+        )
 
         # Confidence based on bond characteristics
         confidence = self._calculate_confidence(bond, base_fair_value)
 
         return BenchmarkOutput(
-            bond_id=bond.bond_id, predicted_value=benchmark_value, confidence=confidence, methodology="bloomberg"
+            bond_id=bond.bond_id,
+            predicted_value=benchmark_value,
+            confidence=confidence,
+            methodology="bloomberg",
         )
 
     def generate_aladdin_benchmark(self, bond: Bond) -> BenchmarkOutput:
@@ -127,12 +132,21 @@ class BenchmarkGenerator:
         portfolio_adjustment = 0.999  # Slight discount for portfolio context
 
         # Aladdin benchmark value
-        benchmark_value = base_fair_value * self.aladdin_factor * risk_adjustment * liquidity_premium * portfolio_adjustment
+        benchmark_value = (
+            base_fair_value
+            * self.aladdin_factor
+            * risk_adjustment
+            * liquidity_premium
+            * portfolio_adjustment
+        )
 
         confidence = self._calculate_confidence(bond, base_fair_value)
 
         return BenchmarkOutput(
-            bond_id=bond.bond_id, predicted_value=benchmark_value, confidence=confidence, methodology="aladdin"
+            bond_id=bond.bond_id,
+            predicted_value=benchmark_value,
+            confidence=confidence,
+            methodology="aladdin",
         )
 
     def generate_goldman_benchmark(self, bond: Bond) -> BenchmarkOutput:
@@ -155,12 +169,21 @@ class BenchmarkGenerator:
             structure_adjustment = 1.001  # Premium for structured product expertise
 
         # Goldman benchmark value
-        benchmark_value = base_fair_value * self.goldman_factor * credit_premium * market_intelligence * structure_adjustment
+        benchmark_value = (
+            base_fair_value
+            * self.goldman_factor
+            * credit_premium
+            * market_intelligence
+            * structure_adjustment
+        )
 
         confidence = self._calculate_confidence(bond, base_fair_value)
 
         return BenchmarkOutput(
-            bond_id=bond.bond_id, predicted_value=benchmark_value, confidence=confidence, methodology="goldman"
+            bond_id=bond.bond_id,
+            predicted_value=benchmark_value,
+            confidence=confidence,
+            methodology="goldman",
         )
 
     def generate_jpmorgan_benchmark(self, bond: Bond) -> BenchmarkOutput:
@@ -181,12 +204,21 @@ class BenchmarkGenerator:
         liquidity_cost = self._calculate_liquidity_cost(bond)
 
         # JPMorgan benchmark value
-        benchmark_value = base_fair_value * self.jpmorgan_factor * transaction_cost * execution_risk * liquidity_cost
+        benchmark_value = (
+            base_fair_value
+            * self.jpmorgan_factor
+            * transaction_cost
+            * execution_risk
+            * liquidity_cost
+        )
 
         confidence = self._calculate_confidence(bond, base_fair_value)
 
         return BenchmarkOutput(
-            bond_id=bond.bond_id, predicted_value=benchmark_value, confidence=confidence, methodology="jpmorgan"
+            bond_id=bond.bond_id,
+            predicted_value=benchmark_value,
+            confidence=confidence,
+            methodology="jpmorgan",
         )
 
     def generate_consensus_benchmark(self, bond: Bond) -> BenchmarkOutput:
@@ -206,14 +238,19 @@ class BenchmarkGenerator:
         total_weight = sum(weights)
 
         if total_weight > 0:
-            consensus_value = sum(b.predicted_value * w for b, w in zip(benchmarks, weights)) / total_weight
+            consensus_value = (
+                sum(b.predicted_value * w for b, w in zip(benchmarks, weights)) / total_weight
+            )
             avg_confidence = np.mean([b.confidence for b in benchmarks])
         else:
             consensus_value = np.mean([b.predicted_value for b in benchmarks])
             avg_confidence = 0.8
 
         return BenchmarkOutput(
-            bond_id=bond.bond_id, predicted_value=consensus_value, confidence=avg_confidence, methodology="consensus"
+            bond_id=bond.bond_id,
+            predicted_value=consensus_value,
+            confidence=avg_confidence,
+            methodology="consensus",
         )
 
     def _get_enhanced_credit_spread(self, bond: Bond) -> float:
@@ -233,9 +270,15 @@ class BenchmarkGenerator:
         # - Maturity (shorter = more liquid)
         # - Issue size (larger = more liquid, approximated by face value)
 
-        rating_factor = {"AAA": 1.002, "AA": 1.001, "A": 1.000, "BBB": 0.999, "BB": 0.998, "B": 0.997, "CCC": 0.995}.get(
-            bond.credit_rating[:3] if len(bond.credit_rating) >= 3 else "BBB", 0.999
-        )
+        rating_factor = {
+            "AAA": 1.002,
+            "AA": 1.001,
+            "A": 1.000,
+            "BBB": 0.999,
+            "BB": 0.998,
+            "B": 0.997,
+            "CCC": 0.995,
+        }.get(bond.credit_rating[:3] if len(bond.credit_rating) >= 3 else "BBB", 0.999)
 
         maturity_factor = 1.0 + min(0, (5.0 - bond.time_to_maturity) * 0.0002)
         size_factor = 1.0 + min(0.002, (bond.face_value - 1000) / 1000000)
@@ -308,10 +351,15 @@ class DriftDetector:
 
     def __init__(self, benchmark_generator: BenchmarkGenerator = None):
         """Initialize drift detector"""
-        self.benchmark_generator = benchmark_generator if benchmark_generator else BenchmarkGenerator()
+        self.benchmark_generator = (
+            benchmark_generator if benchmark_generator else BenchmarkGenerator()
+        )
 
     def calculate_drift(
-        self, bonds: List[Bond], model_predictions: List[float], benchmark_methodology: str = "consensus"
+        self,
+        bonds: List[Bond],
+        model_predictions: List[float],
+        benchmark_methodology: str = "consensus",
     ) -> DriftMetrics:
         """
         Calculate drift metrics between model predictions and benchmarks
@@ -373,7 +421,9 @@ class DriftDetector:
         # Variance ratio (how much more/less variable are our errors than benchmark)
         error_variance = np.var(errors)
         benchmark_variance = np.var(benchmark_predictions)
-        variance_ratio = error_variance / benchmark_variance if benchmark_variance > 0 else float("inf")
+        variance_ratio = (
+            error_variance / benchmark_variance if benchmark_variance > 0 else float("inf")
+        )
 
         # Drift score (0-1, normalized composite metric)
         # Normalize RMSE relative to benchmark range
@@ -386,7 +436,8 @@ class DriftDetector:
             (
                 0.4 * min(1.0, normalized_rmse)
                 + 0.3 * (1.0 - max(0.0, correlation))
-                + 0.3 * min(1.0, abs(bias) / (benchmark_range * 0.01) if benchmark_range > 0 else 1.0)
+                + 0.3
+                * min(1.0, abs(bias) / (benchmark_range * 0.01) if benchmark_range > 0 else 1.0)
             ),
         )
 
@@ -403,7 +454,11 @@ class DriftDetector:
         )
 
     def calculate_drift_by_regime(
-        self, bonds: List[Bond], model_predictions: List[float], regimes: List[str], benchmark_methodology: str = "consensus"
+        self,
+        bonds: List[Bond],
+        model_predictions: List[float],
+        regimes: List[str],
+        benchmark_methodology: str = "consensus",
     ) -> Dict[str, DriftMetrics]:
         """
         Calculate drift metrics by market regime
@@ -427,7 +482,9 @@ class DriftDetector:
             regime_predictions = [p for p, m in zip(model_predictions, regime_mask) if m]
 
             if len(regime_bonds) > 0:
-                drift = self.calculate_drift(regime_bonds, regime_predictions, benchmark_methodology)
+                drift = self.calculate_drift(
+                    regime_bonds, regime_predictions, benchmark_methodology
+                )
                 regime_drifts[regime] = drift
 
         return regime_drifts
@@ -488,11 +545,15 @@ class ModelTuner:
         if total_combinations <= 50:
             # Small parameter space - use grid search
             param_combinations = list(product(*param_values))
-            print(f"Tuning model with {len(param_combinations)} parameter combinations (grid search)...")
+            print(
+                f"Tuning model with {len(param_combinations)} parameter combinations (grid search)..."
+            )
             use_randomized = False
         else:
             # Large parameter space - use randomized search
-            print(f"Tuning model with {n_iter} random samples from {total_combinations} combinations (randomized search)...")
+            print(
+                f"Tuning model with {n_iter} random samples from {total_combinations} combinations (randomized search)..."
+            )
             use_randomized = True
             # Limit iterations to reasonable number
             n_iter = min(n_iter, 100)
@@ -547,7 +608,10 @@ class ModelTuner:
                 for bond in validation_bonds:
                     if hasattr(model_copy, "predict_adjusted_value"):
                         pred = model_copy.predict_adjusted_value(bond)
-                        value = pred.get("ml_adjusted_value", pred.get("ml_adjusted_fair_value", bond.current_price))
+                        value = pred.get(
+                            "ml_adjusted_value",
+                            pred.get("ml_adjusted_fair_value", bond.current_price),
+                        )
                     elif hasattr(model_copy, "predict"):
                         # For sklearn models
                         # Need to extract features first
@@ -565,7 +629,9 @@ class ModelTuner:
                     predictions.append(value)
 
                 # Calculate drift
-                drift_metrics = self.drift_detector.calculate_drift(validation_bonds, predictions, benchmark_methodology)
+                drift_metrics = self.drift_detector.calculate_drift(
+                    validation_bonds, predictions, benchmark_methodology
+                )
 
                 results.append({"params": params, "drift_metrics": drift_metrics})
 
@@ -652,7 +718,9 @@ def compare_models_against_benchmarks(
             try:
                 if hasattr(model, "predict_adjusted_value"):
                     pred = model.predict_adjusted_value(bond)
-                    value = pred.get("ml_adjusted_value", pred.get("ml_adjusted_fair_value", bond.current_price))
+                    value = pred.get(
+                        "ml_adjusted_value", pred.get("ml_adjusted_fair_value", bond.current_price)
+                    )
                 elif hasattr(model, "predict"):
                     from bondtrader.core.container import get_container
 

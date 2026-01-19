@@ -18,7 +18,17 @@ sys.path.insert(0, str(project_root))
 def create_postgresql_schema():
     """Create PostgreSQL schema directly using SQLAlchemy"""
     try:
-        from sqlalchemy import Boolean, CheckConstraint, Column, Float, ForeignKey, Integer, String, Text, create_engine
+        from sqlalchemy import (
+            Boolean,
+            CheckConstraint,
+            Column,
+            Float,
+            ForeignKey,
+            Integer,
+            String,
+            Text,
+            create_engine,
+        )
         from sqlalchemy.orm import declarative_base, sessionmaker
 
         Base = declarative_base()
@@ -45,7 +55,9 @@ def create_postgresql_schema():
             __table_args__ = (
                 CheckConstraint("face_value > 0", name="check_face_value_positive"),
                 CheckConstraint("current_price > 0", name="check_price_positive"),
-                CheckConstraint("coupon_rate >= 0 AND coupon_rate <= 1", name="check_coupon_rate_range"),
+                CheckConstraint(
+                    "coupon_rate >= 0 AND coupon_rate <= 1", name="check_coupon_rate_range"
+                ),
                 CheckConstraint("frequency >= 1 AND frequency <= 12", name="check_frequency_range"),
             )
 
@@ -53,7 +65,9 @@ def create_postgresql_schema():
             __tablename__ = "price_history"
 
             id = Column(Integer, primary_key=True, autoincrement=True)
-            bond_id = Column(String, ForeignKey("bonds.bond_id", ondelete="CASCADE"), nullable=False)
+            bond_id = Column(
+                String, ForeignKey("bonds.bond_id", ondelete="CASCADE"), nullable=False
+            )
             price = Column(Float, nullable=False)
             fair_value = Column(Float)
             timestamp = Column(String, nullable=False)
@@ -64,7 +78,9 @@ def create_postgresql_schema():
             __tablename__ = "valuations"
 
             id = Column(Integer, primary_key=True, autoincrement=True)
-            bond_id = Column(String, ForeignKey("bonds.bond_id", ondelete="CASCADE"), nullable=False)
+            bond_id = Column(
+                String, ForeignKey("bonds.bond_id", ondelete="CASCADE"), nullable=False
+            )
             fair_value = Column(Float, nullable=False)
             ytm = Column(Float, nullable=False)
             duration = Column(Float, nullable=False)
@@ -81,14 +97,17 @@ def create_postgresql_schema():
             __tablename__ = "arbitrage_opportunities"
 
             id = Column(Integer, primary_key=True, autoincrement=True)
-            bond_id = Column(String, ForeignKey("bonds.bond_id", ondelete="CASCADE"), nullable=False)
+            bond_id = Column(
+                String, ForeignKey("bonds.bond_id", ondelete="CASCADE"), nullable=False
+            )
             profit_percentage = Column(Float, nullable=False)
             recommendation = Column(String)
             timestamp = Column(String, nullable=False)
 
             __table_args__ = (
                 CheckConstraint(
-                    "profit_percentage >= -100 AND profit_percentage <= 1000", name="check_profit_percentage_range"
+                    "profit_percentage >= -100 AND profit_percentage <= 1000",
+                    name="check_profit_percentage_range",
                 ),
             )
 

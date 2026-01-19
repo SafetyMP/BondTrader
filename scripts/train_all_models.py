@@ -45,10 +45,18 @@ from bondtrader.analytics.factor_models import FactorModel
 # Import all models
 from bondtrader.config import get_config
 from bondtrader.core.bond_models import Bond, BondType
-from bondtrader.data.training_data_generator import TrainingDataGenerator, load_training_dataset, save_training_dataset
+from bondtrader.data.training_data_generator import (
+    TrainingDataGenerator,
+    load_training_dataset,
+    save_training_dataset,
+)
 from bondtrader.ml.automl import AutoMLBondAdjuster
 from bondtrader.ml.bayesian_optimization import BayesianOptimizer
-from bondtrader.ml.drift_detection import DriftDetector, ModelTuner, compare_models_against_benchmarks
+from bondtrader.ml.drift_detection import (
+    DriftDetector,
+    ModelTuner,
+    compare_models_against_benchmarks,
+)
 from bondtrader.ml.ml_adjuster import MLBondAdjuster
 from bondtrader.ml.ml_adjuster_enhanced import EnhancedMLBondAdjuster
 from bondtrader.ml.ml_advanced import AdvancedMLBondAdjuster
@@ -239,7 +247,11 @@ class ModelTrainer:
         """Save checkpoint for a model with atomic writes and file locking"""
         try:
             checkpoint_path = os.path.join(self.checkpoint_dir, f"{model_name}.joblib")
-            checkpoint_data = {"model_name": model_name, "result": result, "timestamp": datetime.now().isoformat()}
+            checkpoint_data = {
+                "model_name": model_name,
+                "result": result,
+                "timestamp": datetime.now().isoformat(),
+            }
 
             # Atomic write: save to temp file first
             temp_path = checkpoint_path + ".tmp"
@@ -320,7 +332,9 @@ class ModelTrainer:
         pbar = tqdm(total=total_steps, desc="Training Progress", unit="model")
 
         # Helper function to train a model with timing and validation
-        def train_with_timing(step_num: int, model_name: str, train_func, *args, validation_func=None, **kwargs):
+        def train_with_timing(
+            step_num: int, model_name: str, train_func, *args, validation_func=None, **kwargs
+        ):
             """
             Train a model with progress tracking, checkpointing, and validation
 
@@ -356,15 +370,21 @@ class ModelTrainer:
                             # Validation failed
                             elapsed = time.time() - step_start
                             result["status"] = "validation_failed"
-                            result["validation_error"] = validation_result.get("error", "Validation failed")
+                            result["validation_error"] = validation_result.get(
+                                "error", "Validation failed"
+                            )
                             self._save_checkpoint(model_name, result)
                             pbar.set_description(f"✗ {model_name} (validation failed)")
-                            logger.warning(f"{model_name} failed validation: {result.get('validation_error')}")
+                            logger.warning(
+                                f"{model_name} failed validation: {result.get('validation_error')}"
+                            )
                             print(f"\n  ✗ {model_name} failed validation")
                             return result
                     except Exception as validation_error:
                         # Validation function itself failed
-                        logger.warning(f"Validation function failed for {model_name}: {validation_error}")
+                        logger.warning(
+                            f"Validation function failed for {model_name}: {validation_error}"
+                        )
                         # Continue with model anyway, but log the issue
                         result["validation"] = {"passed": False, "error": str(validation_error)}
                         elapsed = time.time() - step_start
@@ -401,7 +421,10 @@ class ModelTrainer:
                         if hasattr(model, "predict_adjusted_value"):
                             pred = model.predict_adjusted_value(bond)
                             validation_predictions.append(
-                                pred.get("ml_adjusted_value", pred.get("ml_adjusted_fair_value", bond.current_price))
+                                pred.get(
+                                    "ml_adjusted_value",
+                                    pred.get("ml_adjusted_fair_value", bond.current_price),
+                                )
                             )
                             validation_actuals.append(bond.current_price)
                     except (ValueError, KeyError, AttributeError) as e:
@@ -426,14 +449,18 @@ class ModelTrainer:
         def train_ml_adjuster():
             ml_adjuster = MLBondAdjuster(model_type=self.config.ml_model_type)
             ml_metrics = ml_adjuster.train(
-                self.train_bonds, test_size=self.config.ml_test_size, random_state=self.config.ml_random_state
+                self.train_bonds,
+                test_size=self.config.ml_test_size,
+                random_state=self.config.ml_random_state,
             )
             result = {"metrics": ml_metrics, "model": ml_adjuster, "status": "success"}
             print(f"  ✓ Train R²: {ml_metrics['train_r2']:.4f}")
             print(f"  ✓ Test R²: {ml_metrics['test_r2']:.4f}")
             return result
 
-        results["ml_adjuster"] = train_with_timing(1, "ml_adjuster", train_ml_adjuster, validation_func=validate_ml_model)
+        results["ml_adjuster"] = train_with_timing(
+            1, "ml_adjuster", train_ml_adjuster, validation_func=validate_ml_model
+        )
 
         # 2. Enhanced ML Adjuster
         print("\n[2/9] Training Enhanced ML Adjuster...")
@@ -445,10 +472,16 @@ class ModelTrainer:
                 random_state=self.config.ml_random_state,
                 tune_hyperparameters=True,
             )
-            results["enhanced_ml_adjuster"] = {"metrics": enhanced_metrics, "model": enhanced_ml, "status": "success"}
+            results["enhanced_ml_adjuster"] = {
+                "metrics": enhanced_metrics,
+                "model": enhanced_ml,
+                "status": "success",
+            }
             print(f"  ✓ Train R²: {enhanced_metrics['train_r2']:.4f}")
             print(f"  ✓ Test R²: {enhanced_metrics['test_r2']:.4f}")
-            print(f"  ✓ CV R²: {enhanced_metrics['cv_r2_mean']:.4f} ± {enhanced_metrics['cv_r2_std']:.4f}")
+            print(
+                f"  ✓ CV R²: {enhanced_metrics['cv_r2_mean']:.4f} ± {enhanced_metrics['cv_r2_std']:.4f}"
+            )
         except Exception as e:
             results["enhanced_ml_adjuster"] = {"status": "failed", "error": str(e)}
             print(f"  ✗ Failed: {e}")
@@ -458,9 +491,15 @@ class ModelTrainer:
         try:
             advanced_ml = AdvancedMLBondAdjuster(self.valuator)
             ensemble_metrics = advanced_ml.train_ensemble(
-                self.train_bonds, test_size=self.config.ml_test_size, random_state=self.config.ml_random_state
+                self.train_bonds,
+                test_size=self.config.ml_test_size,
+                random_state=self.config.ml_random_state,
             )
-            results["advanced_ml_adjuster"] = {"metrics": ensemble_metrics, "model": advanced_ml, "status": "success"}
+            results["advanced_ml_adjuster"] = {
+                "metrics": ensemble_metrics,
+                "model": advanced_ml,
+                "status": "success",
+            }
             print(f"  ✓ Ensemble Test R²: {ensemble_metrics['ensemble_metrics']['test_r2']:.4f}")
             print(f"  ✓ Improvement over best: {ensemble_metrics['improvement_over_best']:.4f}")
         except Exception as e:
@@ -473,7 +512,12 @@ class ModelTrainer:
             automl = AutoMLBondAdjuster(self.valuator)
             automl_results = automl.automated_model_selection(
                 self.train_bonds,
-                candidate_models=["random_forest", "gradient_boosting", "neural_network", "ensemble"],
+                candidate_models=[
+                    "random_forest",
+                    "gradient_boosting",
+                    "neural_network",
+                    "ensemble",
+                ],
                 max_evaluation_time=300,
             )
             results["automl"] = {"results": automl_results, "model": automl, "status": "success"}
@@ -487,11 +531,19 @@ class ModelTrainer:
         print("\n[5/9] Training Regime Detector...")
         try:
             regime_detector = RegimeDetector(self.valuator)
-            regime_results = regime_detector.detect_regimes(self.train_bonds, num_regimes=4, method="kmeans")
-            results["regime_detector"] = {"results": regime_results, "model": regime_detector, "status": "success"}
+            regime_results = regime_detector.detect_regimes(
+                self.train_bonds, num_regimes=4, method="kmeans"
+            )
+            results["regime_detector"] = {
+                "results": regime_results,
+                "model": regime_detector,
+                "status": "success",
+            }
             print(f"  ✓ Detected {regime_results['num_regimes']} regimes")
             for regime_name, regime_info in regime_results["regime_analysis"].items():
-                print(f"    - {regime_name}: {regime_info['num_bonds']} bonds, {regime_info['regime_type']}")
+                print(
+                    f"    - {regime_name}: {regime_info['num_bonds']} bonds, {regime_info['regime_type']}"
+                )
         except Exception as e:
             results["regime_detector"] = {"status": "failed", "error": str(e)}
             print(f"  ✗ Failed: {e}")
@@ -500,10 +552,18 @@ class ModelTrainer:
         print("\n[6/9] Training Factor Model...")
         try:
             factor_model = FactorModel(self.valuator)
-            factor_results = factor_model.extract_bond_factors(self.train_bonds, num_factors=None)  # Auto-select
-            results["factor_model"] = {"results": factor_results, "model": factor_model, "status": "success"}
+            factor_results = factor_model.extract_bond_factors(
+                self.train_bonds, num_factors=None
+            )  # Auto-select
+            results["factor_model"] = {
+                "results": factor_results,
+                "model": factor_model,
+                "status": "success",
+            }
             print(f"  ✓ Extracted {factor_results['num_factors']} factors")
-            print(f"  ✓ Explained variance: {sum(factor_results['explained_variance'][:3]):.1%} (top 3)")
+            print(
+                f"  ✓ Explained variance: {sum(factor_results['explained_variance'][:3]):.1%} (top 3)"
+            )
         except Exception as e:
             results["factor_model"] = {"status": "failed", "error": str(e)}
             print(f"  ✗ Failed: {e}")
@@ -516,7 +576,9 @@ class ModelTrainer:
             sample_bonds = self.train_bonds[:100]
             weights = [1.0 / len(sample_bonds)] * len(sample_bonds)
 
-            cvar_result = tail_risk.calculate_cvar(sample_bonds, weights=weights, confidence_level=0.95, method="monte_carlo")
+            cvar_result = tail_risk.calculate_cvar(
+                sample_bonds, weights=weights, confidence_level=0.95, method="monte_carlo"
+            )
             results["tail_risk"] = {"cvar": cvar_result, "model": tail_risk, "status": "success"}
             print(f"  ✓ CVaR (95%): {cvar_result['cvar_pct']:.2f}%")
             print(f"  ✓ Tail Ratio: {cvar_result['tail_ratio']:.2f}")
@@ -533,7 +595,11 @@ class ModelTrainer:
             opt_results = bayesian_opt.optimize_hyperparameters(
                 sample_bonds, param_bounds={"n_estimators": (50, 200)}, num_iterations=20
             )
-            results["bayesian_optimizer"] = {"results": opt_results, "model": bayesian_opt, "status": "success"}
+            results["bayesian_optimizer"] = {
+                "results": opt_results,
+                "model": bayesian_opt,
+                "status": "success",
+            }
             print(f"  ✓ Optimal parameters: {opt_results['optimal_parameters']}")
             print(f"  ✓ Best R²: {opt_results['best_value']:.4f}")
         except Exception as e:
@@ -577,7 +643,12 @@ class ModelTrainer:
 
         # Evaluate ML models
         for model_name, model_data in trained_models.items():
-            if model_name in ["ml_adjuster", "enhanced_ml_adjuster", "advanced_ml_adjuster", "automl"]:
+            if model_name in [
+                "ml_adjuster",
+                "enhanced_ml_adjuster",
+                "advanced_ml_adjuster",
+                "automl",
+            ]:
                 if model_data.get("status") == "success" and "model" in model_data:
                     try:
                         model = model_data["model"]
@@ -589,7 +660,10 @@ class ModelTrainer:
                                 if hasattr(model, "predict_adjusted_value"):
                                     pred = model.predict_adjusted_value(bond)
                                     test_predictions.append(
-                                        pred.get("ml_adjusted_value", pred.get("ml_adjusted_fair_value", bond.current_price))
+                                        pred.get(
+                                            "ml_adjusted_value",
+                                            pred.get("ml_adjusted_fair_value", bond.current_price),
+                                        )
                                     )
                                 elif hasattr(model, "predict"):
                                     # Direct prediction
@@ -606,7 +680,11 @@ class ModelTrainer:
                                 continue
 
                         if len(test_predictions) > 0:
-                            from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+                            from sklearn.metrics import (
+                                mean_absolute_error,
+                                mean_squared_error,
+                                r2_score,
+                            )
 
                             mse = mean_squared_error(test_actuals, test_predictions)
                             rmse = np.sqrt(mse)
@@ -712,7 +790,10 @@ class ModelTrainer:
                     try:
                         if hasattr(model, "predict_adjusted_value"):
                             pred = model.predict_adjusted_value(bond)
-                            value = pred.get("ml_adjusted_value", pred.get("ml_adjusted_fair_value", bond.current_price))
+                            value = pred.get(
+                                "ml_adjusted_value",
+                                pred.get("ml_adjusted_fair_value", bond.current_price),
+                            )
                         elif hasattr(model, "predict"):
                             fair_value = self.valuator.calculate_fair_value(bond)
                             features = np.array([[bond.coupon_rate, bond.time_to_maturity]])
@@ -741,7 +822,10 @@ class ModelTrainer:
                     except Exception as e:
                         continue
 
-                drift_analysis[model_name] = {"consensus_drift": drift_metrics, "individual_drifts": individual_drifts}
+                drift_analysis[model_name] = {
+                    "consensus_drift": drift_metrics,
+                    "individual_drifts": individual_drifts,
+                }
 
                 print(f"    Consensus Drift Score: {drift_metrics.drift_score:.4f}")
                 print(f"    RMSE vs. Consensus: {drift_metrics.root_mean_squared_error:.2f}")
@@ -791,7 +875,10 @@ class ModelTrainer:
                     for bond in validation_bonds:
                         try:
                             pred = model.predict_adjusted_value(bond)
-                            value = pred.get("ml_adjusted_value", pred.get("ml_adjusted_fair_value", bond.current_price))
+                            value = pred.get(
+                                "ml_adjusted_value",
+                                pred.get("ml_adjusted_fair_value", bond.current_price),
+                            )
                             predictions.append(value)
                         except (ValueError, AttributeError, KeyError) as e:
                             # Fallback to current price if prediction fails
@@ -816,7 +903,10 @@ class ModelTrainer:
                     for bond in validation_bonds:
                         try:
                             pred = model.predict_adjusted_value(bond)
-                            value = pred.get("ml_adjusted_value", pred.get("ml_adjusted_fair_value", bond.current_price))
+                            value = pred.get(
+                                "ml_adjusted_value",
+                                pred.get("ml_adjusted_fair_value", bond.current_price),
+                            )
                             predictions.append(value)
                         except (ValueError, AttributeError, KeyError) as e:
                             # Fallback to current price if prediction fails
@@ -857,7 +947,9 @@ def main() -> None:
 
     # Initialize trainer
     default_dataset_path = os.path.join(config.data_dir, "training_dataset.joblib")
-    trainer = ModelTrainer(dataset_path=default_dataset_path, generate_new=False)  # Set to True to generate new dataset
+    trainer = ModelTrainer(
+        dataset_path=default_dataset_path, generate_new=False
+    )  # Set to True to generate new dataset
 
     # Train all models
     results = trainer.train_all_models()
@@ -907,7 +999,9 @@ def main() -> None:
 
         if drift_scores:
             best_model = min(drift_scores, key=drift_scores.get)
-            print(f"\n✓ Best model (lowest drift): {best_model} (drift score: {drift_scores[best_model]:.4f})")
+            print(
+                f"\n✓ Best model (lowest drift): {best_model} (drift score: {drift_scores[best_model]:.4f})"
+            )
 
     # Print tuning results summary
     if "tuned_models" in results:

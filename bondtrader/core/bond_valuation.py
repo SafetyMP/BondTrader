@@ -32,7 +32,11 @@ class BondValuator:
         self._cache_size_limit = 10000
 
     def calculate_yield_to_maturity(
-        self, bond: Bond, market_price: Optional[float] = None, tolerance: float = 1e-6, max_iterations: int = 100
+        self,
+        bond: Bond,
+        market_price: Optional[float] = None,
+        tolerance: float = 1e-6,
+        max_iterations: int = 100,
     ) -> float:
         """
         Calculate Yield to Maturity using Newton-Raphson method
@@ -102,9 +106,13 @@ class BondValuator:
 
             # Vectorized derivative calculation (optimized)
             if periods > 0:
-                derivative_array = periods_array / (freq_ytm * ((1 + ytm / freq_ytm) ** (periods_array + 1)))
+                derivative_array = periods_array / (
+                    freq_ytm * ((1 + ytm / freq_ytm) ** (periods_array + 1))
+                )
                 derivative = -np.sum(coupon_payment * derivative_array)
-                derivative -= (periods * bond.face_value) / (freq_ytm * ((1 + ytm / freq_ytm) ** (periods + 1)))
+                derivative -= (periods * bond.face_value) / (
+                    freq_ytm * ((1 + ytm / freq_ytm) ** (periods + 1))
+                )
             else:
                 derivative = -1e-10
 
@@ -128,7 +136,10 @@ class BondValuator:
         return ytm
 
     def calculate_fair_value(
-        self, bond: Bond, required_yield: Optional[float] = None, risk_free_rate: Optional[float] = None
+        self,
+        bond: Bond,
+        required_yield: Optional[float] = None,
+        risk_free_rate: Optional[float] = None,
     ) -> float:
         """
         Calculate theoretical fair value of a bond with comprehensive validation.
@@ -162,10 +173,14 @@ class BondValuator:
         # Validate risk-free rate if provided
         if risk_free_rate is not None:
             if risk_free_rate < 0 or risk_free_rate > 1:
-                raise InvalidBondError(f"Risk-free rate must be between 0 and 1, got {risk_free_rate}")
+                raise InvalidBondError(
+                    f"Risk-free rate must be between 0 and 1, got {risk_free_rate}"
+                )
         if required_yield is not None:
             if required_yield < 0 or required_yield > 1:
-                raise InvalidBondError(f"Required yield must be between 0 and 1, got {required_yield}")
+                raise InvalidBondError(
+                    f"Required yield must be between 0 and 1, got {required_yield}"
+                )
 
         rf_rate = risk_free_rate if risk_free_rate is not None else self.risk_free_rate
         time_to_maturity = bond.time_to_maturity
@@ -188,7 +203,9 @@ class BondValuator:
 
                 fr_pricer = FloatingRateBondPricer(self)
                 next_reset = bond.maturity_date - timedelta(days=182)  # Approximate
-                fr_result = fr_pricer.price_floating_rate_bond(bond, next_reset, use_multi_curve=False)
+                fr_result = fr_pricer.price_floating_rate_bond(
+                    bond, next_reset, use_multi_curve=False
+                )
                 return fr_result.get("clean_price", bond.face_value)
             except ImportError:
                 # Fallback: floating rate bonds trade near par
@@ -215,18 +232,28 @@ class BondValuator:
             pv_coupons = 0
 
         # Present value of face value
-        pv_face = bond.face_value / ((1 + required_ytm / bond.frequency) ** periods) if periods > 0 else bond.face_value
+        pv_face = (
+            bond.face_value / ((1 + required_ytm / bond.frequency) ** periods)
+            if periods > 0
+            else bond.face_value
+        )
 
         fair_value = pv_coupons + pv_face
 
         # CRITICAL: Output validation and anomaly detection
         if fair_value <= 0:
-            raise CalculationError(f"Invalid fair value calculated: {fair_value}. Must be positive.")
+            raise CalculationError(
+                f"Invalid fair value calculated: {fair_value}. Must be positive."
+            )
         if not np.isfinite(fair_value):
             raise CalculationError(f"Fair value is not finite: {fair_value}")
 
         # Anomaly detection: Flag suspicious deviations (>50% from market price)
-        deviation_pct = abs(fair_value - bond.current_price) / bond.current_price if bond.current_price > 0 else 0
+        deviation_pct = (
+            abs(fair_value - bond.current_price) / bond.current_price
+            if bond.current_price > 0
+            else 0
+        )
         if deviation_pct > 0.5:  # More than 50% deviation
             logger.warning(
                 f"Large deviation detected for bond {bond.bond_id}: "
@@ -348,7 +375,9 @@ class BondValuator:
             discount_factors = (1 + ytm / bond.frequency) ** periods_array
             pv_coupons = coupon_payment / discount_factors
             convexity_factor = 1 / ((1 + ytm / bond.frequency) ** 2)
-            convexity_sum = np.sum(periods_array * (periods_array + 1) * pv_coupons * convexity_factor)
+            convexity_sum = np.sum(
+                periods_array * (periods_array + 1) * pv_coupons * convexity_factor
+            )
             pv_sum = np.sum(pv_coupons)
         else:
             convexity_sum = 0
@@ -435,7 +464,9 @@ class BondValuator:
         if self._calculation_cache is not None:
             self._calculation_cache.clear()
 
-    def batch_calculate_ytm(self, bonds: List[Bond], market_prices: Optional[List[float]] = None) -> np.ndarray:
+    def batch_calculate_ytm(
+        self, bonds: List[Bond], market_prices: Optional[List[float]] = None
+    ) -> np.ndarray:
         """
         Batch calculate YTM for multiple bonds (vectorized where possible)
 
@@ -449,10 +480,17 @@ class BondValuator:
         if market_prices is None:
             market_prices = [b.current_price for b in bonds]
 
-        ytms = np.array([self.calculate_yield_to_maturity(bond, price) for bond, price in zip(bonds, market_prices)])
+        ytms = np.array(
+            [
+                self.calculate_yield_to_maturity(bond, price)
+                for bond, price in zip(bonds, market_prices)
+            ]
+        )
         return ytms
 
-    def batch_calculate_duration(self, bonds: List[Bond], ytms: Optional[np.ndarray] = None) -> np.ndarray:
+    def batch_calculate_duration(
+        self, bonds: List[Bond], ytms: Optional[np.ndarray] = None
+    ) -> np.ndarray:
         """
         Batch calculate duration for multiple bonds
 

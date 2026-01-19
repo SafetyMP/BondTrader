@@ -143,7 +143,9 @@ class FeatureStore:
         logger.info(f"Registered feature set: {feature_name} version {version_id}")
         return version_id
 
-    def get_feature_set(self, feature_name: str, version: str = "latest") -> Tuple[np.ndarray, List[str], Dict[str, Any]]:
+    def get_feature_set(
+        self, feature_name: str, version: str = "latest"
+    ) -> Tuple[np.ndarray, List[str], Dict[str, Any]]:
         """
         Get feature set from store
 
@@ -225,7 +227,9 @@ class FeatureStore:
 
         return lineage
 
-    def serve_features_online(self, bond_ids: List[str], feature_name: str, version: str = "latest") -> pd.DataFrame:
+    def serve_features_online(
+        self, bond_ids: List[str], feature_name: str, version: str = "latest"
+    ) -> pd.DataFrame:
         """
         Serve features for online prediction (cached)
 

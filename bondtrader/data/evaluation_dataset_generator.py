@@ -318,7 +318,9 @@ class EvaluationDatasetGenerator:
             scenario = self.evaluation_scenarios[scenario_name]
             print(f"\n  Processing: {scenario.scenario_name}")
 
-            scenario_data = self._generate_scenario_data(evaluation_bonds, scenario, start_date, end_date, point_in_time)
+            scenario_data = self._generate_scenario_data(
+                evaluation_bonds, scenario, start_date, end_date, point_in_time
+            )
 
             evaluation_results[scenario_name] = scenario_data
 
@@ -334,7 +336,9 @@ class EvaluationDatasetGenerator:
 
         # Generate metadata and audit trail
         print("\n[5/6] Generating metadata and audit trail...")
-        metadata = self._generate_evaluation_metadata(evaluation_results, scenarios, date_range, point_in_time)
+        metadata = self._generate_evaluation_metadata(
+            evaluation_results, scenarios, date_range, point_in_time
+        )
 
         # Calculate summary statistics
         print("\n[6/6] Calculating summary statistics...")
@@ -382,7 +386,13 @@ class EvaluationDatasetGenerator:
         ]
 
         # Bond type distribution
-        bond_types = [BondType.TREASURY, BondType.CORPORATE, BondType.HIGH_YIELD, BondType.FIXED_RATE, BondType.ZERO_COUPON]
+        bond_types = [
+            BondType.TREASURY,
+            BondType.CORPORATE,
+            BondType.HIGH_YIELD,
+            BondType.FIXED_RATE,
+            BondType.ZERO_COUPON,
+        ]
 
         # Maturity distribution
         maturity_ranges = [(0.5, 2), (2, 5), (5, 10), (10, 20), (20, 30)]
@@ -437,7 +447,9 @@ class EvaluationDatasetGenerator:
             elif bond_type == BondType.HIGH_YIELD:
                 coupon_rate = np.random.uniform(6.0, 12.0)
             else:
-                base_coupon = 2.0 if rating.startswith("A") else 3.0 if rating.startswith("BBB") else 5.0
+                base_coupon = (
+                    2.0 if rating.startswith("A") else 3.0 if rating.startswith("BBB") else 5.0
+                )
                 coupon_rate = np.random.uniform(base_coupon, base_coupon + 2.0)
 
             # Issuer
@@ -479,7 +491,12 @@ class EvaluationDatasetGenerator:
         return bonds
 
     def _generate_scenario_data(
-        self, bonds: List[Bond], scenario: EvaluationScenario, start_date: datetime, end_date: datetime, point_in_time: bool
+        self,
+        bonds: List[Bond],
+        scenario: EvaluationScenario,
+        start_date: datetime,
+        end_date: datetime,
+        point_in_time: bool,
     ) -> Dict:
         """Generate evaluation data for a specific scenario"""
         scenario_bonds = []
@@ -509,7 +526,9 @@ class EvaluationDatasetGenerator:
             sentiment_impact = scenario.market_sentiment * 0.01
 
             # Market price under scenario
-            market_price = fair_value * (1 + liquidity_noise + sentiment_impact + np.random.normal(0, volatility * 0.5))
+            market_price = fair_value * (
+                1 + liquidity_noise + sentiment_impact + np.random.normal(0, volatility * 0.5)
+            )
             market_price = np.clip(market_price, fair_value * 0.5, fair_value * 1.5)
 
             # Create bond copy with scenario price
@@ -564,14 +583,30 @@ class EvaluationDatasetGenerator:
 
     def _generate_benchmark_comparisons(self, bonds: List[Bond]) -> Dict:
         """Generate benchmark price comparisons for all bonds"""
-        benchmarks = {"bloomberg": [], "aladdin": [], "goldman": [], "jpmorgan": [], "consensus": []}
+        benchmarks = {
+            "bloomberg": [],
+            "aladdin": [],
+            "goldman": [],
+            "jpmorgan": [],
+            "consensus": [],
+        }
 
         for bond in bonds:
-            benchmarks["bloomberg"].append(self.benchmark_generator.generate_bloomberg_benchmark(bond).predicted_value)
-            benchmarks["aladdin"].append(self.benchmark_generator.generate_aladdin_benchmark(bond).predicted_value)
-            benchmarks["goldman"].append(self.benchmark_generator.generate_goldman_benchmark(bond).predicted_value)
-            benchmarks["jpmorgan"].append(self.benchmark_generator.generate_jpmorgan_benchmark(bond).predicted_value)
-            benchmarks["consensus"].append(self.benchmark_generator.generate_consensus_benchmark(bond).predicted_value)
+            benchmarks["bloomberg"].append(
+                self.benchmark_generator.generate_bloomberg_benchmark(bond).predicted_value
+            )
+            benchmarks["aladdin"].append(
+                self.benchmark_generator.generate_aladdin_benchmark(bond).predicted_value
+            )
+            benchmarks["goldman"].append(
+                self.benchmark_generator.generate_goldman_benchmark(bond).predicted_value
+            )
+            benchmarks["jpmorgan"].append(
+                self.benchmark_generator.generate_jpmorgan_benchmark(bond).predicted_value
+            )
+            benchmarks["consensus"].append(
+                self.benchmark_generator.generate_consensus_benchmark(bond).predicted_value
+            )
 
         return benchmarks
 
@@ -613,12 +648,17 @@ class EvaluationDatasetGenerator:
 
         total_scenarios = len(scenarios_to_eval)
         scenario_iter = tqdm(
-            scenarios_to_eval.items(), desc="Evaluating scenarios", total=total_scenarios, disable=not TQDM_AVAILABLE
+            scenarios_to_eval.items(),
+            desc="Evaluating scenarios",
+            total=total_scenarios,
+            disable=not TQDM_AVAILABLE,
         )
 
         for sc_name, scenario_data in scenario_iter:
             if TQDM_AVAILABLE:
-                scenario_iter.set_description(f"Scenario: {scenario_data['scenario'].scenario_name[:30]}")
+                scenario_iter.set_description(
+                    f"Scenario: {scenario_data['scenario'].scenario_name[:30]}"
+                )
 
             # Check for bonds - if missing, try to get them or raise helpful error
             if "bonds" not in scenario_data or not scenario_data["bonds"]:
@@ -646,7 +686,9 @@ class EvaluationDatasetGenerator:
             predictions = np.array(predictions)
 
             # Calculate comprehensive metrics
-            metrics = self._calculate_evaluation_metrics(bonds, predictions, actual_prices, scenario_data)
+            metrics = self._calculate_evaluation_metrics(
+                bonds, predictions, actual_prices, scenario_data
+            )
 
             results[sc_name] = metrics
 
@@ -689,7 +731,9 @@ class EvaluationDatasetGenerator:
 
         return predictions.tolist()
 
-    def _predict_parallel(self, model, bonds: List[Bond], max_workers: Optional[int], batch_size: int) -> List[float]:
+    def _predict_parallel(
+        self, model, bonds: List[Bond], max_workers: Optional[int], batch_size: int
+    ) -> List[float]:
         """Parallel prediction processing (optimized)"""
         from datetime import datetime
 
@@ -703,7 +747,9 @@ class EvaluationDatasetGenerator:
             try:
                 if hasattr(model, "predict_adjusted_value"):
                     pred = model.predict_adjusted_value(bond)
-                    return pred.get("ml_adjusted_value", pred.get("ml_adjusted_fair_value", bond.current_price))
+                    return pred.get(
+                        "ml_adjusted_value", pred.get("ml_adjusted_fair_value", bond.current_price)
+                    )
                 elif hasattr(model, "predict"):
                     # OPTIMIZED: Use cached current_time to avoid multiple datetime.now() calls
                     char = bond.get_bond_characteristics(current_time=current_time)
@@ -728,7 +774,11 @@ class EvaluationDatasetGenerator:
         predictions = []
         bond_batches = [bonds[i : i + batch_size] for i in range(0, len(bonds), batch_size)]
 
-        for batch in tqdm(bond_batches, desc="Processing batches", disable=not TQDM_AVAILABLE or len(bond_batches) < 5):
+        for batch in tqdm(
+            bond_batches,
+            desc="Processing batches",
+            disable=not TQDM_AVAILABLE or len(bond_batches) < 5,
+        ):
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
                 batch_predictions = list(executor.map(predict_single, batch))
             predictions.extend(batch_predictions)
@@ -745,12 +795,19 @@ class EvaluationDatasetGenerator:
         # OPTIMIZED: Cache current_time for consistent datetime usage across batch
         current_time = datetime.now()
 
-        for batch in tqdm(bond_batches, desc="Processing bonds", disable=not TQDM_AVAILABLE or len(bond_batches) < 5):
+        for batch in tqdm(
+            bond_batches,
+            desc="Processing bonds",
+            disable=not TQDM_AVAILABLE or len(bond_batches) < 5,
+        ):
             for bond in batch:
                 try:
                     if hasattr(model, "predict_adjusted_value"):
                         pred = model.predict_adjusted_value(bond)
-                        value = pred.get("ml_adjusted_value", pred.get("ml_adjusted_fair_value", bond.current_price))
+                        value = pred.get(
+                            "ml_adjusted_value",
+                            pred.get("ml_adjusted_fair_value", bond.current_price),
+                        )
                     elif hasattr(model, "predict"):
                         # OPTIMIZED: Use cached current_time to avoid multiple datetime.now() calls
                         char = bond.get_bond_characteristics(current_time=current_time)
@@ -765,7 +822,11 @@ class EvaluationDatasetGenerator:
                             ]
                         )
                         pred_value = model.predict(features)[0]
-                        value = bond.current_price * pred_value if pred_value > 0 else bond.current_price
+                        value = (
+                            bond.current_price * pred_value
+                            if pred_value > 0
+                            else bond.current_price
+                        )
                     else:
                         value = bond.current_price
                     predictions.append(value)
@@ -775,7 +836,11 @@ class EvaluationDatasetGenerator:
         return predictions
 
     def _calculate_evaluation_metrics(
-        self, bonds: List[Bond], predictions: np.ndarray, actual_prices: np.ndarray, scenario_data: Dict
+        self,
+        bonds: List[Bond],
+        predictions: np.ndarray,
+        actual_prices: np.ndarray,
+        scenario_data: Dict,
     ) -> EvaluationMetrics:
         """Calculate comprehensive evaluation metrics"""
         from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
@@ -789,7 +854,12 @@ class EvaluationDatasetGenerator:
         non_zero_mask = actual_prices != 0
         if np.any(non_zero_mask):
             mape = (
-                np.mean(np.abs((actual_prices[non_zero_mask] - predictions[non_zero_mask]) / actual_prices[non_zero_mask]))
+                np.mean(
+                    np.abs(
+                        (actual_prices[non_zero_mask] - predictions[non_zero_mask])
+                        / actual_prices[non_zero_mask]
+                    )
+                )
                 * 100
             )
         else:
@@ -820,11 +890,21 @@ class EvaluationDatasetGenerator:
             sharpe = 0.0
 
         # Benchmark comparisons
-        drift_bloomberg = self.drift_detector.calculate_drift(bonds, predictions, benchmark_methodology="bloomberg")
-        drift_aladdin = self.drift_detector.calculate_drift(bonds, predictions, benchmark_methodology="aladdin")
-        drift_goldman = self.drift_detector.calculate_drift(bonds, predictions, benchmark_methodology="goldman")
-        drift_jpmorgan = self.drift_detector.calculate_drift(bonds, predictions, benchmark_methodology="jpmorgan")
-        drift_consensus = self.drift_detector.calculate_drift(bonds, predictions, benchmark_methodology="consensus")
+        drift_bloomberg = self.drift_detector.calculate_drift(
+            bonds, predictions, benchmark_methodology="bloomberg"
+        )
+        drift_aladdin = self.drift_detector.calculate_drift(
+            bonds, predictions, benchmark_methodology="aladdin"
+        )
+        drift_goldman = self.drift_detector.calculate_drift(
+            bonds, predictions, benchmark_methodology="goldman"
+        )
+        drift_jpmorgan = self.drift_detector.calculate_drift(
+            bonds, predictions, benchmark_methodology="jpmorgan"
+        )
+        drift_consensus = self.drift_detector.calculate_drift(
+            bonds, predictions, benchmark_methodology="consensus"
+        )
 
         # Distribution metrics
         errors = predictions - actual_prices
@@ -834,7 +914,9 @@ class EvaluationDatasetGenerator:
 
         # Tail risk metrics
         error_percentiles = np.percentile(np.abs(errors), [95, 99])
-        tail_loss_ratio = error_percentiles[0] / np.mean(np.abs(errors)) if np.mean(np.abs(errors)) > 0 else 1.0
+        tail_loss_ratio = (
+            error_percentiles[0] / np.mean(np.abs(errors)) if np.mean(np.abs(errors)) > 0 else 1.0
+        )
         extreme_error_count = np.sum(np.abs(errors) > error_percentiles[1])
 
         return EvaluationMetrics(
@@ -881,7 +963,9 @@ class EvaluationDatasetGenerator:
                 "price_range": (np.min(actual_prices), np.max(actual_prices)),
                 "price_mean": np.mean(actual_prices),
                 "price_std": np.std(actual_prices),
-                "fair_value_range": (np.min(fair_values), np.max(fair_values)) if len(fair_values) > 0 else (0, 0),
+                "fair_value_range": (
+                    (np.min(fair_values), np.max(fair_values)) if len(fair_values) > 0 else (0, 0)
+                ),
             }
 
             quality_checks[scenario_name] = checks
@@ -907,7 +991,9 @@ class EvaluationDatasetGenerator:
             },
             "scenarios_included": scenarios,
             "total_bonds": sum(
-                len(sc["bonds"]) for sc in evaluation_results.values() if isinstance(sc, dict) and "bonds" in sc
+                len(sc["bonds"])
+                for sc in evaluation_results.values()
+                if isinstance(sc, dict) and "bonds" in sc
             ),
             "evaluation_standards": [
                 "Model Risk Management (MRM) compliance",
@@ -979,9 +1065,14 @@ def save_evaluation_dataset(dataset: Dict, filepath: str):
                             if isinstance(sc_data["fair_values"], np.ndarray)
                             else sc_data["fair_values"]
                         ),
-                        "benchmark_prices": {k: [float(p) for p in v] for k, v in sc_data["benchmark_prices"].items()},
+                        "benchmark_prices": {
+                            k: [float(p) for p in v] for k, v in sc_data["benchmark_prices"].items()
+                        },
                         "num_bonds": sc_data["num_bonds"],
-                        "date_range": (sc_data["date_range"][0].isoformat(), sc_data["date_range"][1].isoformat()),
+                        "date_range": (
+                            sc_data["date_range"][0].isoformat(),
+                            sc_data["date_range"][1].isoformat(),
+                        ),
                         "point_in_time": sc_data["point_in_time"],
                     }
             serializable_dataset[key] = serializable_scenarios

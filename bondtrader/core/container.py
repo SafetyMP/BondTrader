@@ -64,7 +64,9 @@ class ServiceContainer:
             Shared BondValuator instance
         """
         if self._valuator is None:
-            rfr = risk_free_rate if risk_free_rate is not None else self.config.default_risk_free_rate
+            rfr = (
+                risk_free_rate if risk_free_rate is not None else self.config.default_risk_free_rate
+            )
             self._valuator = BondValuator(risk_free_rate=rfr)
         elif risk_free_rate is not None and self._valuator.risk_free_rate != risk_free_rate:
             # Update risk-free rate if different

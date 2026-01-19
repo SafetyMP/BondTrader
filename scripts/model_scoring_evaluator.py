@@ -60,10 +60,17 @@ class ModelPerformanceScorer:
     def __init__(self):
         """Initialize scorer"""
         # Scoring weights (must sum to 1.0)
-        self.weights = {"prediction_accuracy": 0.40, "benchmark_drift": 0.30, "correlation": 0.15, "stress_performance": 0.15}
+        self.weights = {
+            "prediction_accuracy": 0.40,
+            "benchmark_drift": 0.30,
+            "correlation": 0.15,
+            "stress_performance": 0.15,
+        }
 
     def calculate_model_score(
-        self, evaluation_results: Dict[str, EvaluationMetrics], scenario_type_weights: Optional[Dict[str, float]] = None
+        self,
+        evaluation_results: Dict[str, EvaluationMetrics],
+        scenario_type_weights: Optional[Dict[str, float]] = None,
     ) -> Dict:
         """
         Calculate comprehensive score for a model across all scenarios
@@ -76,7 +83,12 @@ class ModelPerformanceScorer:
             Dictionary with overall score and component scores
         """
         if scenario_type_weights is None:
-            scenario_type_weights = {"normal": 0.30, "stress": 0.35, "crisis": 0.20, "sensitivity": 0.15}
+            scenario_type_weights = {
+                "normal": 0.30,
+                "stress": 0.35,
+                "crisis": 0.20,
+                "sensitivity": 0.15,
+            }
 
         # Calculate component scores for each scenario
         scenario_scores = {}
@@ -264,7 +276,9 @@ class ModelEvaluator:
     evaluates models, and creates performance scores.
     """
 
-    def __init__(self, model_dir: str = "trained_models", evaluation_data_dir: str = "evaluation_data"):
+    def __init__(
+        self, model_dir: str = "trained_models", evaluation_data_dir: str = "evaluation_data"
+    ):
         """Initialize evaluator"""
         self.model_dir = model_dir
         self.evaluation_data_dir = evaluation_data_dir
@@ -380,7 +394,11 @@ class ModelEvaluator:
             # Use fewer scenarios for faster execution
             evaluation_dataset = generator.generate_evaluation_dataset(
                 num_bonds=num_bonds,
-                scenarios=["normal_market", "rate_shock_up_200bps", "credit_spread_widening"],  # Reduced scenarios
+                scenarios=[
+                    "normal_market",
+                    "rate_shock_up_200bps",
+                    "credit_spread_widening",
+                ],  # Reduced scenarios
                 include_benchmarks=True,
                 point_in_time=True,
             )
@@ -451,7 +469,10 @@ class ModelEvaluator:
                         print(f"  ⚠️  Bonds missing for {scenario_name}, regenerating dataset...")
                         generator = EvaluationDatasetGenerator(seed=42)
                         evaluation_dataset = generator.generate_evaluation_dataset(
-                            num_bonds=1000, scenarios=[scenario_name], include_benchmarks=True, point_in_time=True
+                            num_bonds=1000,
+                            scenarios=[scenario_name],
+                            include_benchmarks=True,
+                            point_in_time=True,
                         )
                         break
 
@@ -490,7 +511,9 @@ class ModelEvaluator:
 
         if use_parallel and len(models) > 1:
             # Parallel model evaluation
-            all_results = self._evaluate_models_parallel(models, evaluation_dataset, eval_generator, max_workers, batch_size)
+            all_results = self._evaluate_models_parallel(
+                models, evaluation_dataset, eval_generator, max_workers, batch_size
+            )
         else:
             # Sequential evaluation with progress tracking
             model_items = list(models.items())
@@ -525,10 +548,17 @@ class ModelEvaluator:
                     }
 
                     if TQDM_AVAILABLE:
-                        model_iter.set_postfix({"score": f"{score_result['overall_score']:.1f}", "time": f"{model_time:.1f}s"})
+                        model_iter.set_postfix(
+                            {
+                                "score": f"{score_result['overall_score']:.1f}",
+                                "time": f"{model_time:.1f}s",
+                            }
+                        )
                     else:
                         print(f"    ✓ Overall Score: {score_result['overall_score']:.2f}/100")
-                        print(f"    ✓ Accuracy Component: {score_result['accuracy_component']:.2f}/100")
+                        print(
+                            f"    ✓ Accuracy Component: {score_result['accuracy_component']:.2f}/100"
+                        )
                         print(f"    ✓ Drift Component: {score_result['drift_component']:.2f}/100")
                         print(f"    ✓ Time: {model_time:.1f}s")
 
@@ -538,10 +568,16 @@ class ModelEvaluator:
 
                     print(f"    Full error traceback:")
                     traceback.print_exc()
-                    all_results[model_name] = {"status": "failed", "error": str(e), "traceback": traceback.format_exc()}
+                    all_results[model_name] = {
+                        "status": "failed",
+                        "error": str(e),
+                        "traceback": traceback.format_exc(),
+                    }
 
         total_time = time.time() - start_time
-        print(f"\n[Evaluation Complete] Total time: {total_time:.1f}s ({total_time/60:.1f} minutes)")
+        print(
+            f"\n[Evaluation Complete] Total time: {total_time:.1f}s ({total_time/60:.1f} minutes)"
+        )
 
         # Save results
         if save_results:
@@ -608,10 +644,18 @@ class ModelEvaluator:
 
         # Use ThreadPoolExecutor for I/O-bound operations (model predictions)
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = {executor.submit(evaluate_single_model, name, model): name for name, model in models.items()}
+            futures = {
+                executor.submit(evaluate_single_model, name, model): name
+                for name, model in models.items()
+            }
 
             # Process completed evaluations with progress bar
-            completed = tqdm(as_completed(futures), total=len(futures), desc="Parallel evaluation", disable=not TQDM_AVAILABLE)
+            completed = tqdm(
+                as_completed(futures),
+                total=len(futures),
+                desc="Parallel evaluation",
+                disable=not TQDM_AVAILABLE,
+            )
 
             for future in completed:
                 result = future.result()
@@ -634,7 +678,10 @@ class ModelEvaluator:
                 serializable[model_name] = model_data
                 continue
 
-            serializable_model = {"status": "success", "performance_score": model_data["performance_score"]}
+            serializable_model = {
+                "status": "success",
+                "performance_score": model_data["performance_score"],
+            }
 
             # Convert evaluation results
             eval_results_serialized = {}
@@ -657,7 +704,13 @@ class ModelEvaluator:
         print("MODEL PERFORMANCE SCORING REPORT")
         print("=" * 80)
 
-        report = {"summary": {}, "model_rankings": [], "detailed_scores": {}, "best_performers": {}, "warnings": []}
+        report = {
+            "summary": {},
+            "model_rankings": [],
+            "detailed_scores": {},
+            "best_performers": {},
+            "warnings": [],
+        }
 
         # Collect all model scores
         model_scores = {}
@@ -670,7 +723,8 @@ class ModelEvaluator:
         ranked_models = sorted(model_scores.items(), key=lambda x: x[1], reverse=True)
 
         report["model_rankings"] = [
-            {"model": name, "score": score, "rank": i + 1} for i, (name, score) in enumerate(ranked_models)
+            {"model": name, "score": score, "rank": i + 1}
+            for i, (name, score) in enumerate(ranked_models)
         ]
 
         # Summary statistics
@@ -707,9 +761,13 @@ class ModelEvaluator:
             elif model_data.get("status") == "success":
                 score = model_data["performance_score"]["overall_score"]
                 if score < 50:
-                    report["warnings"].append(f"{model_name}: Low performance score ({score:.2f}/100)")
+                    report["warnings"].append(
+                        f"{model_name}: Low performance score ({score:.2f}/100)"
+                    )
                 if score < 70:
-                    report["warnings"].append(f"{model_name}: Performance below industry standards ({score:.2f}/100)")
+                    report["warnings"].append(
+                        f"{model_name}: Performance below industry standards ({score:.2f}/100)"
+                    )
 
         # Print report
         self._print_report(report)
@@ -823,7 +881,9 @@ def main() -> tuple:
     )
 
     # Step 3: Evaluate all models
-    results = evaluator.evaluate_all_models(models=models, evaluation_dataset=evaluation_dataset, save_results=True)
+    results = evaluator.evaluate_all_models(
+        models=models, evaluation_dataset=evaluation_dataset, save_results=True
+    )
 
     # Step 4: Generate scoring report
     report = evaluator.generate_scoring_report(results)

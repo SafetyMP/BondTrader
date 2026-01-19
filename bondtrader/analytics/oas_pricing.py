@@ -95,7 +95,9 @@ class OASPricer:
 
             # Calculate option value
             option_free_value = self.valuator.calculate_fair_value(bond)
-            option_adjusted_value = self._binomial_price(bond, oas, volatility, call_exercise_price, put_exercise_price)
+            option_adjusted_value = self._binomial_price(
+                bond, oas, volatility, call_exercise_price, put_exercise_price
+            )
             option_value = option_free_value - option_adjusted_value
 
             return {
@@ -113,7 +115,14 @@ class OASPricer:
             logger.error(f"Error calculating OAS: {e}")
             return {"oas": 0, "error": str(e)}
 
-    def _solve_oas(self, bond: Bond, target_price: float, volatility: float, call_price: float, put_price: float) -> float:
+    def _solve_oas(
+        self,
+        bond: Bond,
+        target_price: float,
+        volatility: float,
+        call_price: float,
+        put_price: float,
+    ) -> float:
         """Solve for OAS that makes binomial price equal to market price"""
 
         def price_difference(oas):
@@ -140,7 +149,9 @@ class OASPricer:
                 low = mid
         return (low + high) / 2
 
-    def _binomial_price(self, bond: Bond, oas: float, volatility: float, call_price: float, put_price: float) -> float:
+    def _binomial_price(
+        self, bond: Bond, oas: float, volatility: float, call_price: float, put_price: float
+    ) -> float:
         """
         Calculate bond price using binomial tree with OAS
 
@@ -212,7 +223,9 @@ class OASPricer:
 
         return values[0] if len(values) > 0 else bond.face_value
 
-    def _build_rate_tree(self, initial_rate: float, volatility: float, dt: float) -> List[List[float]]:
+    def _build_rate_tree(
+        self, initial_rate: float, volatility: float, dt: float
+    ) -> List[List[float]]:
         """Build binomial interest rate tree"""
         rates = []
 
@@ -252,7 +265,9 @@ class OASPricer:
             "note": "Non-callable bond: OAS equals Z-spread",
         }
 
-    def calculate_option_value(self, bond: Bond, volatility: float = 0.15, call_price: Optional[float] = None) -> Dict:
+    def calculate_option_value(
+        self, bond: Bond, volatility: float = 0.15, call_price: Optional[float] = None
+    ) -> Dict:
         """
         Calculate the value of embedded options
 
@@ -284,7 +299,9 @@ class OASPricer:
             "oas_bps": oas_result.get("oas_bps", 0),
         }
 
-    def price_callable_bond(self, bond: Bond, volatility: float = 0.15, call_schedule: Optional[List[Dict]] = None) -> Dict:
+    def price_callable_bond(
+        self, bond: Bond, volatility: float = 0.15, call_schedule: Optional[List[Dict]] = None
+    ) -> Dict:
         """
         Price callable bond with call schedule
 
@@ -297,7 +314,10 @@ class OASPricer:
             Pricing results
         """
         if not bond.callable:
-            return {"error": "Bond is not callable", "value": self.valuator.calculate_fair_value(bond)}
+            return {
+                "error": "Bond is not callable",
+                "value": self.valuator.calculate_fair_value(bond),
+            }
 
         # Simplified: use single call price
         # In production, would handle full call schedule

@@ -28,7 +28,9 @@ class TestDatabaseFailures:
         )
 
         # Simulate database failure
-        with patch.object(service.repository, "find_all", side_effect=Exception("Database connection failed")):
+        with patch.object(
+            service.repository, "find_all", side_effect=Exception("Database connection failed")
+        ):
             result = service.find_bonds()
 
             # Should return error result, not crash
@@ -188,7 +190,9 @@ class TestDataCorruption:
             assert result.is_err(), "Should reject invalid bond data"
         except ValueError as e:
             # Bond model validation caught it - this is also acceptable
-            assert "price" in str(e).lower() or "positive" in str(e).lower(), f"Unexpected validation error: {e}"
+            assert (
+                "price" in str(e).lower() or "positive" in str(e).lower()
+            ), f"Unexpected validation error: {e}"
 
 
 class TestDegradationMode:

@@ -109,15 +109,17 @@ def test_generate_single_bond(generator):
     assert len(bonds) == 1
     assert isinstance(bonds[0], Bond)
 
+
 def test_add_price_noise(generator):
     """Test adding price noise to bonds"""
     bonds = generator.generate_bonds(num_bonds=10)
     original_prices = [b.current_price for b in bonds]
     bonds_with_noise = generator.add_price_noise(bonds, noise_level=0.05)
     noisy_prices = [b.current_price for b in bonds_with_noise]
-    
+
     # Prices should be different (within noise level)
     assert any(op != np for op, np in zip(original_prices, noisy_prices))
+
 
 def test_add_price_noise_zero_level(generator):
     """Test adding zero price noise"""
@@ -125,7 +127,8 @@ def test_add_price_noise_zero_level(generator):
     original_prices = [b.current_price for b in bonds]
     bonds_no_noise = generator.add_price_noise(bonds.copy(), noise_level=0.0)
     no_noise_prices = [b.current_price for b in bonds_no_noise]
-    
+
     # Prices should be same with zero noise (use approximate comparison for float)
     import numpy as np
+
     assert np.allclose(original_prices, no_noise_prices)

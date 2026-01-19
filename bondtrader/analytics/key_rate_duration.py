@@ -66,7 +66,9 @@ class KeyRateDuration:
 
         for key_rate in key_rates:
             # Calculate KRD at this key rate point
-            krd = self._calculate_krd_at_point(bond, key_rate, base_price, base_ytm, time_to_maturity)
+            krd = self._calculate_krd_at_point(
+                bond, key_rate, base_price, base_ytm, time_to_maturity
+            )
             krd_values.append(krd)
             krd_results[f"{key_rate}y"] = krd
 
@@ -86,7 +88,12 @@ class KeyRateDuration:
         }
 
     def _calculate_krd_at_point(
-        self, bond: Bond, key_rate: float, base_price: float, base_ytm: float, time_to_maturity: float
+        self,
+        bond: Bond,
+        key_rate: float,
+        base_price: float,
+        base_ytm: float,
+        time_to_maturity: float,
     ) -> float:
         """
         Calculate KRD at a specific key rate point
@@ -175,7 +182,10 @@ class KeyRateDuration:
         return pv_coupons + pv_face
 
     def calculate_portfolio_krd(
-        self, bonds: List[Bond], weights: Optional[List[float]] = None, key_rates: Optional[List[float]] = None
+        self,
+        bonds: List[Bond],
+        weights: Optional[List[float]] = None,
+        key_rates: Optional[List[float]] = None,
     ) -> Dict:
         """
         Calculate portfolio-level Key Rate Duration
@@ -223,7 +233,10 @@ class KeyRateDuration:
         }
 
     def yield_curve_shock_analysis(
-        self, bonds: List[Bond], weights: Optional[List[float]] = None, shock_scenarios: Optional[List[str]] = None
+        self,
+        bonds: List[Bond],
+        weights: Optional[List[float]] = None,
+        shock_scenarios: Optional[List[str]] = None,
     ) -> Dict:
         """
         Analyze portfolio impact of yield curve shock scenarios
@@ -266,7 +279,9 @@ class KeyRateDuration:
                 if i < len(krd_values):
                     portfolio_change += krd_values[i] * shock * portfolio_value
 
-            portfolio_change_pct = (portfolio_change / portfolio_value) * 100 if portfolio_value > 0 else 0
+            portfolio_change_pct = (
+                (portfolio_change / portfolio_value) * 100 if portfolio_value > 0 else 0
+            )
 
             scenarios[scenario] = {
                 "shocks": scenario_shocks,
@@ -275,7 +290,11 @@ class KeyRateDuration:
                 "new_portfolio_value": portfolio_value + portfolio_change,
             }
 
-        return {"base_portfolio_value": portfolio_value, "scenarios": scenarios, "key_rates": self.STANDARD_KEY_RATES}
+        return {
+            "base_portfolio_value": portfolio_value,
+            "scenarios": scenarios,
+            "key_rates": self.STANDARD_KEY_RATES,
+        }
 
     def _get_scenario_shocks(self, scenario: str, shock_size: float = 0.01) -> List[float]:
         """Get yield shocks for different scenarios (in decimal)"""

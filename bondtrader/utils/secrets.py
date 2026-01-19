@@ -58,12 +58,14 @@ class SecretsManager:
             master_password = os.getenv("SECRETS_MASTER_PASSWORD")
             if not master_password:
                 raise ValueError(
-                    "SECRETS_MASTER_PASSWORD environment variable must be set. " "Never use default passwords in production."
+                    "SECRETS_MASTER_PASSWORD environment variable must be set. "
+                    "Never use default passwords in production."
                 )
             salt = os.getenv("SECRETS_SALT")
             if not salt:
                 raise ValueError(
-                    "SECRETS_SALT environment variable must be set for secure encryption. " "Generate a random salt value."
+                    "SECRETS_SALT environment variable must be set for secure encryption. "
+                    "Generate a random salt value."
                 )
             salt = salt.encode()
 
@@ -105,7 +107,9 @@ class SecretsManager:
         except ImportError:
             raise ImportError("hvac required for Vault backend. Install with: pip install hvac")
 
-    def get_secret(self, key: str, default: Optional[str] = None, user_id: Optional[str] = None) -> Optional[str]:
+    def get_secret(
+        self, key: str, default: Optional[str] = None, user_id: Optional[str] = None
+    ) -> Optional[str]:
         """
         Get a secret value with audit logging.
 
@@ -189,7 +193,9 @@ class SecretsManager:
     def _get_vault_secret(self, key: str, default: Optional[str]) -> Optional[str]:
         """Get secret from HashiCorp Vault"""
         try:
-            secret_response = self._vault_client.secrets.kv.v2.read_secret_version(path=self._vault_path)
+            secret_response = self._vault_client.secrets.kv.v2.read_secret_version(
+                path=self._vault_path
+            )
             secrets = secret_response["data"]["data"]
             return secrets.get(key, default)
         except Exception:

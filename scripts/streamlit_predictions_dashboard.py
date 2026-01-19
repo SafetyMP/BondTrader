@@ -29,7 +29,10 @@ from bondtrader.config import get_config
 
 # Page configuration
 st.set_page_config(
-    page_title="2025 Bond Predictions Dashboard", page_icon="📊", layout="wide", initial_sidebar_state="expanded"
+    page_title="2025 Bond Predictions Dashboard",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
 
 # Custom CSS
@@ -115,7 +118,9 @@ def create_prediction_comparison_chart(df: pd.DataFrame):
                         "Predicted Value": row[col],
                         "Theoretical Value": base_value,
                         "Difference": row[col] - base_value,
-                        "Difference %": ((row[col] - base_value) / base_value * 100) if base_value > 0 else 0,
+                        "Difference %": (
+                            ((row[col] - base_value) / base_value * 100) if base_value > 0 else 0
+                        ),
                     }
                 )
 
@@ -196,7 +201,13 @@ def create_model_performance_metrics(df: pd.DataFrame):
         # Correlation
         correlation = pred_values.corr(theo_values) if len(pred_values) > 1 else 0
 
-        metrics[model_name] = {"MAE": mae, "RMSE": rmse, "MAPE": mape, "Correlation": correlation, "Count": len(pred_values)}
+        metrics[model_name] = {
+            "MAE": mae,
+            "RMSE": rmse,
+            "MAPE": mape,
+            "Correlation": correlation,
+            "Count": len(pred_values),
+        }
 
     return metrics
 
@@ -206,7 +217,9 @@ def main():
     config = get_config()
 
     # Header
-    st.markdown('<h1 class="main-header">2025 Bond Predictions Dashboard</h1>', unsafe_allow_html=True)
+    st.markdown(
+        '<h1 class="main-header">2025 Bond Predictions Dashboard</h1>', unsafe_allow_html=True
+    )
 
     # Load predictions
     predictions_path = os.path.join(config.data_dir, "predictions", "2025_predictions.csv")
@@ -284,10 +297,16 @@ def main():
 
         for metric_name in ["MAE", "RMSE", "MAPE"]:
             if metric_name in metrics_df.columns:
-                metric_fig.add_trace(go.Bar(x=metrics_df.index, y=metrics_df[metric_name], name=metric_name))
+                metric_fig.add_trace(
+                    go.Bar(x=metrics_df.index, y=metrics_df[metric_name], name=metric_name)
+                )
 
         metric_fig.update_layout(
-            title="Model Performance Comparison", xaxis_title="Model", yaxis_title="Metric Value", barmode="group", height=400
+            title="Model Performance Comparison",
+            xaxis_title="Model",
+            yaxis_title="Metric Value",
+            barmode="group",
+            height=400,
         )
         st.plotly_chart(metric_fig, use_container_width=True)
 
@@ -330,7 +349,12 @@ def main():
 
     # Download button
     csv = df.to_csv(index=False)
-    st.download_button(label="Download Predictions as CSV", data=csv, file_name="2025_predictions.csv", mime="text/csv")
+    st.download_button(
+        label="Download Predictions as CSV",
+        data=csv,
+        file_name="2025_predictions.csv",
+        mime="text/csv",
+    )
 
     # Model Information
     st.sidebar.header("Model Information")

@@ -12,8 +12,15 @@ import joblib
 import numpy as np
 
 from bondtrader.core.bond_models import Bond
-from bondtrader.data.evaluation_dataset_generator import EvaluationDatasetGenerator, load_evaluation_dataset
-from bondtrader.data.training_data_generator import TrainingDataGenerator, load_training_dataset, save_training_dataset
+from bondtrader.data.evaluation_dataset_generator import (
+    EvaluationDatasetGenerator,
+    load_evaluation_dataset,
+)
+from bondtrader.data.training_data_generator import (
+    TrainingDataGenerator,
+    load_training_dataset,
+    save_training_dataset,
+)
 from bondtrader.utils import logger
 
 try:
@@ -142,10 +149,16 @@ class UnifiedTrainingFramework:
 
                     current_date = datetime.now()
                     if not maturity_date:
-                        time_to_maturity = metadata.get("time_to_maturity", features[1] if len(features) > 1 else 5.0)
-                        maturity_date = current_date + timedelta(days=int(time_to_maturity * 365.25))
+                        time_to_maturity = metadata.get(
+                            "time_to_maturity", features[1] if len(features) > 1 else 5.0
+                        )
+                        maturity_date = current_date + timedelta(
+                            days=int(time_to_maturity * 365.25)
+                        )
                     if not issue_date:
-                        years_since_issue = metadata.get("years_since_issue", features[4] if len(features) > 4 else 0.0)
+                        years_since_issue = metadata.get(
+                            "years_since_issue", features[4] if len(features) > 4 else 0.0
+                        )
                         issue_date = current_date - timedelta(days=int(years_since_issue * 365.25))
 
                     price_to_par = features[3] if len(features) > 3 else 1.0
@@ -263,7 +276,10 @@ class UnifiedTrainingFramework:
             raise
 
     def train_multiple_models(
-        self, configs: List[Tuple[str, TrainingConfig]], resume: bool = False, show_progress: bool = True
+        self,
+        configs: List[Tuple[str, TrainingConfig]],
+        resume: bool = False,
+        show_progress: bool = True,
     ) -> Dict:
         """
         Train multiple models with different configurations
@@ -277,7 +293,11 @@ class UnifiedTrainingFramework:
             Dictionary of training results
         """
         results = {}
-        pbar = tqdm(total=len(configs), desc="Training Models", unit="model") if show_progress else None
+        pbar = (
+            tqdm(total=len(configs), desc="Training Models", unit="model")
+            if show_progress
+            else None
+        )
 
         for model_name, config in configs:
             try:
@@ -323,7 +343,12 @@ class UnifiedTrainingFramework:
             try:
                 if hasattr(model, "predict_adjusted_value"):
                     pred = model.predict_adjusted_value(bond)
-                    predictions.append(pred.get("ml_adjusted_value", pred.get("ml_adjusted_fair_value", bond.current_price)))
+                    predictions.append(
+                        pred.get(
+                            "ml_adjusted_value",
+                            pred.get("ml_adjusted_fair_value", bond.current_price),
+                        )
+                    )
                     actuals.append(bond.current_price)
             except Exception as e:
                 logger.debug(f"Prediction failed for bond: {e}")
@@ -345,7 +370,11 @@ class UnifiedTrainingFramework:
     def _save_checkpoint(self, model_name: str, result: Dict):
         """Save checkpoint with atomic writes"""
         checkpoint_path = os.path.join(self.checkpoint_dir, f"{model_name}.joblib")
-        checkpoint_data = {"model_name": model_name, "result": result, "timestamp": datetime.now().isoformat()}
+        checkpoint_data = {
+            "model_name": model_name,
+            "result": result,
+            "timestamp": datetime.now().isoformat(),
+        }
 
         temp_path = checkpoint_path + ".tmp"
         try:

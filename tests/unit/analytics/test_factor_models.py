@@ -114,7 +114,9 @@ def test_statistical_factors_with_return_data(factor_model, portfolio_bonds):
     # Create synthetic return data
     return_data = np.random.randn(len(portfolio_bonds), 252) * 0.01
 
-    result = factor_model.statistical_factors(portfolio_bonds, return_data=return_data, num_factors=2)
+    result = factor_model.statistical_factors(
+        portfolio_bonds, return_data=return_data, num_factors=2
+    )
 
     assert "factors" in result
     assert result["num_factors"] == 2

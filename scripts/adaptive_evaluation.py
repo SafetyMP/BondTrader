@@ -67,7 +67,9 @@ class AdaptiveEvaluator:
 
         return models
 
-    def evaluate_models_on_dataset(self, models: Dict, evaluation_dataset: Dict, scenario_name: Optional[str] = None) -> Dict:
+    def evaluate_models_on_dataset(
+        self, models: Dict, evaluation_dataset: Dict, scenario_name: Optional[str] = None
+    ) -> Dict:
         """
         Evaluate all models on evaluation dataset
 
@@ -207,7 +209,9 @@ class AdaptiveEvaluator:
                     "min_price": float(np.min(prices)),
                     "max_price": float(np.max(prices)),
                     "mean_face_value": float(np.mean(face_values)),
-                    "price_to_face_ratio": float(np.mean([p / fv for p, fv in zip(prices, face_values)])),
+                    "price_to_face_ratio": float(
+                        np.mean([p / fv for p, fv in zip(prices, face_values)])
+                    ),
                 }
 
         # Aggregate metrics across all models
@@ -285,22 +289,32 @@ class AdaptiveEvaluator:
 
                 # Identify specific issues with actionable adjustments
                 if avg_mape > mape_threshold:
-                    scenario_feedback["issues"].append(f"High MAPE ({avg_mape:.2f}%) - price prediction struggling")
+                    scenario_feedback["issues"].append(
+                        f"High MAPE ({avg_mape:.2f}%) - price prediction struggling"
+                    )
                     scenario_feedback["adjustments_needed"]["reduce_price_variance"] = True
                     scenario_feedback["adjustments_needed"]["align_with_training_range"] = True
 
                 if avg_rmse > rmse_threshold:
-                    scenario_feedback["issues"].append(f"High RMSE (${avg_rmse:.2f}) - large prediction errors")
+                    scenario_feedback["issues"].append(
+                        f"High RMSE (${avg_rmse:.2f}) - large prediction errors"
+                    )
                     scenario_feedback["adjustments_needed"]["reduce_volatility"] = True
 
                 if avg_correlation < 0.5:
-                    scenario_feedback["issues"].append(f"Low correlation ({avg_correlation:.3f}) - not capturing patterns")
+                    scenario_feedback["issues"].append(
+                        f"Low correlation ({avg_correlation:.3f}) - not capturing patterns"
+                    )
                     scenario_feedback["adjustments_needed"]["improve_market_structure"] = True
 
                 if abs(avg_bias) > bias_threshold:
-                    scenario_feedback["issues"].append(f"Significant bias (${avg_bias:.2f}) - systematic prediction error")
+                    scenario_feedback["issues"].append(
+                        f"Significant bias (${avg_bias:.2f}) - systematic prediction error"
+                    )
                     scenario_feedback["adjustments_needed"]["adjust_risk_free_rate"] = True
-                    scenario_feedback["adjustments_needed"]["bias_direction"] = "up" if avg_bias > 0 else "down"
+                    scenario_feedback["adjustments_needed"]["bias_direction"] = (
+                        "up" if avg_bias > 0 else "down"
+                    )
 
                 feedback["poor_performing_scenarios"].append(scenario_feedback)
 
@@ -310,16 +324,26 @@ class AdaptiveEvaluator:
 
         # Generate recommendations
         if feedback["poor_performing_scenarios"]:
-            feedback["recommendations"].append("Adjust evaluation data to better match training data characteristics")
-            feedback["recommendations"].append("Reduce price variance in poorly performing scenarios")
-            feedback["recommendations"].append("Align bond price ranges with historical training data")
+            feedback["recommendations"].append(
+                "Adjust evaluation data to better match training data characteristics"
+            )
+            feedback["recommendations"].append(
+                "Reduce price variance in poorly performing scenarios"
+            )
+            feedback["recommendations"].append(
+                "Align bond price ranges with historical training data"
+            )
 
         if len(feedback["well_performing_scenarios"]) > len(feedback["poor_performing_scenarios"]):
-            feedback["recommendations"].append("Models are performing well overall - consider adding edge cases")
+            feedback["recommendations"].append(
+                "Models are performing well overall - consider adding edge cases"
+            )
 
         return feedback
 
-    def adjust_generator(self, generator: EvaluationDatasetGenerator, feedback: Dict) -> EvaluationDatasetGenerator:
+    def adjust_generator(
+        self, generator: EvaluationDatasetGenerator, feedback: Dict
+    ) -> EvaluationDatasetGenerator:
         """
         Adjust evaluation generator based on feedback
 
@@ -351,12 +375,16 @@ class AdaptiveEvaluator:
                 if adjustments.get("reduce_volatility"):
                     # Reduce volatility multiplier
                     scenario.volatility_multiplier *= 0.85
-                    print(f"  ✓ Reduced volatility multiplier to {scenario.volatility_multiplier:.3f}")
+                    print(
+                        f"  ✓ Reduced volatility multiplier to {scenario.volatility_multiplier:.3f}"
+                    )
 
                 if adjustments.get("reduce_price_variance"):
                     # Reduce credit spread adjustment to make prices more consistent
                     scenario.credit_spread_adjustment *= 0.8
-                    print(f"  ✓ Reduced credit spread adjustment to {scenario.credit_spread_adjustment:.4f}")
+                    print(
+                        f"  ✓ Reduced credit spread adjustment to {scenario.credit_spread_adjustment:.4f}"
+                    )
 
                 if adjustments.get("align_with_training_range"):
                     # Adjust liquidity factor to bring prices closer to training range
@@ -378,7 +406,9 @@ class AdaptiveEvaluator:
                     else:
                         # Model under-predicting, increase risk-free rate
                         scenario.risk_free_rate *= 1.03
-                    print(f"  ✓ Adjusted risk-free rate to {scenario.risk_free_rate:.4f} (bias: ${bias:.2f})")
+                    print(
+                        f"  ✓ Adjusted risk-free rate to {scenario.risk_free_rate:.4f} (bias: ${bias:.2f})"
+                    )
 
         # Add more diverse scenarios if models are performing well
         if len(feedback["well_performing_scenarios"]) > 3:
@@ -387,7 +417,10 @@ class AdaptiveEvaluator:
         return generator
 
     def run_adaptive_evaluation(
-        self, num_iterations: int = 3, num_bonds: int = 1000, initial_scenarios: Optional[List[str]] = None
+        self,
+        num_iterations: int = 3,
+        num_bonds: int = 1000,
+        initial_scenarios: Optional[List[str]] = None,
     ) -> Dict:
         """
         Run adaptive evaluation loop
@@ -415,7 +448,12 @@ class AdaptiveEvaluator:
         generator = EvaluationDatasetGenerator(seed=42)
 
         if initial_scenarios is None:
-            initial_scenarios = ["normal_market", "rate_shock_up_200bps", "credit_spread_widening", "liquidity_crisis"]
+            initial_scenarios = [
+                "normal_market",
+                "rate_shock_up_200bps",
+                "credit_spread_widening",
+                "liquidity_crisis",
+            ]
 
         all_results = []
 
@@ -427,7 +465,10 @@ class AdaptiveEvaluator:
             # Generate evaluation dataset
             print(f"\n[Iteration {iteration + 1}] Generating evaluation dataset...")
             evaluation_dataset = generator.generate_evaluation_dataset(
-                num_bonds=num_bonds, scenarios=initial_scenarios, include_benchmarks=True, point_in_time=True
+                num_bonds=num_bonds,
+                scenarios=initial_scenarios,
+                include_benchmarks=True,
+                point_in_time=True,
             )
 
             # Evaluate models
@@ -462,7 +503,8 @@ class AdaptiveEvaluator:
                     {
                         "iteration": iteration + 1,
                         "results": {
-                            k: {sk: {m: float(v) for m, v in sv.items()} for sk, sv in v.items()} for k, v in results.items()
+                            k: {sk: {m: float(v) for m, v in sv.items()} for sk, sv in v.items()}
+                            for k, v in results.items()
                         },
                         "feedback": {
                             "poor_performing_scenarios": feedback["poor_performing_scenarios"],
@@ -489,7 +531,11 @@ class AdaptiveEvaluator:
         for rec in final_feedback["recommendations"]:
             print(f"  - {rec}")
 
-        return {"all_results": all_results, "feedback_history": self.feedback_history, "final_generator": generator}
+        return {
+            "all_results": all_results,
+            "feedback_history": self.feedback_history,
+            "final_generator": generator,
+        }
 
 
 def main():
@@ -497,13 +543,20 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Adaptive evaluation with generator adjustment")
-    parser.add_argument("--iterations", type=int, default=3, help="Number of adjustment iterations (default: 3)")
-    parser.add_argument("--num-bonds", type=int, default=1000, help="Number of bonds per evaluation (default: 1000)")
+    parser.add_argument(
+        "--iterations", type=int, default=3, help="Number of adjustment iterations (default: 3)"
+    )
+    parser.add_argument(
+        "--num-bonds", type=int, default=1000, help="Number of bonds per evaluation (default: 1000)"
+    )
     # Get config for default values
     config = get_config()
 
     parser.add_argument(
-        "--model-dir", type=str, default=config.model_dir, help=f"Directory with trained models (default: {config.model_dir})"
+        "--model-dir",
+        type=str,
+        default=config.model_dir,
+        help=f"Directory with trained models (default: {config.model_dir})",
     )
     parser.add_argument(
         "--scenarios",
@@ -519,7 +572,9 @@ def main():
 
     try:
         results = evaluator.run_adaptive_evaluation(
-            num_iterations=args.iterations, num_bonds=args.num_bonds, initial_scenarios=args.scenarios
+            num_iterations=args.iterations,
+            num_bonds=args.num_bonds,
+            initial_scenarios=args.scenarios,
         )
 
         print("\n✓ Adaptive evaluation complete!")

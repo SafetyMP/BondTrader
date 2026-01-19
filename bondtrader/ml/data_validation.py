@@ -88,7 +88,9 @@ class DataValidator:
         actual_features = X.shape[1] if len(X.shape) > 1 else 1
 
         if actual_features != expected_features:
-            errors.append(f"Feature count mismatch: expected {expected_features}, got {actual_features}")
+            errors.append(
+                f"Feature count mismatch: expected {expected_features}, got {actual_features}"
+            )
             checks["feature_count"] = False
         else:
             checks["feature_count"] = True
@@ -98,7 +100,9 @@ class DataValidator:
         missing_pct = missing_count / X.size if X.size > 0 else 0
 
         if missing_pct > self.schema.max_missing_pct:
-            errors.append(f"Too many missing values: {missing_pct:.2%} > {self.schema.max_missing_pct:.2%}")
+            errors.append(
+                f"Too many missing values: {missing_pct:.2%} > {self.schema.max_missing_pct:.2%}"
+            )
             checks["missing_values"] = False
         elif missing_pct > 0:
             warnings.append(f"Missing values detected: {missing_pct:.2%}")
@@ -123,7 +127,9 @@ class DataValidator:
 
                     if np.any(feature_data < min_val) or np.any(feature_data > max_val):
                         out_of_range = np.sum((feature_data < min_val) | (feature_data > max_val))
-                        warnings.append(f"Feature {feature_name}: {out_of_range} values out of range [{min_val}, {max_val}]")
+                        warnings.append(
+                            f"Feature {feature_name}: {out_of_range} values out of range [{min_val}, {max_val}]"
+                        )
                         checks[f"range_{feature_name}"] = False
                     else:
                         checks[f"range_{feature_name}"] = True
@@ -135,7 +141,9 @@ class DataValidator:
             "checks": checks,
         }
 
-    def validate_statistics(self, X: np.ndarray, y: np.ndarray = None, reference_statistics: Dict = None) -> Dict[str, Any]:
+    def validate_statistics(
+        self, X: np.ndarray, y: np.ndarray = None, reference_statistics: Dict = None
+    ) -> Dict[str, Any]:
         """
         Validate statistical properties of data
 
@@ -196,7 +204,9 @@ class DataValidator:
             z_scores = np.abs((y - statistics["target_mean"]) / statistics["target_std"])
             outliers = np.sum(z_scores > 3)
             if outliers > len(y) * 0.05:  # More than 5% outliers
-                warnings.append(f"High number of target outliers: {outliers} ({outliers/len(y):.1%})")
+                warnings.append(
+                    f"High number of target outliers: {outliers} ({outliers/len(y):.1%})"
+                )
                 checks["target_outliers"] = False
             else:
                 checks["target_outliers"] = True
@@ -231,7 +241,9 @@ class DataValidator:
             "statistics": statistics,
         }
 
-    def _detect_drift(self, current_statistics: Dict, reference_statistics: Dict, threshold: float = 0.1) -> bool:
+    def _detect_drift(
+        self, current_statistics: Dict, reference_statistics: Dict, threshold: float = 0.1
+    ) -> bool:
         """
         Detect data drift by comparing statistics
 
@@ -253,7 +265,9 @@ class DataValidator:
             return True  # Different number of features indicates drift
 
         # Calculate relative change
-        reference_std = np.array(reference_statistics.get("feature_stds", [1.0] * len(reference_means)))
+        reference_std = np.array(
+            reference_statistics.get("feature_stds", [1.0] * len(reference_means))
+        )
         reference_std = np.where(reference_std == 0, 1.0, reference_std)  # Avoid division by zero
 
         relative_change = np.abs(current_means - reference_means) / reference_std

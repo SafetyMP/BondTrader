@@ -143,7 +143,9 @@ class StructuredLogger:
             self._logger.exception(msg, **extra)
 
 
-def setup_structured_logging(use_structlog: bool = True, use_loguru: bool = False, log_level: str = "INFO") -> Any:
+def setup_structured_logging(
+    use_structlog: bool = True, use_loguru: bool = False, log_level: str = "INFO"
+) -> Any:
     """
     Setup structured logging with optional structlog or loguru
 
@@ -185,7 +187,11 @@ def setup_structured_logging(use_structlog: bool = True, use_loguru: bool = Fals
                 structlog.processors.StackInfoRenderer(),
                 structlog.processors.format_exc_info,
                 structlog.processors.UnicodeDecoder(),
-                structlog.processors.JSONRenderer() if log_level == "DEBUG" else structlog.dev.ConsoleRenderer(),
+                (
+                    structlog.processors.JSONRenderer()
+                    if log_level == "DEBUG"
+                    else structlog.dev.ConsoleRenderer()
+                ),
             ],
             context_class=dict,
             logger_factory=structlog.stdlib.LoggerFactory(),
@@ -279,7 +285,9 @@ def log_performance(func_name: str = None):
                 return result
             except Exception as e:
                 duration = time() - start_time
-                logger.error(f"{name} failed", duration_seconds=duration, error=str(e), status="error")
+                logger.error(
+                    f"{name} failed", duration_seconds=duration, error=str(e), status="error"
+                )
                 raise
 
         return wrapper

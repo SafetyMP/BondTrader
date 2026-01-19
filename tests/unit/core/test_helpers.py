@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import pytest
 
 from bondtrader.core.bond_models import Bond, BondType
+from bondtrader.core.bond_valuation import BondValuator
 from bondtrader.core.helpers import (
     calculate_portfolio_value,
     format_valuation_result,
@@ -16,7 +17,6 @@ from bondtrader.core.helpers import (
 )
 from bondtrader.core.repository import InMemoryBondRepository
 from bondtrader.core.service_layer import BondService
-from bondtrader.core.bond_valuation import BondValuator
 
 
 @pytest.mark.unit
@@ -97,6 +97,7 @@ class TestCoreHelpers:
         service.create_bond(sample_bond)
         # The helper uses container, so we need to ensure the container has the service
         from bondtrader.core.container import get_container
+
         container = get_container()
         container._bond_service = service
         result = get_bond_or_error("TEST-001")
@@ -106,6 +107,7 @@ class TestCoreHelpers:
     def test_get_bond_or_error_not_found(self, repository, service):
         """Test getting non-existent bond"""
         from bondtrader.core.container import get_container
+
         container = get_container()
         container._bond_service = service
         result = get_bond_or_error("NONEXISTENT")
@@ -128,6 +130,7 @@ class TestCoreHelpers:
         )
         service.create_bond(bond2)
         from bondtrader.core.container import get_container
+
         container = get_container()
         container._bond_service = service
         result = get_bonds_or_error(["TEST-001", "TEST-002"])
@@ -138,6 +141,7 @@ class TestCoreHelpers:
         """Test getting bonds with some failures"""
         service.create_bond(sample_bond)
         from bondtrader.core.container import get_container
+
         container = get_container()
         container._bond_service = service
         result = get_bonds_or_error(["TEST-001", "NONEXISTENT"])
@@ -154,6 +158,7 @@ class TestCoreHelpers:
         """Test calculating portfolio value for single bond"""
         service.create_bond(sample_bond)
         from bondtrader.core.container import get_container
+
         container = get_container()
         container._bond_service = service
         result = calculate_portfolio_value([sample_bond])
@@ -178,6 +183,7 @@ class TestCoreHelpers:
         service.create_bond(sample_bond)
         service.create_bond(bond2)
         from bondtrader.core.container import get_container
+
         container = get_container()
         container._bond_service = service
         result = calculate_portfolio_value([sample_bond, bond2], weights=[0.6, 0.4])

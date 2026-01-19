@@ -101,7 +101,9 @@ class DistributedTracer:
             # Fallback: return no-op context manager
             return _NoOpSpan()
 
-    def trace_function(self, name: Optional[str] = None, attributes: Optional[Dict[str, Any]] = None):
+    def trace_function(
+        self, name: Optional[str] = None, attributes: Optional[Dict[str, Any]] = None
+    ):
         """
         Decorator to trace function execution.
 
@@ -174,7 +176,9 @@ class _NoOpSpan:
 _tracer: Optional[DistributedTracer] = None
 
 
-def get_tracer(service_name: str = "bondtrader", endpoint: Optional[str] = None) -> DistributedTracer:
+def get_tracer(
+    service_name: str = "bondtrader", endpoint: Optional[str] = None
+) -> DistributedTracer:
     """Get or create global tracer instance"""
     global _tracer
     if _tracer is None:

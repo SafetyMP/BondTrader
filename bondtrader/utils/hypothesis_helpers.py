@@ -31,8 +31,12 @@ if HAS_HYPOTHESIS:
             bond_type=st.sampled_from(list(BondType)),
             face_value=st.floats(min_value=100, max_value=1000000),
             coupon_rate=st.floats(min_value=0, max_value=20),
-            maturity_date=st.datetimes(min_value=datetime.now(), max_value=datetime.now() + timedelta(days=365 * 30)),
-            issue_date=st.datetimes(min_value=datetime.now() - timedelta(days=365 * 10), max_value=datetime.now()),
+            maturity_date=st.datetimes(
+                min_value=datetime.now(), max_value=datetime.now() + timedelta(days=365 * 30)
+            ),
+            issue_date=st.datetimes(
+                min_value=datetime.now() - timedelta(days=365 * 10), max_value=datetime.now()
+            ),
             current_price=st.floats(min_value=50, max_value=2000),
             credit_rating=st.sampled_from(["AAA", "AA", "A", "BBB", "BB", "B", "CCC"]),
             issuer=st.text(min_size=1, max_size=50),
@@ -47,7 +51,9 @@ if HAS_HYPOTHESIS:
 
     def float_strategy(min_value: float = 0.0, max_value: float = 1.0):
         """Generate float values for testing"""
-        return st.floats(min_value=min_value, max_value=max_value, allow_nan=False, allow_infinity=False)
+        return st.floats(
+            min_value=min_value, max_value=max_value, allow_nan=False, allow_infinity=False
+        )
 
     def positive_float_strategy():
         """Generate positive float values"""
@@ -68,7 +74,9 @@ if HAS_HYPOTHESIS:
         # Generate symmetric positive semi-definite matrix
         return st.builds(
             lambda x: np.dot(x, x.T),
-            arrays(np.float64, (n, n), elements=st.floats(min_value=-1, max_value=1, allow_nan=False)),
+            arrays(
+                np.float64, (n, n), elements=st.floats(min_value=-1, max_value=1, allow_nan=False)
+            ),
         )
 
 else:

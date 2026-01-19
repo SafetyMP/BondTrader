@@ -43,11 +43,18 @@ def evaluate_all_models(
     print("=" * 70)
 
     # Step 1: Load or generate evaluation dataset
-    if generate_new_evaluation or evaluation_dataset_path is None or not os.path.exists(evaluation_dataset_path):
+    if (
+        generate_new_evaluation
+        or evaluation_dataset_path is None
+        or not os.path.exists(evaluation_dataset_path)
+    ):
         print("\n[Step 1/4] Generating evaluation dataset...")
         eval_generator = EvaluationDatasetGenerator(seed=42)
         evaluation_dataset = eval_generator.generate_evaluation_dataset(
-            num_bonds=2000, scenarios=None, include_benchmarks=True, point_in_time=True  # All scenarios
+            num_bonds=2000,
+            scenarios=None,
+            include_benchmarks=True,
+            point_in_time=True,  # All scenarios
         )
 
         os.makedirs("evaluation_data", exist_ok=True)
@@ -61,14 +68,18 @@ def evaluate_all_models(
     print("\n[Step 2/4] Loading trained models...")
     if model_results_path is None or not os.path.exists(model_results_path):
         print("  No trained models found. Training models first...")
-        trainer = ModelTrainer(dataset_path="training_data/training_dataset.joblib", generate_new=False)
+        trainer = ModelTrainer(
+            dataset_path="training_data/training_dataset.joblib", generate_new=False
+        )
         model_results = trainer.train_all_models()
         trainer.save_models(model_results)
     else:
         # Load model results (simplified - in practice, load from trained_models/)
         print("  Models should be loaded from trained_models/ directory")
         # For this example, we'll assume models are trained fresh
-        trainer = ModelTrainer(dataset_path="training_data/training_dataset.joblib", generate_new=False)
+        trainer = ModelTrainer(
+            dataset_path="training_data/training_dataset.joblib", generate_new=False
+        )
         model_results = trainer.train_all_models()
 
     # Step 3: Evaluate models
@@ -94,7 +105,9 @@ def evaluate_all_models(
         try:
             model = model_data["model"]
             eval_results = eval_generator.evaluate_model(
-                model=model, evaluation_dataset=evaluation_dataset, scenario_name=None  # All scenarios
+                model=model,
+                evaluation_dataset=evaluation_dataset,
+                scenario_name=None,  # All scenarios
             )
             all_evaluation_results[model_name] = eval_results
             print(f"    ✓ Evaluation complete")
@@ -207,7 +220,10 @@ def generate_evaluation_report(evaluation_results: Dict, evaluation_dataset: Dic
 
         # Best R²
         best_r2 = max(normal_perf.items(), key=lambda x: x[1]["r2_score"])
-        report["best_performing_models"]["highest_r2"] = {"model": best_r2[0], "r2_score": best_r2[1]["r2_score"]}
+        report["best_performing_models"]["highest_r2"] = {
+            "model": best_r2[0],
+            "r2_score": best_r2[1]["r2_score"],
+        }
 
         # Lowest drift
         best_drift = min(normal_perf.items(), key=lambda x: x[1]["drift_score"])
@@ -235,7 +251,9 @@ def generate_evaluation_report(evaluation_results: Dict, evaluation_dataset: Dic
             if metrics.r2_score < 0.70:
                 report["warnings"].append(f"{model_name}: Low R² score ({metrics.r2_score:.4f})")
             if metrics.drift_vs_consensus.drift_score > 0.10:
-                report["warnings"].append(f"{model_name}: High drift score ({metrics.drift_vs_consensus.drift_score:.4f})")
+                report["warnings"].append(
+                    f"{model_name}: High drift score ({metrics.drift_vs_consensus.drift_score:.4f})"
+                )
             if metrics.drift_vs_consensus.correlation < 0.85:
                 report["warnings"].append(
                     f"{model_name}: Low benchmark correlation ({metrics.drift_vs_consensus.correlation:.4f})"
@@ -257,9 +275,13 @@ def print_evaluation_summary(evaluation_report: Dict):
         print("\nBest Performing Models:")
         best = evaluation_report["best_performing_models"]
         if "highest_r2" in best:
-            print(f"  Highest R²: {best['highest_r2']['model']} ({best['highest_r2']['r2_score']:.4f})")
+            print(
+                f"  Highest R²: {best['highest_r2']['model']} ({best['highest_r2']['r2_score']:.4f})"
+            )
         if "lowest_drift" in best:
-            print(f"  Lowest Drift: {best['lowest_drift']['model']} ({best['lowest_drift']['drift_score']:.4f})")
+            print(
+                f"  Lowest Drift: {best['lowest_drift']['model']} ({best['lowest_drift']['drift_score']:.4f})"
+            )
         if "highest_correlation" in best:
             print(
                 f"  Highest Correlation: {best['highest_correlation']['model']} ({best['highest_correlation']['correlation']:.4f})"
@@ -288,7 +310,8 @@ def print_evaluation_summary(evaluation_report: Dict):
 if __name__ == "__main__":
     # Run comprehensive evaluation
     results = evaluate_all_models(
-        generate_new_evaluation=False, save_results=True  # Set to True to regenerate evaluation dataset
+        generate_new_evaluation=False,
+        save_results=True,  # Set to True to regenerate evaluation dataset
     )
 
     print("\n✓ Model evaluation complete!")

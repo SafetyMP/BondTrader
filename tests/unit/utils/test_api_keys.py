@@ -2,9 +2,10 @@
 Unit tests for API key management utilities
 """
 
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from bondtrader.utils.api_keys import APIKey, APIKeyError, APIKeyManager
 

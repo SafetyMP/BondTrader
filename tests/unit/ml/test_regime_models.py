@@ -2,9 +2,10 @@
 Unit tests for regime models
 """
 
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from bondtrader.core.bond_models import Bond, BondType
 from bondtrader.core.bond_valuation import BondValuator
@@ -87,7 +88,7 @@ class TestRegimeDetector:
         """Test regime-dependent pricing"""
         # First detect regimes
         detector.detect_regimes(sample_bonds, num_regimes=3)
-        
+
         # Price bond with regime
         result = detector.regime_dependent_pricing(sample_bonds[0], current_regime=0)
         assert "current_regime" in result
@@ -98,7 +99,7 @@ class TestRegimeDetector:
     def test_regime_dependent_pricing_auto_detect(self, detector, sample_bonds):
         """Test regime-dependent pricing with auto detection"""
         detector.detect_regimes(sample_bonds, num_regimes=2)
-        
+
         result = detector.regime_dependent_pricing(sample_bonds[0])
         assert "current_regime" in result
         assert "regime_adjusted_value" in result
@@ -106,7 +107,7 @@ class TestRegimeDetector:
     def test_adaptive_risk_metrics(self, detector, sample_bonds):
         """Test adaptive risk metrics"""
         detector.detect_regimes(sample_bonds, num_regimes=2)
-        
+
         result = detector.adaptive_risk_metrics(sample_bonds)
         assert "regime_risks" in result
         assert "num_regimes" in result
@@ -115,7 +116,7 @@ class TestRegimeDetector:
         """Test adaptive risk metrics with weights"""
         detector.detect_regimes(sample_bonds, num_regimes=2)
         weights = [1.0 / len(sample_bonds)] * len(sample_bonds)
-        
+
         result = detector.adaptive_risk_metrics(sample_bonds, weights=weights)
         assert "regime_risks" in result
 

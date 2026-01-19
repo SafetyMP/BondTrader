@@ -112,7 +112,11 @@ def main():
     parser = argparse.ArgumentParser(description="Setup authentication for BondTrader")
     parser.add_argument("--create", action="store_true", help="Create users file")
     parser.add_argument("--verify", action="store_true", help="Verify users file")
-    parser.add_argument("--file", default="config/users.json", help="Path to users file (default: config/users.json)")
+    parser.add_argument(
+        "--file",
+        default="config/users.json",
+        help="Path to users file (default: config/users.json)",
+    )
 
     args = parser.parse_args()
 

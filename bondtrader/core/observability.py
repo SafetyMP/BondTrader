@@ -65,7 +65,11 @@ class Metrics:
             bond_type: Optional bond type for categorization
         """
         self._trading_volume += volume
-        self.increment("business.trading_volume", value=int(volume), tags={"bond_type": bond_type} if bond_type else None)
+        self.increment(
+            "business.trading_volume",
+            value=int(volume),
+            tags={"bond_type": bond_type} if bond_type else None,
+        )
         self.gauge("business.total_trading_volume", self._trading_volume)
 
     def track_pnl(self, pnl: float, trade_id: Optional[str] = None):
@@ -123,7 +127,9 @@ class Metrics:
             "business": {
                 "total_trading_volume": self._trading_volume,
                 "total_pnl": self._total_pnl,
-                "current_portfolio_value": self._portfolio_values[-1] if self._portfolio_values else None,
+                "current_portfolio_value": (
+                    self._portfolio_values[-1] if self._portfolio_values else None
+                ),
                 "risk_metrics": self._risk_metrics.copy(),
             },
         }
@@ -174,7 +180,10 @@ def trace(func: Callable = None, name: Optional[str] = None):
 
             # Create trace span
             span_id = f"{int(time.time() * 1000000)}"
-            logger.info(f"TRACE START: {operation_name}", extra={"span_id": span_id, "operation": operation_name})
+            logger.info(
+                f"TRACE START: {operation_name}",
+                extra={"span_id": span_id, "operation": operation_name},
+            )
 
             try:
                 result = f(*args, **kwargs)
@@ -234,7 +243,9 @@ def trace_context(operation_name: str):
     start_time = time.time()
     span_id = f"{int(time.time() * 1000000)}"
 
-    logger.info(f"TRACE START: {operation_name}", extra={"span_id": span_id, "operation": operation_name})
+    logger.info(
+        f"TRACE START: {operation_name}", extra={"span_id": span_id, "operation": operation_name}
+    )
 
     try:
         yield span_id
@@ -244,7 +255,12 @@ def trace_context(operation_name: str):
 
         logger.info(
             f"TRACE END: {operation_name}",
-            extra={"span_id": span_id, "operation": operation_name, "duration_ms": duration * 1000, "status": "success"},
+            extra={
+                "span_id": span_id,
+                "operation": operation_name,
+                "duration_ms": duration * 1000,
+                "status": "success",
+            },
         )
     except Exception as e:
         duration = time.time() - start_time

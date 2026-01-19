@@ -2,8 +2,9 @@
 Unit tests for alerting utilities
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from bondtrader.utils.alerting import Alert, AlertChannel, AlertManager, AlertSeverity
 

@@ -25,7 +25,9 @@ def EnhancedMLBondAdjuster(model_type: str = "random_forest", valuator=None):
         DeprecationWarning,
         stacklevel=2,
     )
-    return UnifiedMLBondAdjuster(model_type=model_type, feature_level="enhanced", valuator=valuator, use_ensemble=False)
+    return UnifiedMLBondAdjuster(
+        model_type=model_type, feature_level="enhanced", valuator=valuator, use_ensemble=False
+    )
 
 
 def AdvancedMLBondAdjuster(valuator=None, use_ensemble: bool = True):
@@ -38,7 +40,10 @@ def AdvancedMLBondAdjuster(valuator=None, use_ensemble: bool = True):
         stacklevel=2,
     )
     return UnifiedMLBondAdjuster(
-        model_type="random_forest", feature_level="advanced", valuator=valuator, use_ensemble=use_ensemble
+        model_type="random_forest",
+        feature_level="advanced",
+        valuator=valuator,
+        use_ensemble=use_ensemble,
     )
 
 
@@ -75,7 +80,12 @@ try:
         ModelLineage,
         get_lineage_tracker,
     )
-    from bondtrader.ml.data_validation import DataSchema, DataValidator, ValidationResult, create_default_schema
+    from bondtrader.ml.data_validation import (
+        DataSchema,
+        DataValidator,
+        ValidationResult,
+        create_default_schema,
+    )
     from bondtrader.ml.explainability import (
         Explanation,
         GlobalExplanation,
@@ -91,7 +101,11 @@ try:
         PredictionResponse,
         create_model_server,
     )
-    from bondtrader.ml.production_monitoring import ModelMonitor, MonitoringMetrics, PredictionRecord
+    from bondtrader.ml.production_monitoring import (
+        ModelMonitor,
+        MonitoringMetrics,
+        PredictionRecord,
+    )
 
     HAS_MLOPS = True
 except ImportError:

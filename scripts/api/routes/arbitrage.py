@@ -15,12 +15,21 @@ from scripts.api_helpers import handle_service_result
 router = APIRouter(tags=["Arbitrage"])
 
 
-@router.get("/opportunities", response_model=List[ArbitrageOpportunity], dependencies=[Depends(verify_api_key)])
+@router.get(
+    "/opportunities",
+    response_model=List[ArbitrageOpportunity],
+    dependencies=[Depends(verify_api_key)],
+)
 async def get_arbitrage_opportunities(
     min_profit_percentage: float = Query(
-        0.0, ge=0, description="Minimum profit percentage threshold (as decimal, e.g., 0.01 for 1%)", example=0.01
+        0.0,
+        ge=0,
+        description="Minimum profit percentage threshold (as decimal, e.g., 0.01 for 1%)",
+        example=0.01,
     ),
-    limit: int = Query(10, ge=1, le=100, description="Maximum number of opportunities to return", example=10),
+    limit: int = Query(
+        10, ge=1, le=100, description="Maximum number of opportunities to return", example=10
+    ),
 ):
     """
     Get arbitrage opportunities

@@ -145,7 +145,9 @@ class AlternativeDataAnalyzer:
 
         return {
             "news_sentiment": news_score,
-            "sentiment_label": "Positive" if news_score > 0 else "Negative" if news_score < 0 else "Neutral",
+            "sentiment_label": (
+                "Positive" if news_score > 0 else "Negative" if news_score < 0 else "Neutral"
+            ),
             "sentiment_spread_adjustment_bps": sentiment_spread_adjustment * 10000,
             "base_fair_value": base_fair_value,
             "sentiment_adjusted_value": sentiment_adjusted_value,
@@ -153,7 +155,11 @@ class AlternativeDataAnalyzer:
         }
 
     def economic_factors_impact(
-        self, bonds: List[Bond], inflation_expectation: float = 0.02, gdp_growth: float = 0.03, unemployment: float = 0.04
+        self,
+        bonds: List[Bond],
+        inflation_expectation: float = 0.02,
+        gdp_growth: float = 0.03,
+        unemployment: float = 0.04,
     ) -> Dict:
         """
         Analyze impact of economic factors on bond portfolio

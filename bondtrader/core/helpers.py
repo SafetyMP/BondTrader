@@ -67,7 +67,15 @@ def validate_bond_data(data: Dict) -> Result[Dict, Exception]:
     """
     from bondtrader.core.exceptions import InvalidBondError
 
-    required_fields = ["bond_id", "bond_type", "face_value", "coupon_rate", "maturity_date", "issue_date", "current_price"]
+    required_fields = [
+        "bond_id",
+        "bond_type",
+        "face_value",
+        "coupon_rate",
+        "maturity_date",
+        "issue_date",
+        "current_price",
+    ]
 
     # Check required fields
     missing = [field for field in required_fields if field not in data]
@@ -104,7 +112,9 @@ def validate_bond_data(data: Dict) -> Result[Dict, Exception]:
     return Result.ok(data)
 
 
-def calculate_portfolio_value(bonds: List[Bond], weights: Optional[List[float]] = None) -> Dict[str, float]:
+def calculate_portfolio_value(
+    bonds: List[Bond], weights: Optional[List[float]] = None
+) -> Dict[str, float]:
     """
     Calculate portfolio value metrics
 
@@ -151,7 +161,9 @@ def calculate_portfolio_value(bonds: List[Bond], weights: Optional[List[float]] 
         "total_market_value": total_market_value,
         "total_fair_value": total_fair_value,
         "mismatch_percentage": (
-            ((total_market_value - total_fair_value) / total_fair_value * 100) if total_fair_value > 0 else 0
+            ((total_market_value - total_fair_value) / total_fair_value * 100)
+            if total_fair_value > 0
+            else 0
         ),
         "num_bonds": len(bonds),
     }

@@ -203,7 +203,11 @@ Examples:
         """,
     )
 
-    parser.add_argument("--dry-run", action="store_true", help="Show what would be deleted without actually deleting")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be deleted without actually deleting",
+    )
 
     parser.add_argument("--verbose", "-v", action="store_true", help="Show verbose output")
 

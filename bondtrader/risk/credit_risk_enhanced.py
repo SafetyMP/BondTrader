@@ -46,9 +46,13 @@ class CreditRiskEnhanced:
         debt_value: Optional[float] = None,
     ) -> Dict:
         """Calculate default probability using Merton structural model (delegates to RiskManager)"""
-        return self.risk_manager.merton_structural_model(bond, asset_value, asset_volatility, debt_value)
+        return self.risk_manager.merton_structural_model(
+            bond, asset_value, asset_volatility, debt_value
+        )
 
-    def credit_migration_analysis(self, bond: Bond, time_horizon: float = 1.0, num_scenarios: int = 10000) -> Dict:
+    def credit_migration_analysis(
+        self, bond: Bond, time_horizon: float = 1.0, num_scenarios: int = 10000
+    ) -> Dict:
         """Analyze credit migration risk using migration matrix (delegates to RiskManager)"""
         return self.risk_manager.credit_migration_analysis(bond, time_horizon, num_scenarios)
 
@@ -60,8 +64,12 @@ class CreditRiskEnhanced:
         time_horizon: float = 1.0,
     ) -> Dict:
         """Calculate Credit Value at Risk (CVaR) (delegates to RiskManager)"""
-        return self.risk_manager.calculate_credit_var(bonds, weights, confidence_level, time_horizon)
+        return self.risk_manager.calculate_credit_var(
+            bonds, weights, confidence_level, time_horizon
+        )
 
-    def calculate_expected_credit_loss(self, bonds: List[Bond], weights: Optional[List[float]] = None) -> Dict:
+    def calculate_expected_credit_loss(
+        self, bonds: List[Bond], weights: Optional[List[float]] = None
+    ) -> Dict:
         """Calculate expected credit loss across portfolio (delegates to RiskManager)"""
         return self.risk_manager.calculate_expected_credit_loss(bonds, weights)

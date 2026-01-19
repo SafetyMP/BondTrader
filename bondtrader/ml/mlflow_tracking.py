@@ -118,7 +118,11 @@ class MLflowTracker:
             try:
                 import subprocess
 
-                git_commit = subprocess.check_output(["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL).decode().strip()
+                git_commit = (
+                    subprocess.check_output(["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL)
+                    .decode()
+                    .strip()
+                )
                 mlflow.set_tag("git_commit", git_commit)
             except (subprocess.CalledProcessError, FileNotFoundError, ValueError):
                 # Git not available or not in a git repo - not critical

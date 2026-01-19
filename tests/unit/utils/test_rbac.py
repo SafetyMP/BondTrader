@@ -55,12 +55,16 @@ class TestRBACManager:
 
     def test_check_permission_no_permission(self, rbac_manager):
         """Test checking permission when user doesn't have it"""
-        has_permission = rbac_manager.check_permission([Role.READ_ONLY.value], Permission.BOND_CREATE)
+        has_permission = rbac_manager.check_permission(
+            [Role.READ_ONLY.value], Permission.BOND_CREATE
+        )
         assert has_permission is False
 
     def test_check_permission_with_resource_id(self, rbac_manager):
         """Test checking permission with resource ID"""
-        has_permission = rbac_manager.check_permission([Role.TRADER.value], Permission.BOND_CREATE, resource_id="BOND-001")
+        has_permission = rbac_manager.check_permission(
+            [Role.TRADER.value], Permission.BOND_CREATE, resource_id="BOND-001"
+        )
         assert has_permission is True
 
     def test_require_permission_decorator(self, rbac_manager):

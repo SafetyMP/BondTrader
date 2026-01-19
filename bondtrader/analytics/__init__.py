@@ -26,10 +26,16 @@ _IMPORT_MAP = {
     "OASPricer": ("bondtrader.analytics.oas_pricing", "OASPricer"),
     "KeyRateDuration": ("bondtrader.analytics.key_rate_duration", "KeyRateDuration"),
     "MultiCurveFramework": ("bondtrader.analytics.multi_curve", "MultiCurveFramework"),
-    "FloatingRateBondPricer": ("bondtrader.analytics.floating_rate_bonds", "FloatingRateBondPricer"),
+    "FloatingRateBondPricer": (
+        "bondtrader.analytics.floating_rate_bonds",
+        "FloatingRateBondPricer",
+    ),
     "ExecutionStrategy": ("bondtrader.analytics.execution_strategies", "ExecutionStrategy"),
     "AlternativeDataAnalyzer": ("bondtrader.analytics.alternative_data", "AlternativeDataAnalyzer"),
-    "TransactionCostCalculator": ("bondtrader.analytics.transaction_costs", "TransactionCostCalculator"),
+    "TransactionCostCalculator": (
+        "bondtrader.analytics.transaction_costs",
+        "TransactionCostCalculator",
+    ),
     "AdvancedAnalytics": ("bondtrader.analytics.advanced_analytics", "AdvancedAnalytics"),
 }
 

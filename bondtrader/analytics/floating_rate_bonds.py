@@ -39,7 +39,11 @@ class FloatingRateBondPricer:
             self.multi_curve.initialize_default_curves()
 
     def calculate_floating_coupon(
-        self, bond: Bond, reset_date: datetime, reference_rate: Optional[float] = None, spread: float = 0.0
+        self,
+        bond: Bond,
+        reset_date: datetime,
+        reference_rate: Optional[float] = None,
+        spread: float = 0.0,
     ) -> Dict:
         """
         Calculate floating rate coupon payment
@@ -115,12 +119,16 @@ class FloatingRateBondPricer:
         # Get current reference rate
         if current_reference_rate is None:
             if use_multi_curve and self.multi_curve.libor_curve:
-                current_reference_rate = float(self.multi_curve.libor_curve["interpolation"](time_to_next_reset))
+                current_reference_rate = float(
+                    self.multi_curve.libor_curve["interpolation"](time_to_next_reset)
+                )
             else:
                 current_reference_rate = self.valuator.risk_free_rate + 0.002
 
         # Calculate next coupon
-        next_coupon = self.calculate_floating_coupon(bond, next_reset_date, current_reference_rate, spread)
+        next_coupon = self.calculate_floating_coupon(
+            bond, next_reset_date, current_reference_rate, spread
+        )
 
         # Floating rate bonds trade near par because:
         # 1. Next coupon is known (discounted)
@@ -129,16 +137,22 @@ class FloatingRateBondPricer:
 
         if use_multi_curve:
             # Discount next coupon using OIS
-            discount_factor = self.multi_curve.get_discount_factor(time_to_next_reset, curve_type="OIS")
+            discount_factor = self.multi_curve.get_discount_factor(
+                time_to_next_reset, curve_type="OIS"
+            )
             pv_next_coupon = next_coupon["coupon_payment"] * discount_factor
 
             # Remaining value (par + accrued)
             # After next reset, bond will trade near par
-            discount_to_maturity = self.multi_curve.get_discount_factor(time_to_maturity, curve_type="OIS")
+            discount_to_maturity = self.multi_curve.get_discount_factor(
+                time_to_maturity, curve_type="OIS"
+            )
             pv_principal = bond.face_value * discount_to_maturity
 
             # Accrued interest (from last reset to now)
-            days_since_reset = (datetime.now() - next_reset_date + timedelta(days=365 / bond.frequency)).days
+            days_since_reset = (
+                datetime.now() - next_reset_date + timedelta(days=365 / bond.frequency)
+            ).days
             days_in_period = 365 / bond.frequency
             accrued_interest = (days_since_reset / days_in_period) * next_coupon["coupon_payment"]
 
@@ -148,11 +162,15 @@ class FloatingRateBondPricer:
             # More sophisticated: discount next coupon, rest ≈ par
             discount_factor = np.exp(-self.valuator.risk_free_rate * time_to_next_reset)
             pv_next_coupon = next_coupon["coupon_payment"] * discount_factor
-            pv_principal = bond.face_value * np.exp(-self.valuator.risk_free_rate * time_to_maturity)
+            pv_principal = bond.face_value * np.exp(
+                -self.valuator.risk_free_rate * time_to_maturity
+            )
             total_value = pv_next_coupon + pv_principal
 
         # Clean price (without accrued interest)
-        clean_price = total_value - accrued_interest if "accrued_interest" in locals() else total_value
+        clean_price = (
+            total_value - accrued_interest if "accrued_interest" in locals() else total_value
+        )
 
         return {
             "dirty_price": total_value,
@@ -167,7 +185,9 @@ class FloatingRateBondPricer:
             "price_to_par": clean_price / bond.face_value if bond.face_value > 0 else 1.0,
         }
 
-    def calculate_discount_margin(self, bond: Bond, market_price: float, next_reset_date: datetime) -> Dict:
+    def calculate_discount_margin(
+        self, bond: Bond, market_price: float, next_reset_date: datetime
+    ) -> Dict:
         """
         Calculate Discount Margin (DM) for floating rate bond
 
@@ -185,7 +205,9 @@ class FloatingRateBondPricer:
         from scipy.optimize import brentq
 
         def price_with_dm(dm):
-            result = self.price_floating_rate_bond(bond, next_reset_date, spread=dm, use_multi_curve=True)
+            result = self.price_floating_rate_bond(
+                bond, next_reset_date, spread=dm, use_multi_curve=True
+            )
             return result["clean_price"] - market_price
 
         try:

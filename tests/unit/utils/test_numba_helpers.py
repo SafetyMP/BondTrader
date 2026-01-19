@@ -58,7 +58,9 @@ class TestNumbaHelpers:
 
     def test_vectorized_coupon_derivative(self):
         """Test vectorized coupon derivative"""
-        result = vectorized_coupon_derivative(coupon_payment=25.0, periods=10, ytm=0.05, frequency=2.0)
+        result = vectorized_coupon_derivative(
+            coupon_payment=25.0, periods=10, ytm=0.05, frequency=2.0
+        )
         assert isinstance(result, float)
 
     def test_enable_numba_jit_decorator(self):

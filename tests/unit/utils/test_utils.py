@@ -71,7 +71,8 @@ def test_format_currency():
     """Test currency formatting"""
     assert format_currency(1000.50) == "$1,000.50"
     assert (
-        format_currency(1000.5, decimals=0) == "$1,001" or format_currency(1000.5, decimals=0) == "$1,000"
+        format_currency(1000.5, decimals=0) == "$1,001"
+        or format_currency(1000.5, decimals=0) == "$1,000"
     )  # May round either way
     assert format_currency(0) == "$0.00"
 

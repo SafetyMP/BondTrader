@@ -2,8 +2,9 @@
 Unit tests for OAuth utilities
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from bondtrader.utils.oauth import OAuth2Manager, OAuth2Provider
 
@@ -35,12 +36,15 @@ class TestOAuth2Provider:
         )
         assert provider.userinfo_endpoint == "https://auth.example.com/userinfo"
 
-    @patch.dict("os.environ", {
-        "OAUTH_CLIENT_ID": "env_client",
-        "OAUTH_CLIENT_SECRET": "env_secret",
-        "OAUTH_AUTHORIZATION_ENDPOINT": "https://auth.example.com/authorize",
-        "OAUTH_TOKEN_ENDPOINT": "https://auth.example.com/token",
-    })
+    @patch.dict(
+        "os.environ",
+        {
+            "OAUTH_CLIENT_ID": "env_client",
+            "OAUTH_CLIENT_SECRET": "env_secret",
+            "OAUTH_AUTHORIZATION_ENDPOINT": "https://auth.example.com/authorize",
+            "OAUTH_TOKEN_ENDPOINT": "https://auth.example.com/token",
+        },
+    )
     def test_oauth2_provider_from_environment(self):
         """Test creating provider from environment"""
         provider = OAuth2Provider.from_environment("OAUTH")
@@ -84,7 +88,7 @@ class TestOAuth2Manager:
             token_endpoint="https://auth.example.com/token",
         )
         manager = OAuth2Manager(provider=provider)
-        
+
         # Test with authlib available
         try:
             url, state = manager.get_authorization_url("https://example.com/callback")
@@ -103,7 +107,7 @@ class TestOAuth2Manager:
             token_endpoint="https://auth.example.com/token",
         )
         manager = OAuth2Manager(provider=provider)
-        
+
         # Test with authlib available
         try:
             with patch.object(manager, "_get_oauth_session") as mock_session:
@@ -124,7 +128,7 @@ class TestOAuth2Manager:
             token_endpoint="https://auth.example.com/token",
         )
         manager = OAuth2Manager(provider=provider)
-        
+
         # Test token validation
         try:
             is_valid = manager.validate_token("test_token")

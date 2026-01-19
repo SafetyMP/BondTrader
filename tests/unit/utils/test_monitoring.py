@@ -2,10 +2,11 @@
 Extended unit tests for monitoring utilities
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
 
-from bondtrader.utils.monitoring import track_api_request, track_valuation, track_ml_prediction
+import pytest
+
+from bondtrader.utils.monitoring import track_api_request, track_ml_prediction, track_valuation
 
 
 @pytest.mark.unit
@@ -14,10 +15,11 @@ class TestMonitoringFunctions:
 
     def test_track_api_request(self):
         """Test tracking API request"""
+
         @track_api_request("GET", "/api/bonds")
         def test_endpoint():
             return "success"
-        
+
         result = test_endpoint()
         assert result == "success"
 

@@ -2,8 +2,9 @@
 Unit tests for tail risk analysis
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 
 from bondtrader.core.bond_models import Bond, BondType
 from bondtrader.core.bond_valuation import BondValuator
@@ -52,7 +53,7 @@ class TestTailRiskAnalyzer:
     def test_calculate_cvar(self, tail_risk, sample_bonds):
         """Test calculating Conditional Value at Risk"""
         weights = [1.0 / len(sample_bonds)] * len(sample_bonds)
-        
+
         result = tail_risk.calculate_cvar(sample_bonds, weights, confidence_level=0.95)
         assert "cvar_value" in result
         assert "cvar_pct" in result
@@ -62,7 +63,7 @@ class TestTailRiskAnalyzer:
     def test_calculate_cvar_different_confidence(self, tail_risk, sample_bonds):
         """Test CVaR with different confidence level"""
         weights = [1.0 / len(sample_bonds)] * len(sample_bonds)
-        
+
         result = tail_risk.calculate_cvar(sample_bonds, weights, confidence_level=0.99)
         assert "cvar_value" in result
         assert result["cvar_pct"] >= 0
@@ -70,7 +71,7 @@ class TestTailRiskAnalyzer:
     def test_calculate_expected_shortfall(self, tail_risk, sample_bonds):
         """Test calculating Expected Shortfall"""
         weights = [1.0 / len(sample_bonds)] * len(sample_bonds)
-        
+
         result = tail_risk.calculate_expected_shortfall(sample_bonds, weights)
         assert "expected_shortfall" in result
         assert "es_pct" in result
@@ -79,7 +80,7 @@ class TestTailRiskAnalyzer:
     def test_calculate_tail_expectation(self, tail_risk, sample_bonds):
         """Test calculating tail expectation"""
         weights = [1.0 / len(sample_bonds)] * len(sample_bonds)
-        
+
         result = tail_risk.calculate_tail_expectation(sample_bonds, weights, tail_threshold=0.05)
         assert "tail_expectation" in result
         assert "tail_pct" in result
@@ -94,7 +95,7 @@ class TestTailRiskAnalyzer:
     def test_cvar_greater_than_var(self, tail_risk, sample_bonds):
         """Test that CVaR is typically greater than VaR"""
         weights = [1.0 / len(sample_bonds)] * len(sample_bonds)
-        
+
         result = tail_risk.calculate_cvar(sample_bonds, weights, confidence_level=0.95)
         # CVaR should be >= VaR (average of tail losses)
         assert result["cvar_value"] >= result["var_value"]

@@ -74,11 +74,17 @@ class RiskManager(AnalyticsBase):
         portfolio_value = sum(b.current_price * w for b, w in zip(bonds, weights))
 
         if method == "historical":
-            return self._var_historical(bonds, weights, confidence_level, time_horizon, portfolio_value)
+            return self._var_historical(
+                bonds, weights, confidence_level, time_horizon, portfolio_value
+            )
         elif method == "parametric":
-            return self._var_parametric(bonds, weights, confidence_level, time_horizon, portfolio_value)
+            return self._var_parametric(
+                bonds, weights, confidence_level, time_horizon, portfolio_value
+            )
         elif method == "monte_carlo":
-            return self._var_monte_carlo(bonds, weights, confidence_level, time_horizon, portfolio_value)
+            return self._var_monte_carlo(
+                bonds, weights, confidence_level, time_horizon, portfolio_value
+            )
         else:
             raise ValueError(f"Unknown VaR method: {method}")
 
@@ -97,7 +103,9 @@ class RiskManager(AnalyticsBase):
 
         # Pre-calculate initial durations (cached)
         initial_ytms = np.array([self.valuator.calculate_yield_to_maturity(bond) for bond in bonds])
-        initial_durations = np.array([self.valuator.calculate_duration(bond, ytm) for bond, ytm in zip(bonds, initial_ytms)])
+        initial_durations = np.array(
+            [self.valuator.calculate_duration(bond, ytm) for bond, ytm in zip(bonds, initial_ytms)]
+        )
 
         # OPTIMIZED: Vectorized simulation
         # Generate all yield changes at once (num_simulations x n_bonds)
@@ -124,7 +132,12 @@ class RiskManager(AnalyticsBase):
         }
 
     def _var_parametric(
-        self, bonds: List[Bond], weights: List[float], confidence_level: float, time_horizon: int, portfolio_value: float
+        self,
+        bonds: List[Bond],
+        weights: List[float],
+        confidence_level: float,
+        time_horizon: int,
+        portfolio_value: float,
     ) -> Dict:
         """Calculate VaR using parametric method"""
         # Calculate portfolio duration
@@ -166,7 +179,9 @@ class RiskManager(AnalyticsBase):
 
         # Pre-calculate initial YTM, duration, and convexity for all bonds (cached)
         initial_ytms = np.array([self.valuator.calculate_yield_to_maturity(bond) for bond in bonds])
-        initial_durations = np.array([self.valuator.calculate_duration(bond, ytm) for bond, ytm in zip(bonds, initial_ytms)])
+        initial_durations = np.array(
+            [self.valuator.calculate_duration(bond, ytm) for bond, ytm in zip(bonds, initial_ytms)]
+        )
         initial_convexities = np.array(
             [self.valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds, initial_ytms)]
         )
@@ -185,9 +200,9 @@ class RiskManager(AnalyticsBase):
         # Price change ≈ -duration * Δy + 0.5 * convexity * (Δy)^2
         # Note: For large yield changes, we approximate duration/convexity as constant
         # This is acceptable for VaR calculations and much faster than recalculating
-        price_change_pct = -initial_durations[np.newaxis, :] * yield_changes + 0.5 * initial_convexities[np.newaxis, :] * (
-            yield_changes**2
-        )
+        price_change_pct = -initial_durations[
+            np.newaxis, :
+        ] * yield_changes + 0.5 * initial_convexities[np.newaxis, :] * (yield_changes**2)
         new_prices = initial_prices[np.newaxis, :] * (1 + price_change_pct)
 
         # Calculate portfolio values for all simulations (vectorized)
@@ -246,7 +261,9 @@ class RiskManager(AnalyticsBase):
 
         return get_recovery_rate_standard(rating)
 
-    def calculate_interest_rate_sensitivity(self, bond: Bond, rate_change: float = 0.01) -> Dict:  # 1% change
+    def calculate_interest_rate_sensitivity(
+        self, bond: Bond, rate_change: float = 0.01
+    ) -> Dict:  # 1% change
         """
         Calculate price sensitivity to interest rate changes
 
@@ -281,7 +298,9 @@ class RiskManager(AnalyticsBase):
             "rate_change": rate_change,
         }
 
-    def stress_test(self, bonds: List[Bond], scenario: str = "rate_shock", shock_size: float = 0.02) -> Dict:
+    def stress_test(
+        self, bonds: List[Bond], scenario: str = "rate_shock", shock_size: float = 0.02
+    ) -> Dict:
         """
         Stress test portfolio under various scenarios
 
@@ -324,7 +343,9 @@ class RiskManager(AnalyticsBase):
 
         results["portfolio_value_before"] = total_value_before
         results["portfolio_value_after"] = total_value_after
-        results["portfolio_change_pct"] = ((total_value_after - total_value_before) / total_value_before) * 100
+        results["portfolio_change_pct"] = (
+            (total_value_after - total_value_before) / total_value_before
+        ) * 100
 
         return results
 
@@ -467,7 +488,9 @@ class RiskManager(AnalyticsBase):
             "model": "Merton",
         }
 
-    def credit_migration_analysis(self, bond: Bond, time_horizon: float = 1.0, num_scenarios: int = 10000) -> Dict:
+    def credit_migration_analysis(
+        self, bond: Bond, time_horizon: float = 1.0, num_scenarios: int = 10000
+    ) -> Dict:
         """
         Analyze credit migration risk using migration matrix
 
@@ -484,7 +507,16 @@ class RiskManager(AnalyticsBase):
         current_rating = bond.credit_rating.upper()
 
         if current_rating not in self.migration_matrix:
-            migration_probs = {"AAA": 0.01, "AA": 0.05, "A": 0.10, "BBB": 0.40, "BB": 0.30, "B": 0.10, "CCC": 0.03, "D": 0.01}
+            migration_probs = {
+                "AAA": 0.01,
+                "AA": 0.05,
+                "A": 0.10,
+                "BBB": 0.40,
+                "BB": 0.30,
+                "B": 0.10,
+                "CCC": 0.03,
+                "D": 0.01,
+            }
         else:
             migration_probs = self.migration_matrix[current_rating]
 
@@ -568,7 +600,9 @@ class RiskManager(AnalyticsBase):
         for _ in range(10000):
             portfolio_value = 0
             for bond, weight in zip(bonds, weights):
-                migration_result = self.credit_migration_analysis(bond, time_horizon=time_horizon, num_scenarios=1)
+                migration_result = self.credit_migration_analysis(
+                    bond, time_horizon=time_horizon, num_scenarios=1
+                )
                 new_rating = np.random.choice(
                     list(migration_result["value_distribution"].keys()),
                     p=[v["probability"] for v in migration_result["value_distribution"].values()],
@@ -578,10 +612,14 @@ class RiskManager(AnalyticsBase):
             portfolio_values.append(portfolio_value)
 
         portfolio_values = np.array(portfolio_values)
-        current_portfolio_value = sum(b.current_price * w * b.face_value for b, w in zip(bonds, weights))
+        current_portfolio_value = sum(
+            b.current_price * w * b.face_value for b, w in zip(bonds, weights)
+        )
         var_percentile = (1 - confidence_level) * 100
         cvar_value = current_portfolio_value - np.percentile(portfolio_values, var_percentile)
-        cvar_pct = (cvar_value / current_portfolio_value) * 100 if current_portfolio_value > 0 else 0
+        cvar_pct = (
+            (cvar_value / current_portfolio_value) * 100 if current_portfolio_value > 0 else 0
+        )
 
         return {
             "credit_var": cvar_value,
@@ -595,7 +633,9 @@ class RiskManager(AnalyticsBase):
             "percentile_95": np.percentile(portfolio_values, 95),
         }
 
-    def calculate_expected_credit_loss(self, bonds: List[Bond], weights: Optional[List[float]] = None) -> Dict:
+    def calculate_expected_credit_loss(
+        self, bonds: List[Bond], weights: Optional[List[float]] = None
+    ) -> Dict:
         """
         Calculate expected credit loss across portfolio
 
@@ -628,7 +668,9 @@ class RiskManager(AnalyticsBase):
             )
 
         portfolio_value = sum(b.current_price * w for b, w in zip(bonds, weights))
-        expected_loss_pct = (total_expected_loss / portfolio_value) * 100 if portfolio_value > 0 else 0
+        expected_loss_pct = (
+            (total_expected_loss / portfolio_value) * 100 if portfolio_value > 0 else 0
+        )
 
         return {
             "total_expected_loss": total_expected_loss,

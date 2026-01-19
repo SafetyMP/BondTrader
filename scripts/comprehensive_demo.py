@@ -171,7 +171,9 @@ class ComprehensiveDemo:
         self.print_section("DEMO 2: Arbitrage Opportunity Detection")
 
         detector = ArbitrageDetector(
-            valuator=self.valuator, min_profit_threshold=self.config.min_profit_threshold, include_transaction_costs=True
+            valuator=self.valuator,
+            min_profit_threshold=self.config.min_profit_threshold,
+            include_transaction_costs=True,
         )
 
         with self.timed_operation(f"Analyzing {len(bonds)} bonds for arbitrage opportunities"):
@@ -186,7 +188,9 @@ class ComprehensiveDemo:
                 print(f"     Type: {opp['bond_type']}")
                 print(f"     Market Price: ${opp['market_price']:,.2f}")
                 print(f"     Fair Value: ${opp['adjusted_fair_value']:,.2f}")
-                print(f"     Profit: ${opp['net_profit']:,.2f} ({opp['net_profit_percentage']:.2f}%)")
+                print(
+                    f"     Profit: ${opp['net_profit']:,.2f} ({opp['net_profit_percentage']:.2f}%)"
+                )
                 print(f"     Recommendation: {opp['recommendation']}")
                 print(f"     Arbitrage Type: {opp['arbitrage_type']}")
 
@@ -200,21 +204,28 @@ class ComprehensiveDemo:
         print(f"  Portfolio Profit %: {portfolio_analysis['portfolio_profit_pct']:.2f}%")
         print(f"  Opportunities Found: {portfolio_analysis['num_opportunities']}")
 
-        self.results["arbitrage"] = {"opportunities": opportunities, "portfolio_analysis": portfolio_analysis}
+        self.results["arbitrage"] = {
+            "opportunities": opportunities,
+            "portfolio_analysis": portfolio_analysis,
+        }
         return {"opportunities": opportunities, "portfolio_analysis": portfolio_analysis}
 
     def demo_ml_models(self, bonds: List[Bond]) -> Dict:
         """Demo 3: Machine Learning Models"""
         self.print_section("DEMO 3: Machine Learning Models")
 
-        self.log(f"\n🤖 Training ML Model ({self.config.ml_model_type}) on {len(bonds)} bonds...", "blue")
+        self.log(
+            f"\n🤖 Training ML Model ({self.config.ml_model_type}) on {len(bonds)} bonds...", "blue"
+        )
         ml_adjuster = MLBondAdjuster(model_type=self.config.ml_model_type)
 
         try:
             # Train model
             with self.timed_operation("Training ML model"):
                 training_metrics = ml_adjuster.train(
-                    bonds, test_size=self.config.ml_test_size, random_state=self.config.ml_random_state
+                    bonds,
+                    test_size=self.config.ml_test_size,
+                    random_state=self.config.ml_random_state,
                 )
 
             self.log(f"\n✓ Model Training Complete!", "green")
@@ -237,7 +248,9 @@ class ComprehensiveDemo:
 
             # Use ML in arbitrage detection
             detector_ml = ArbitrageDetector(
-                valuator=self.valuator, ml_adjuster=ml_adjuster, min_profit_threshold=self.config.min_profit_threshold
+                valuator=self.valuator,
+                ml_adjuster=ml_adjuster,
+                min_profit_threshold=self.config.min_profit_threshold,
             )
             ml_opportunities = detector_ml.find_arbitrage_opportunities(bonds[:10], use_ml=True)
 
@@ -331,7 +344,9 @@ class ComprehensiveDemo:
         print(f"\n🔗 Correlation Analysis:")
         correlation_analyzer = CorrelationAnalyzer(valuator=self.valuator)
         try:
-            corr_result = correlation_analyzer.calculate_correlation_matrix(bonds, method="characteristics")
+            corr_result = correlation_analyzer.calculate_correlation_matrix(
+                bonds, method="characteristics"
+            )
             print(f"  Average Correlation: {corr_result['average_correlation']:.3f}")
             print(f"  Diversification Ratio: {corr_result['diversification_ratio']:.3f}")
         except Exception as e:
@@ -420,13 +435,19 @@ class ComprehensiveDemo:
             ("⚠️ Risk Analytics", "Comprehensive risk metrics (VaR, credit, liquidity)"),
             ("⚖️ Portfolio Optimization", "Markowitz, Black-Litterman, risk parity strategies"),
             ("🔬 Factor Models", "PCA-based factor extraction and risk attribution"),
-            ("📈 Backtesting & Execution", "Historical performance validation and execution strategies"),
+            (
+                "📈 Backtesting & Execution",
+                "Historical performance validation and execution strategies",
+            ),
             ("🚀 Advanced ML & AI", "ML model training, explainability, drift detection"),
         ]
         for tab, description in dashboard_tabs:
             self.log(f"    ✓ {tab}: {description}", "green")
 
-        self.log(f"\n  💡 All advanced features from the codebase are accessible via the dashboard!", "cyan")
+        self.log(
+            f"\n  💡 All advanced features from the codebase are accessible via the dashboard!",
+            "cyan",
+        )
 
     def save_report(self):
         """Save demo output as markdown report"""
@@ -539,7 +560,9 @@ class ComprehensiveDemo:
             self.log(f"\n✅ All critical system capabilities demonstrated!", "green")
             self.log(f"\n📊 Summary:")
             self.log(f"  Bonds Analyzed: {len(bonds)}")
-            self.log(f"  Arbitrage Opportunities: {len(self.results.get('arbitrage', {}).get('opportunities', []))}")
+            self.log(
+                f"  Arbitrage Opportunities: {len(self.results.get('arbitrage', {}).get('opportunities', []))}"
+            )
             self.log(f"  ML Model: {'Trained' if self.results.get('ml') else 'Not Trained'}")
             self.log(f"  Risk Metrics: Calculated")
             self.log(f"  Portfolio Optimization: Completed")
@@ -567,14 +590,20 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="BondTrader Comprehensive Demo")
-    parser.add_argument("--launch-dashboard", action="store_true", help="Automatically launch Streamlit dashboard after demo")
+    parser.add_argument(
+        "--launch-dashboard",
+        action="store_true",
+        help="Automatically launch Streamlit dashboard after demo",
+    )
     parser.add_argument("--no-report", action="store_true", help="Skip saving markdown report")
     parser.add_argument("--report-file", type=str, default=None, help="Custom report filename")
 
     args = parser.parse_args()
 
     demo = ComprehensiveDemo(output_file=args.report_file)
-    demo.run_complete_demo(auto_launch_dashboard=args.launch_dashboard, save_report=not args.no_report)
+    demo.run_complete_demo(
+        auto_launch_dashboard=args.launch_dashboard, save_report=not args.no_report
+    )
 
 
 if __name__ == "__main__":

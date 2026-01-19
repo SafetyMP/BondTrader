@@ -177,7 +177,12 @@ class AuditLogger:
         # Also log to standard logger with INFO level
         logger.info(
             f"AUDIT: {event_type.value}",
-            extra={"audit_event": audit_record, "entity_id": entity_id, "operation": operation, "user_id": user_id},
+            extra={
+                "audit_event": audit_record,
+                "entity_id": entity_id,
+                "operation": operation,
+                "user_id": user_id,
+            },
         )
 
     def log_valuation(self, bond_id: str, fair_value: float, ytm: float, **kwargs):

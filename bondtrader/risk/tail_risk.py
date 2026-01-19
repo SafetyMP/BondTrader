@@ -149,7 +149,10 @@ class TailRiskAnalyzer:
         return es_results
 
     def calculate_tail_expectation(
-        self, bonds: List[Bond], weights: Optional[List[float]] = None, tail_probability: float = 0.05
+        self,
+        bonds: List[Bond],
+        weights: Optional[List[float]] = None,
+        tail_probability: float = 0.05,
     ) -> Dict:
         """
         Calculate tail expectation
@@ -198,7 +201,9 @@ class TailRiskAnalyzer:
             "tail_probability": tail_probability,
             "tail_threshold": tail_threshold,
             "tail_expectation": tail_expectation,
-            "tail_expectation_pct": (tail_expectation / portfolio_value) * 100 if portfolio_value > 0 else 0,
+            "tail_expectation_pct": (
+                (tail_expectation / portfolio_value) * 100 if portfolio_value > 0 else 0
+            ),
             "expected_tail_loss": tail_expectation,
         }
 

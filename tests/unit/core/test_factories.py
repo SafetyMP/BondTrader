@@ -159,9 +159,10 @@ class TestMLModelFactory:
 
     def test_create_basic(self):
         """Test creating basic ML adjuster"""
+        from unittest.mock import MagicMock, patch
+
         from bondtrader.core.container import get_container
         from bondtrader.core.factories import MLModelFactory
-        from unittest.mock import MagicMock, patch
 
         # Mock container to avoid actual setup
         with patch("bondtrader.core.factories.get_container") as mock_get_container:
@@ -176,8 +177,9 @@ class TestMLModelFactory:
 
     def test_create_enhanced(self):
         """Test creating enhanced ML adjuster"""
-        from bondtrader.core.factories import MLModelFactory
         from unittest.mock import MagicMock, patch
+
+        from bondtrader.core.factories import MLModelFactory
 
         with patch("bondtrader.core.factories.get_container") as mock_get_container:
             mock_container = MagicMock()
@@ -190,8 +192,9 @@ class TestMLModelFactory:
 
     def test_create_advanced(self):
         """Test creating advanced ML adjuster"""
-        from bondtrader.core.factories import MLModelFactory
         from unittest.mock import MagicMock, patch
+
+        from bondtrader.core.factories import MLModelFactory
 
         with patch("bondtrader.core.factories.get_container") as mock_get_container:
             mock_container = MagicMock()
@@ -204,8 +207,9 @@ class TestMLModelFactory:
 
     def test_create_automl(self):
         """Test creating AutoML adjuster"""
-        from bondtrader.core.factories import MLModelFactory
         from unittest.mock import MagicMock, patch
+
+        from bondtrader.core.factories import MLModelFactory
 
         with patch("bondtrader.core.factories.get_container") as mock_get_container:
             mock_container = MagicMock()
@@ -223,8 +227,9 @@ class TestAnalyticsFactory:
 
     def test_create_portfolio_optimizer(self):
         """Test creating portfolio optimizer"""
-        from bondtrader.core.factories import AnalyticsFactory
         from unittest.mock import MagicMock, patch
+
+        from bondtrader.core.factories import AnalyticsFactory
 
         with patch("bondtrader.core.factories.get_container") as mock_get_container:
             mock_container = MagicMock()

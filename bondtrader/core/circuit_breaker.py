@@ -43,7 +43,12 @@ class CircuitBreaker:
     4. Closing circuit when service recovers
     """
 
-    def __init__(self, name: str, config: Optional[CircuitBreakerConfig] = None, fallback: Optional[Callable] = None):
+    def __init__(
+        self,
+        name: str,
+        config: Optional[CircuitBreakerConfig] = None,
+        fallback: Optional[Callable] = None,
+    ):
         self.name = name
         self.config = config or CircuitBreakerConfig()
         self.fallback = fallback
@@ -73,7 +78,10 @@ class CircuitBreaker:
             # Check circuit state
             if self.state == CircuitState.OPEN:
                 # Check if timeout has passed
-                if self.last_failure_time and (time.time() - self.last_failure_time) >= self.config.timeout:
+                if (
+                    self.last_failure_time
+                    and (time.time() - self.last_failure_time) >= self.config.timeout
+                ):
                     self.state = CircuitState.HALF_OPEN
                     self.success_count = 0
                     logger.info(f"Circuit breaker {self.name} transitioning to HALF_OPEN")
@@ -84,7 +92,8 @@ class CircuitBreaker:
                         return self.fallback(*args, **kwargs)
                     else:
                         raise ExternalServiceError(
-                            f"Circuit breaker {self.name} is OPEN - service unavailable", error_code="CIRCUIT_OPEN"
+                            f"Circuit breaker {self.name} is OPEN - service unavailable",
+                            error_code="CIRCUIT_OPEN",
                         )
 
         # Try to call function
@@ -158,7 +167,9 @@ def get_circuit_breaker(name: str, config: Optional[CircuitBreakerConfig] = None
     return _circuit_breakers[name]
 
 
-def circuit_breaker(name: str, config: Optional[CircuitBreakerConfig] = None, fallback: Optional[Callable] = None):
+def circuit_breaker(
+    name: str, config: Optional[CircuitBreakerConfig] = None, fallback: Optional[Callable] = None
+):
     """
     Decorator for circuit breaker pattern
 

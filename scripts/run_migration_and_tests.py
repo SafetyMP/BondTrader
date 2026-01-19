@@ -58,7 +58,16 @@ def run_load_tests():
 
     try:
         result = subprocess.run(
-            ["python3", "-m", "pytest", "tests/load/test_load.py", "-v", "-m", "slow", "--tb=short"],
+            [
+                "python3",
+                "-m",
+                "pytest",
+                "tests/load/test_load.py",
+                "-v",
+                "-m",
+                "slow",
+                "--tb=short",
+            ],
             cwd=project_root,
             capture_output=True,
             text=True,

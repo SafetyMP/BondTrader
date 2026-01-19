@@ -65,7 +65,9 @@ class PortfolioOptimizer(AnalyticsBase):
 
                 # Generate synthetic returns
                 bond_returns = np.random.normal(
-                    ytm / 252, abs(duration * 0.001), lookback_periods  # Daily return  # Volatility based on duration
+                    ytm / 252,
+                    abs(duration * 0.001),
+                    lookback_periods,  # Daily return  # Volatility based on duration
                 )
                 returns.append(bond_returns)
 
@@ -76,7 +78,9 @@ class PortfolioOptimizer(AnalyticsBase):
         else:  # implied
             # Use bond characteristics to estimate returns and covariances
             # OPTIMIZED: Batch calculate YTM and duration to avoid redundant calculations
-            expected_returns = np.array([self.valuator.calculate_yield_to_maturity(bond) for bond in bonds])
+            expected_returns = np.array(
+                [self.valuator.calculate_yield_to_maturity(bond) for bond in bonds]
+            )
 
             # Batch calculate durations (cached internally)
             durations = np.array([self.valuator.calculate_duration(bond) for bond in bonds])
@@ -129,7 +133,9 @@ class PortfolioOptimizer(AnalyticsBase):
 
         # Try CVXPY if requested and available
         if use_cvxpy and HAS_CVXPY:
-            return self._markowitz_optimization_cvxpy(expected_returns, covariance, target_return, risk_aversion)
+            return self._markowitz_optimization_cvxpy(
+                expected_returns, covariance, target_return, risk_aversion
+            )
 
         # Fallback to scipy.optimize
         # Objective function: minimize negative utility
@@ -142,7 +148,9 @@ class PortfolioOptimizer(AnalyticsBase):
         constraints_list = [{"type": "eq", "fun": lambda w: np.sum(w) - 1.0}]  # Weights sum to 1
 
         if target_return is not None:
-            constraints_list.append({"type": "eq", "fun": lambda w: np.dot(w, expected_returns) - target_return})
+            constraints_list.append(
+                {"type": "eq", "fun": lambda w: np.dot(w, expected_returns) - target_return}
+            )
 
         # Bounds: long-only (0 <= w <= 1)
         bounds = [(0, 1) for _ in range(n)]
@@ -151,7 +159,9 @@ class PortfolioOptimizer(AnalyticsBase):
         x0 = np.ones(n) / n
 
         # Optimize
-        result = minimize(objective, x0, method="SLSQP", bounds=bounds, constraints=constraints_list)
+        result = minimize(
+            objective, x0, method="SLSQP", bounds=bounds, constraints=constraints_list
+        )
 
         if not result.success:
             logger.warning("Optimization did not converge")
@@ -175,7 +185,11 @@ class PortfolioOptimizer(AnalyticsBase):
         }
 
     def _markowitz_optimization_cvxpy(
-        self, expected_returns: np.ndarray, covariance: np.ndarray, target_return: Optional[float], risk_aversion: float
+        self,
+        expected_returns: np.ndarray,
+        covariance: np.ndarray,
+        target_return: Optional[float],
+        risk_aversion: float,
     ) -> Dict:
         """Markowitz optimization using CVXPY (convex optimization)"""
         if not HAS_CVXPY:
@@ -206,7 +220,9 @@ class PortfolioOptimizer(AnalyticsBase):
         try:
             problem.solve(solver=cp.ECOS, verbose=False)
             if problem.status in ["infeasible", "unbounded"]:
-                logger.warning(f"CVXPY optimization status: {problem.status}, falling back to equal weights")
+                logger.warning(
+                    f"CVXPY optimization status: {problem.status}, falling back to equal weights"
+                )
                 weights = np.ones(n) / n
                 optimization_success = False
             else:
@@ -285,7 +301,9 @@ class PortfolioOptimizer(AnalyticsBase):
                 confidence = view.get("confidence", 1.0)
 
                 # Normalize weights
-                view_weights = np.array(view.get("weights", [1.0 / len(asset_indices)] * len(asset_indices)))
+                view_weights = np.array(
+                    view.get("weights", [1.0 / len(asset_indices)] * len(asset_indices))
+                )
                 view_weights = view_weights / np.sum(view_weights)
 
                 P[i, asset_indices] = view_weights
@@ -327,7 +345,9 @@ class PortfolioOptimizer(AnalyticsBase):
             "method": "Black-Litterman",
         }
 
-    def risk_parity_optimization(self, bonds: List[Bond], target_risk: Optional[float] = None) -> Dict:
+    def risk_parity_optimization(
+        self, bonds: List[Bond], target_risk: Optional[float] = None
+    ) -> Dict:
         """
         Risk parity optimization
 
@@ -347,7 +367,9 @@ class PortfolioOptimizer(AnalyticsBase):
             portfolio_vol = np.sqrt(np.dot(weights, np.dot(covariance, weights)))
 
             # Risk contributions
-            marginal_contrib = np.dot(covariance, weights) / portfolio_vol if portfolio_vol > 0 else np.zeros(n)
+            marginal_contrib = (
+                np.dot(covariance, weights) / portfolio_vol if portfolio_vol > 0 else np.zeros(n)
+            )
             risk_contrib = weights * marginal_contrib
 
             # Minimize variance of risk contributions
@@ -357,13 +379,17 @@ class PortfolioOptimizer(AnalyticsBase):
         bounds = [(0, 1) for _ in range(n)]
         x0 = np.ones(n) / n
 
-        result = minimize(risk_parity_objective, x0, method="SLSQP", bounds=bounds, constraints=constraints)
+        result = minimize(
+            risk_parity_objective, x0, method="SLSQP", bounds=bounds, constraints=constraints
+        )
 
         weights = result.x if result.success else x0
 
         # Calculate metrics
         portfolio_vol = np.sqrt(np.dot(weights, np.dot(covariance, weights)))
-        marginal_contrib = np.dot(covariance, weights) / portfolio_vol if portfolio_vol > 0 else np.zeros(n)
+        marginal_contrib = (
+            np.dot(covariance, weights) / portfolio_vol if portfolio_vol > 0 else np.zeros(n)
+        )
         risk_contrib = weights * marginal_contrib
 
         return {
@@ -402,7 +428,9 @@ class PortfolioOptimizer(AnalyticsBase):
             frontier_weights.append(result["weights"])
 
         # Find maximum Sharpe ratio portfolio
-        sharpe_ratios = [r / v if v > 0 else 0 for r, v in zip(frontier_returns, frontier_volatilities)]
+        sharpe_ratios = [
+            r / v if v > 0 else 0 for r, v in zip(frontier_returns, frontier_volatilities)
+        ]
         max_sharpe_idx = np.argmax(sharpe_ratios)
 
         return {

@@ -137,7 +137,9 @@ def refresh_models(dataset_path: str = None, skip_training_data: bool = False):
         print("\n📊 Test Set Performance:")
         for model_name, eval_data in results["test_evaluations"].items():
             if "r2" in eval_data:
-                print(f"   {model_name}: R² = {eval_data['r2']:.4f}, RMSE = {eval_data['rmse']:.2f}")
+                print(
+                    f"   {model_name}: R² = {eval_data['r2']:.4f}, RMSE = {eval_data['rmse']:.2f}"
+                )
 
     return results
 
@@ -166,14 +168,22 @@ Examples:
     )
 
     parser.add_argument(
-        "--skip-training-data", action="store_true", help="Skip training data generation, use existing dataset"
+        "--skip-training-data",
+        action="store_true",
+        help="Skip training data generation, use existing dataset",
     )
 
-    parser.add_argument("--datasets-only", action="store_true", help="Only generate datasets, do not train models")
+    parser.add_argument(
+        "--datasets-only", action="store_true", help="Only generate datasets, do not train models"
+    )
 
-    parser.add_argument("--dataset", type=str, default=None, help="Path to training dataset (if not using default)")
+    parser.add_argument(
+        "--dataset", type=str, default=None, help="Path to training dataset (if not using default)"
+    )
 
-    parser.add_argument("--skip-evaluation-data", action="store_true", help="Skip evaluation dataset generation")
+    parser.add_argument(
+        "--skip-evaluation-data", action="store_true", help="Skip evaluation dataset generation"
+    )
 
     args = parser.parse_args()
 

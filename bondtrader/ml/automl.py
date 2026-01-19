@@ -37,7 +37,10 @@ class AutoMLBondAdjuster:
         self.is_trained = False
 
     def automated_model_selection(
-        self, bonds: List[Bond], candidate_models: Optional[List[str]] = None, max_evaluation_time: int = 300  # seconds
+        self,
+        bonds: List[Bond],
+        candidate_models: Optional[List[str]] = None,
+        max_evaluation_time: int = 300,  # seconds
     ) -> Dict:
         """
         Automatically select best model and hyperparameters
@@ -69,7 +72,9 @@ class AutoMLBondAdjuster:
         # Use enhanced ML adjuster for feature extraction
         advanced_ml = AdvancedMLBondAdjuster(self.valuator)
         X, feature_names = advanced_ml._create_advanced_features(bonds, fair_values)
-        y = np.array([bond.current_price / fv if fv > 0 else 1.0 for bond, fv in zip(bonds, fair_values)])
+        y = np.array(
+            [bond.current_price / fv if fv > 0 else 1.0 for bond, fv in zip(bonds, fair_values)]
+        )
 
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
@@ -95,7 +100,13 @@ class AutoMLBondAdjuster:
             }
             rf_base = RandomForestRegressor(random_state=42, n_jobs=-1)
             rf_search = RandomizedSearchCV(
-                rf_base, param_distributions, n_iter=25, cv=tscv, scoring="r2", n_jobs=-1, random_state=42
+                rf_base,
+                param_distributions,
+                n_iter=25,
+                cv=tscv,
+                scoring="r2",
+                n_jobs=-1,
+                random_state=42,
             )
             rf_search.fit(X_scaled, y)
             model_results["random_forest"] = {
@@ -117,9 +128,17 @@ class AutoMLBondAdjuster:
                 "subsample": [0.8, 0.85, 0.9, 0.95, 1.0],
             }
             # Add early stopping for gradient boosting
-            gb_base = GradientBoostingRegressor(random_state=42, validation_fraction=0.1, n_iter_no_change=10, tol=1e-4)
+            gb_base = GradientBoostingRegressor(
+                random_state=42, validation_fraction=0.1, n_iter_no_change=10, tol=1e-4
+            )
             gb_search = RandomizedSearchCV(
-                gb_base, param_distributions, n_iter=25, cv=tscv, scoring="r2", n_jobs=-1, random_state=42
+                gb_base,
+                param_distributions,
+                n_iter=25,
+                cv=tscv,
+                scoring="r2",
+                n_jobs=-1,
+                random_state=42,
             )
             gb_search.fit(X_scaled, y)
             model_results["gradient_boosting"] = {
@@ -133,14 +152,30 @@ class AutoMLBondAdjuster:
             from sklearn.model_selection import RandomizedSearchCV
 
             param_distributions = {
-                "hidden_layer_sizes": [(50,), (100,), (150,), (100, 50), (100, 75), (150, 100), (200, 100)],
+                "hidden_layer_sizes": [
+                    (50,),
+                    (100,),
+                    (150,),
+                    (100, 50),
+                    (100, 75),
+                    (150, 100),
+                    (200, 100),
+                ],
                 "alpha": [0.0001, 0.001, 0.01, 0.1, 1.0],
                 "learning_rate": ["constant", "adaptive"],
                 "learning_rate_init": [0.001, 0.01, 0.1],
             }
-            nn_base = MLPRegressor(max_iter=1000, random_state=42, early_stopping=True, validation_fraction=0.1)
+            nn_base = MLPRegressor(
+                max_iter=1000, random_state=42, early_stopping=True, validation_fraction=0.1
+            )
             nn_search = RandomizedSearchCV(
-                nn_base, param_distributions, n_iter=20, cv=tscv, scoring="r2", n_jobs=-1, random_state=42
+                nn_base,
+                param_distributions,
+                n_iter=20,
+                cv=tscv,
+                scoring="r2",
+                n_jobs=-1,
+                random_state=42,
             )
             nn_search.fit(X_scaled, y)
             model_results["neural_network"] = {

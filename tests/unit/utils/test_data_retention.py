@@ -2,9 +2,10 @@
 Unit tests for data retention utilities
 """
 
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from bondtrader.utils.data_retention import DataRetentionManager, RetentionPolicy
 

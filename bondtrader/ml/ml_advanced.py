@@ -77,15 +77,21 @@ class AdvancedMLBondAdjuster:
         self.scaler_mean_ = None
         self.scaler_var_ = None
 
-    def _create_advanced_features(self, bonds: List[Bond], fair_values: List[float]) -> Tuple[np.ndarray, List[str]]:
+    def _create_advanced_features(
+        self, bonds: List[Bond], fair_values: List[float]
+    ) -> Tuple[np.ndarray, List[str]]:
         """Create advanced feature set with polynomial and interaction features"""
         features = []
         feature_names = []
         ytms = [self.valuator.calculate_yield_to_maturity(bond) for bond in bonds]
         durations = [self.valuator.calculate_duration(bond, ytm) for bond, ytm in zip(bonds, ytms)]
-        convexities = [self.valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds, ytms)]
+        convexities = [
+            self.valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds, ytms)
+        ]
 
-        for bond, fv, ytm, duration, convexity in zip(bonds, fair_values, ytms, durations, convexities):
+        for bond, fv, ytm, duration, convexity in zip(
+            bonds, fair_values, ytms, durations, convexities
+        ):
             char = bond.get_bond_characteristics()
 
             # Base features
@@ -121,11 +127,20 @@ class AdvancedMLBondAdjuster:
 
             # Polynomial features (degree 2)
             feature_vector.extend(
-                [coupon_rate**2, ttm**2, duration**2, coupon_rate * ttm, coupon_rate * duration, ttm * duration]
+                [
+                    coupon_rate**2,
+                    ttm**2,
+                    duration**2,
+                    coupon_rate * ttm,
+                    coupon_rate * duration,
+                    ttm * duration,
+                ]
             )
 
             # Interaction features
-            feature_vector.extend([price_to_par * duration, rating_num * ttm, ytm * duration, convexity * duration])
+            feature_vector.extend(
+                [price_to_par * duration, rating_num * ttm, ytm * duration, convexity * duration]
+            )
 
             features.append(feature_vector)
 
@@ -147,13 +162,22 @@ class AdvancedMLBondAdjuster:
             "modified_duration",
             "spread_over_rf",
         ]
-        poly_names = ["coupon_rate^2", "ttm^2", "duration^2", "coupon*ttm", "coupon*duration", "ttm*duration"]
+        poly_names = [
+            "coupon_rate^2",
+            "ttm^2",
+            "duration^2",
+            "coupon*ttm",
+            "coupon*duration",
+            "ttm*duration",
+        ]
         inter_names = ["price_to_par*duration", "rating*ttm", "ytm*duration", "convexity*duration"]
         feature_names = base_names + poly_names + inter_names
 
         return np.array(features), feature_names
 
-    def train_ensemble(self, bonds: List[Bond], test_size: float = 0.2, random_state: int = 42) -> Dict:
+    def train_ensemble(
+        self, bonds: List[Bond], test_size: float = 0.2, random_state: int = 42
+    ) -> Dict:
         """
         Train ensemble of multiple models
 
@@ -184,10 +208,14 @@ class AdvancedMLBondAdjuster:
         # Create features
         X, feature_names = self._create_advanced_features(bonds, fair_values)
         self.feature_names = feature_names
-        y = np.array([bond.current_price / fv if fv > 0 else 1.0 for bond, fv in zip(bonds, fair_values)])
+        y = np.array(
+            [bond.current_price / fv if fv > 0 else 1.0 for bond, fv in zip(bonds, fair_values)]
+        )
 
         # Split data
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=test_size, random_state=random_state
+        )
 
         # Scale features
         # Support incremental learning: if previous scaler state exists and incremental mode is on, use partial_fit
@@ -241,13 +269,21 @@ class AdvancedMLBondAdjuster:
         gb_model.fit(X_train_scaled, y_train)
         nn_model.fit(X_train_scaled, y_train)
 
-        self.models = {"random_forest": rf_model, "gradient_boosting": gb_model, "neural_network": nn_model}
+        self.models = {
+            "random_forest": rf_model,
+            "gradient_boosting": gb_model,
+            "neural_network": nn_model,
+        }
 
         # Create ensemble (stacking)
         base_models = [("rf", rf_model), ("gb", gb_model), ("nn", nn_model)]
 
-        meta_model = GradientBoostingRegressor(n_estimators=100, max_depth=4, learning_rate=0.1, random_state=random_state)
-        self.ensemble_model = StackingRegressor(estimators=base_models, final_estimator=meta_model, cv=5)
+        meta_model = GradientBoostingRegressor(
+            n_estimators=100, max_depth=4, learning_rate=0.1, random_state=random_state
+        )
+        self.ensemble_model = StackingRegressor(
+            estimators=base_models, final_estimator=meta_model, cv=5
+        )
 
         self.ensemble_model.fit(X_train_scaled, y_train)
 
@@ -282,7 +318,9 @@ class AdvancedMLBondAdjuster:
             "n_train": len(X_train),
             "n_test": len(X_test),
             "n_features": len(feature_names),
-            "improvement_over_best": (ensemble_metrics["test_r2"] - max(m["test_r2"] for m in models_eval.values())),
+            "improvement_over_best": (
+                ensemble_metrics["test_r2"] - max(m["test_r2"] for m in models_eval.values())
+            ),
             "model_version": self.current_model_version,
         }
 
@@ -301,12 +339,16 @@ class AdvancedMLBondAdjuster:
         # RF feature importance
         if "random_forest" in self.models:
             rf_importance = self.models["random_forest"].feature_importances_
-            importance_results["random_forest"] = dict(zip(self.feature_names, rf_importance.tolist()))
+            importance_results["random_forest"] = dict(
+                zip(self.feature_names, rf_importance.tolist())
+            )
 
         # GB feature importance
         if "gradient_boosting" in self.models:
             gb_importance = self.models["gradient_boosting"].feature_importances_
-            importance_results["gradient_boosting"] = dict(zip(self.feature_names, gb_importance.tolist()))
+            importance_results["gradient_boosting"] = dict(
+                zip(self.feature_names, gb_importance.tolist())
+            )
 
         # Ensemble consensus (average)
         all_importances = []
@@ -316,11 +358,15 @@ class AdvancedMLBondAdjuster:
 
         if all_importances:
             consensus_importance = np.mean(all_importances, axis=0)
-            importance_results["consensus"] = dict(zip(self.feature_names, consensus_importance.tolist()))
+            importance_results["consensus"] = dict(
+                zip(self.feature_names, consensus_importance.tolist())
+            )
 
         # Sort by consensus importance
         if "consensus" in importance_results:
-            sorted_importance = sorted(importance_results["consensus"].items(), key=lambda x: x[1], reverse=True)
+            sorted_importance = sorted(
+                importance_results["consensus"].items(), key=lambda x: x[1], reverse=True
+            )
             importance_results["sorted"] = dict(sorted_importance)
 
         return importance_results
@@ -359,7 +405,9 @@ class AdvancedMLBondAdjuster:
             importances = self.models["random_forest"].feature_importances_
             feature_values = X[0]
 
-            for i, (name, importance, value) in enumerate(zip(self.feature_names, importances, feature_values)):
+            for i, (name, importance, value) in enumerate(
+                zip(self.feature_names, importances, feature_values)
+            ):
                 # Contribution = importance * (value - mean_value)
                 contribution = importance * value
                 feature_contributions[name] = contribution
@@ -368,7 +416,9 @@ class AdvancedMLBondAdjuster:
             "theoretical_fair_value": fair_value,
             "ml_adjusted_value": ml_adjusted_value,
             "adjustment_factor": adjustment_factor,
-            "feature_contributions": feature_contributions if "feature_contributions" in locals() else {},
+            "feature_contributions": (
+                feature_contributions if "feature_contributions" in locals() else {}
+            ),
             "top_drivers": sorted(
                 feature_contributions.items() if "feature_contributions" in locals() else {},
                 key=lambda x: abs(x[1]),
@@ -424,8 +474,13 @@ class AdvancedMLBondAdjuster:
             "mean_ml_value": adjusted_mean,
             "confidence_interval_lower": adjusted_lower,
             "confidence_interval_upper": adjusted_upper,
-            "uncertainty_pct": (std_prediction / mean_prediction * 100) if mean_prediction > 0 else 0,
-            "individual_predictions": {name: pred for name, pred in zip(list(self.models.keys()) + ["ensemble"], predictions)},
+            "uncertainty_pct": (
+                (std_prediction / mean_prediction * 100) if mean_prediction > 0 else 0
+            ),
+            "individual_predictions": {
+                name: pred
+                for name, pred in zip(list(self.models.keys()) + ["ensemble"], predictions)
+            },
         }
 
     def adaptive_learning(
@@ -483,7 +538,9 @@ class AdvancedMLBondAdjuster:
             try:
                 # Use consistent random_state for reproducibility (can be changed per window if needed)
                 # For now, use fixed random_state for reproducibility
-                metrics = self.train_ensemble(window_bonds, test_size=0.1, random_state=random_state)
+                metrics = self.train_ensemble(
+                    window_bonds, test_size=0.1, random_state=random_state
+                )
 
                 new_test_r2 = metrics["ensemble_metrics"]["test_r2"]
 
@@ -494,14 +551,18 @@ class AdvancedMLBondAdjuster:
                 # Check threshold
                 if new_test_r2 < validation_threshold:
                     should_replace = False
-                    rejection_reason = f"Test R² {new_test_r2:.4f} below threshold {validation_threshold:.4f}"
+                    rejection_reason = (
+                        f"Test R² {new_test_r2:.4f} below threshold {validation_threshold:.4f}"
+                    )
 
                 # Check improvement over previous model
                 if previous_test_r2 is not None:
                     improvement = new_test_r2 - previous_test_r2
                     if improvement < min_improvement:
                         should_replace = False
-                        rejection_reason = f"Degradation too large: {improvement:.4f} < {min_improvement:.4f}"
+                        rejection_reason = (
+                            f"Degradation too large: {improvement:.4f} < {min_improvement:.4f}"
+                        )
 
                 if should_replace:
                     # Save model version before updating
@@ -540,7 +601,12 @@ class AdvancedMLBondAdjuster:
                 # Proper exception handling with logging
                 logger.error(f"Retraining failed at window {i}: {e}", exc_info=True)
                 validation_results.append(
-                    {"timestamp": datetime.now().isoformat(), "window": i, "status": "error", "error": str(e)}
+                    {
+                        "timestamp": datetime.now().isoformat(),
+                        "window": i,
+                        "status": "error",
+                        "error": str(e),
+                    }
                 )
                 # Restore previous model state if available
                 if self._previous_ensemble is not None:
@@ -548,7 +614,9 @@ class AdvancedMLBondAdjuster:
                 continue
 
             # Predict on next batch (validation set for this window)
-            test_bonds = bonds[i + window_size : min(i + window_size + retrain_frequency, len(bonds))]
+            test_bonds = bonds[
+                i + window_size : min(i + window_size + retrain_frequency, len(bonds))
+            ]
             for bond in test_bonds:
                 try:
                     pred_result = self.explain_prediction(bond)
@@ -585,7 +653,9 @@ class AdvancedMLBondAdjuster:
         """Save current model state for potential rollback"""
         try:
             self._previous_models = copy.deepcopy(self.models) if self.models else None
-            self._previous_ensemble = copy.deepcopy(self.ensemble_model) if self.ensemble_model else None
+            self._previous_ensemble = (
+                copy.deepcopy(self.ensemble_model) if self.ensemble_model else None
+            )
             self._previous_scaler = copy.deepcopy(self.scaler) if self.scaler else None
         except Exception as e:
             logger.warning(f"Failed to save model state: {e}")

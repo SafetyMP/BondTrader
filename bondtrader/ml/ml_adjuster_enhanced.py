@@ -55,7 +55,9 @@ class EnhancedMLBondAdjuster:
         self.feature_names = []
         self.training_metrics = {}
 
-    def _create_enhanced_features(self, bonds: List[Bond], fair_values: List[float]) -> Tuple[np.ndarray, List[str]]:
+    def _create_enhanced_features(
+        self, bonds: List[Bond], fair_values: List[float]
+    ) -> Tuple[np.ndarray, List[str]]:
         """Create enhanced feature matrix with macroeconomic and time features"""
         features = []
         feature_names = [
@@ -82,9 +84,13 @@ class EnhancedMLBondAdjuster:
         current_date = datetime.now()
         ytms = [self.valuator.calculate_yield_to_maturity(bond) for bond in bonds]
         durations = [self.valuator.calculate_duration(bond, ytm) for bond, ytm in zip(bonds, ytms)]
-        convexities = [self.valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds, ytms)]
+        convexities = [
+            self.valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds, ytms)
+        ]
 
-        for bond, fv, ytm, duration, convexity in zip(bonds, fair_values, ytms, durations, convexities):
+        for bond, fv, ytm, duration, convexity in zip(
+            bonds, fair_values, ytms, durations, convexities
+        ):
             char = bond.get_bond_characteristics()
 
             # Base features
@@ -95,7 +101,8 @@ class EnhancedMLBondAdjuster:
                 char["coupon_rate"],
                 char["time_to_maturity"],
                 char["credit_rating_numeric"],
-                char["current_price"] / char["face_value"],  # price_to_par_ratio (OK - different from target)
+                char["current_price"]
+                / char["face_value"],  # price_to_par_ratio (OK - different from target)
                 char["years_since_issue"],
                 char["frequency"],
                 char["callable"],
@@ -119,7 +126,13 @@ class EnhancedMLBondAdjuster:
             day_of_year = current_date.timetuple().tm_yday
 
             feature_vector.extend(
-                [modified_duration, spread_over_rf * 100, time_decay, quarter, day_of_year / 365.25]  # Normalized
+                [
+                    modified_duration,
+                    spread_over_rf * 100,
+                    time_decay,
+                    quarter,
+                    day_of_year / 365.25,
+                ]  # Normalized
             )
 
             features.append(feature_vector)
@@ -155,7 +168,10 @@ class EnhancedMLBondAdjuster:
         if use_mlflow and HAS_MLFLOW_TRACKING:
             try:
                 mlflow_tracker = MLflowTracker()
-                run_name = mlflow_run_name or f"enhanced_ml_{self.model_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                run_name = (
+                    mlflow_run_name
+                    or f"enhanced_ml_{self.model_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                )
                 mlflow_tracker.start_run(run_name=run_name, tags={"model_type": self.model_type})
             except Exception as e:
                 logger.warning(f"Failed to initialize MLflow tracking: {e}")
@@ -171,7 +187,9 @@ class EnhancedMLBondAdjuster:
             y = self._create_targets(bonds, fair_values)
 
             # Split data
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=test_size, random_state=random_state
+            )
 
             # Scale features
             X_train_scaled = self.scaler.fit_transform(X_train)
@@ -296,7 +314,9 @@ class EnhancedMLBondAdjuster:
                 mlflow_tracker.end_run()
             raise
 
-    def _tune_hyperparameters(self, X_train: np.ndarray, y_train: np.ndarray, random_state: int = 42) -> Dict:
+    def _tune_hyperparameters(
+        self, X_train: np.ndarray, y_train: np.ndarray, random_state: int = 42
+    ) -> Dict:
         """Tune hyperparameters using randomized search with time series cross-validation"""
         from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 

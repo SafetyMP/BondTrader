@@ -34,7 +34,9 @@ class CorrelationAnalyzer:
         else:
             self.valuator = valuator
 
-    def calculate_correlation_matrix(self, bonds: List[Bond], method: str = "characteristics") -> Dict:
+    def calculate_correlation_matrix(
+        self, bonds: List[Bond], method: str = "characteristics"
+    ) -> Dict:
         """
         Calculate correlation matrix for bonds
 
@@ -81,7 +83,10 @@ class CorrelationAnalyzer:
             # Weighted average correlation (excluding diagonal which is already 1.0)
             mask = ~np.eye(n, dtype=bool)
             correlation_matrix[mask] = (
-                0.3 * rating_sim[mask] + 0.3 * maturity_sim[mask] + 0.2 * type_sim[mask] + 0.2 * issuer_sim[mask]
+                0.3 * rating_sim[mask]
+                + 0.3 * maturity_sim[mask]
+                + 0.2 * type_sim[mask]
+                + 0.2 * issuer_sim[mask]
             )
 
         else:  # returns method (would use historical data)
@@ -135,7 +140,9 @@ class CorrelationAnalyzer:
 
         return correlation
 
-    def calculate_covariance_matrix(self, bonds: List[Bond], correlation_matrix: Optional[np.ndarray] = None) -> Dict:
+    def calculate_covariance_matrix(
+        self, bonds: List[Bond], correlation_matrix: Optional[np.ndarray] = None
+    ) -> Dict:
         """
         Calculate covariance matrix
 
@@ -169,7 +176,9 @@ class CorrelationAnalyzer:
             "correlation_matrix": correlation_matrix.tolist(),
         }
 
-    def portfolio_diversification_metrics(self, bonds: List[Bond], weights: Optional[np.ndarray] = None) -> Dict:
+    def portfolio_diversification_metrics(
+        self, bonds: List[Bond], weights: Optional[np.ndarray] = None
+    ) -> Dict:
         """
         Calculate portfolio diversification metrics
 
@@ -204,7 +213,11 @@ class CorrelationAnalyzer:
         avg_correlation = corr_result["average_correlation"]
         undiversified_risk = np.sqrt(np.sum(weights**2))
         diversified_risk = np.sqrt(portfolio_variance)
-        diversification_benefit = (undiversified_risk - diversified_risk) / undiversified_risk if undiversified_risk > 0 else 0
+        diversification_benefit = (
+            (undiversified_risk - diversified_risk) / undiversified_risk
+            if undiversified_risk > 0
+            else 0
+        )
 
         return {
             "effective_positions": effective_positions,

@@ -23,7 +23,13 @@ class ExecutionStrategy:
         """Initialize execution strategy engine"""
         pass
 
-    def twap_execution(self, total_quantity: float, start_time: datetime, end_time: datetime, num_intervals: int = 10) -> Dict:
+    def twap_execution(
+        self,
+        total_quantity: float,
+        start_time: datetime,
+        end_time: datetime,
+        num_intervals: int = 10,
+    ) -> Dict:
         """
         Time-Weighted Average Price (TWAP) execution
 
@@ -66,7 +72,11 @@ class ExecutionStrategy:
         }
 
     def vwap_execution(
-        self, total_quantity: float, volume_profile: List[Dict], start_time: datetime, end_time: datetime
+        self,
+        total_quantity: float,
+        volume_profile: List[Dict],
+        start_time: datetime,
+        end_time: datetime,
     ) -> Dict:
         """
         Volume-Weighted Average Price (VWAP) execution
@@ -118,7 +128,11 @@ class ExecutionStrategy:
         }
 
     def implementation_shortfall(
-        self, bond: Bond, target_quantity: float, execution_prices: List[float], benchmark_price: Optional[float] = None
+        self,
+        bond: Bond,
+        target_quantity: float,
+        execution_prices: List[float],
+        benchmark_price: Optional[float] = None,
     ) -> Dict:
         """
         Calculate Implementation Shortfall
@@ -146,7 +160,9 @@ class ExecutionStrategy:
 
         # Implementation shortfall
         implementation_shortfall = total_cost - benchmark_cost
-        implementation_shortfall_pct = (implementation_shortfall / benchmark_cost) * 100 if benchmark_cost > 0 else 0
+        implementation_shortfall_pct = (
+            (implementation_shortfall / benchmark_cost) * 100 if benchmark_cost > 0 else 0
+        )
 
         # Price impact
         price_impact = average_execution_price - benchmark_price
@@ -164,7 +180,9 @@ class ExecutionStrategy:
             "num_trades": len(execution_prices),
         }
 
-    def optimal_execution(self, bond: Bond, total_quantity: float, urgency: float = 0.5, volatility: float = 0.01) -> Dict:
+    def optimal_execution(
+        self, bond: Bond, total_quantity: float, urgency: float = 0.5, volatility: float = 0.01
+    ) -> Dict:
         """
         Optimal execution using Almgren-Chriss model
 

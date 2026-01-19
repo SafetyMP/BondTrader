@@ -2,8 +2,9 @@
 Unit tests for PostgreSQL support utilities
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 @pytest.mark.unit
@@ -21,7 +22,7 @@ class TestPostgreSQLSupport:
             username="testuser",
             password="testpass",
         )
-        
+
         assert "localhost" in connection_string
         assert "5432" in connection_string
         assert "testdb" in connection_string
@@ -39,7 +40,7 @@ class TestPostgreSQLSupport:
             password="testpass",
             ssl_mode="require",
         )
-        
+
         assert "sslmode=require" in connection_string or "ssl=true" in connection_string
 
     def test_check_postgresql_connection(self):
@@ -50,7 +51,7 @@ class TestPostgreSQLSupport:
             mock_conn = MagicMock()
             mock_conn.execute.return_value = None
             mock_engine.return_value.connect.return_value.__enter__.return_value = mock_conn
-            
+
             try:
                 result = check_connection("postgresql://localhost/testdb")
                 # Should return boolean or handle gracefully

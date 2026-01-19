@@ -92,7 +92,11 @@ class TestUserManager:
         """Test enabling MFA for user"""
         # Create user first by adding to users dict
         hashed, salt = hash_password("testpassword")
-        user_manager_file.users["testuser"] = {"password_hash": hashed, "salt": salt, "roles": ["user"]}
+        user_manager_file.users["testuser"] = {
+            "password_hash": hashed,
+            "salt": salt,
+            "roles": ["user"],
+        }
 
         if user_manager_file.mfa_manager:
             secret, qr_code = user_manager_file.enable_mfa("testuser")

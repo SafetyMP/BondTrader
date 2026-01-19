@@ -245,7 +245,10 @@ class MLModelCICD:
                     test_name=gate.gate_name,
                     status=TestStatus.FAILED,
                     message=f"Data validation failed: {', '.join(validation_result.errors)}",
-                    details={"errors": validation_result.errors, "warnings": validation_result.warnings},
+                    details={
+                        "errors": validation_result.errors,
+                        "warnings": validation_result.warnings,
+                    },
                 )
 
         except Exception as e:
@@ -425,7 +428,8 @@ class MLModelCICD:
     def _save_results(self, result: CICDResult):
         """Save CI/CD results to file"""
         result_file = os.path.join(
-            self.results_dir, f"cicd_{self.pipeline_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            self.results_dir,
+            f"cicd_{self.pipeline_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
         )
 
         result_dict = asdict(result)

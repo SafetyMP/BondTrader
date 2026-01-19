@@ -4,8 +4,8 @@ Unit tests for dependency injection container
 
 import pytest
 
-from bondtrader.core.container import ServiceContainer, get_container
 from bondtrader.core.bond_valuation import BondValuator
+from bondtrader.core.container import ServiceContainer, get_container
 
 
 @pytest.mark.unit

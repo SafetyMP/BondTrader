@@ -2,8 +2,9 @@
 Unit tests for health checking utilities
 """
 
-import pytest
 from datetime import datetime
+
+import pytest
 
 from bondtrader.utils.health import ComponentHealth, HealthChecker, HealthStatus
 

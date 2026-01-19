@@ -2,8 +2,9 @@
 Extended unit tests for secrets management utilities
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from bondtrader.utils.secrets import SecretsManager
 
@@ -30,8 +31,9 @@ class TestSecretsManager:
     def test_get_secret_env(self):
         """Test getting secret from environment"""
         import os
+
         manager = SecretsManager(backend="env")
-        
+
         with patch.dict(os.environ, {"TEST_SECRET": "test_value"}):
             value = manager.get_secret("TEST_SECRET")
             assert value == "test_value"
@@ -39,10 +41,14 @@ class TestSecretsManager:
     def test_set_secret_file(self):
         """Test setting secret in file backend"""
         import os
-        with patch.dict(os.environ, {
-            "SECRETS_MASTER_PASSWORD": "test_password",
-            "SECRETS_SALT": "test_salt_value_for_testing_only"
-        }):
+
+        with patch.dict(
+            os.environ,
+            {
+                "SECRETS_MASTER_PASSWORD": "test_password",
+                "SECRETS_SALT": "test_salt_value_for_testing_only",
+            },
+        ):
             try:
                 manager = SecretsManager(backend="file", secrets_file=".test_secrets")
                 result = manager.set_secret("TEST_SECRET", "test_value")
@@ -55,6 +61,6 @@ class TestSecretsManager:
     def test_get_secret_not_found(self):
         """Test getting non-existent secret"""
         manager = SecretsManager(backend="env")
-        
+
         value = manager.get_secret("NON_EXISTENT_SECRET", default="default_value")
         assert value == "default_value"

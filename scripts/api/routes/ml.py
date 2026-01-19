@@ -13,7 +13,11 @@ from scripts.api_helpers import handle_service_result
 router = APIRouter(tags=["Machine Learning"])
 
 
-@router.get("/predict/{bond_id}", response_model=MLPredictionResponse, dependencies=[Depends(verify_api_key)])
+@router.get(
+    "/predict/{bond_id}",
+    response_model=MLPredictionResponse,
+    dependencies=[Depends(verify_api_key)],
+)
 async def ml_predict(bond_id: str):
     """
     Get ML-adjusted prediction for a bond

@@ -52,7 +52,9 @@ def generate_2005_training_data(
 
     # Generate time series data starting from 2005
     print(f"\nStep 2: Generating time series data from {start_year}...")
-    time_series_data = _generate_time_series_data_from_date(generator, base_bonds, time_periods, bonds_per_period, start_year)
+    time_series_data = _generate_time_series_data_from_date(
+        generator, base_bonds, time_periods, bonds_per_period, start_year
+    )
     print(f"✓ Generated {len(time_series_data)} time series observations")
 
     # Create feature matrices
@@ -111,8 +113,16 @@ def generate_2005_training_data(
             "num_features": features.shape[1] if len(features) > 0 else 0,
             "regimes_represented": list(set([m["regime"] for m in metadata])),
             "date_range": {
-                "start": min([m["date"] for m in metadata]).isoformat() if metadata else datetime.now().isoformat(),
-                "end": max([m["date"] for m in metadata]).isoformat() if metadata else datetime.now().isoformat(),
+                "start": (
+                    min([m["date"] for m in metadata]).isoformat()
+                    if metadata
+                    else datetime.now().isoformat()
+                ),
+                "end": (
+                    max([m["date"] for m in metadata]).isoformat()
+                    if metadata
+                    else datetime.now().isoformat()
+                ),
             },
             "start_year": start_year,
         },
@@ -134,7 +144,11 @@ def generate_2005_training_data(
 
 
 def _generate_time_series_data_from_date(
-    generator: TrainingDataGenerator, base_bonds: list, time_periods: int, bonds_per_period: int, start_year: int
+    generator: TrainingDataGenerator,
+    base_bonds: list,
+    time_periods: int,
+    bonds_per_period: int,
+    start_year: int,
 ) -> list:
     """
     Generate time series data starting from a specific year
@@ -148,8 +162,20 @@ def _generate_time_series_data_from_date(
 
     # Regime transition probabilities (Markov chain)
     regime_transitions = {
-        "normal": {"normal": 0.6, "bull": 0.15, "bear": 0.15, "high_volatility": 0.05, "low_volatility": 0.05},
-        "bull": {"normal": 0.3, "bull": 0.5, "bear": 0.1, "high_volatility": 0.05, "low_volatility": 0.05},
+        "normal": {
+            "normal": 0.6,
+            "bull": 0.15,
+            "bear": 0.15,
+            "high_volatility": 0.05,
+            "low_volatility": 0.05,
+        },
+        "bull": {
+            "normal": 0.3,
+            "bull": 0.5,
+            "bear": 0.1,
+            "high_volatility": 0.05,
+            "low_volatility": 0.05,
+        },
         "bear": {"normal": 0.2, "bull": 0.1, "bear": 0.5, "high_volatility": 0.15, "crisis": 0.05},
         "high_volatility": {"normal": 0.3, "bear": 0.3, "high_volatility": 0.3, "crisis": 0.1},
         "low_volatility": {"normal": 0.4, "bull": 0.4, "low_volatility": 0.2},
@@ -167,7 +193,9 @@ def _generate_time_series_data_from_date(
             transition_probs = regime_transitions.get(current_regime, regime_transitions["normal"])
             current_regime = random.choice(list(transition_probs.keys()))
             # Use probabilities for selection
-            current_regime = np.random.choice(list(transition_probs.keys()), p=list(transition_probs.values()))
+            current_regime = np.random.choice(
+                list(transition_probs.keys()), p=list(transition_probs.values())
+            )
 
         regime = generator.regimes[current_regime]
         period_date = start_date + timedelta(days=period * 30)
@@ -193,7 +221,9 @@ def _generate_time_series_data_from_date(
             sentiment_impact = regime.market_sentiment * 0.01
 
             # Market price with regime effects
-            market_price = fair_value * (1 + liquidity_noise + sentiment_impact + np.random.normal(0, volatility * 0.5))
+            market_price = fair_value * (
+                1 + liquidity_noise + sentiment_impact + np.random.normal(0, volatility * 0.5)
+            )
 
             # Ensure price is reasonable
             market_price = np.clip(market_price, fair_value * 0.5, fair_value * 1.5)
@@ -216,7 +246,9 @@ def _generate_time_series_data_from_date(
     return time_series_data
 
 
-def train_model_with_2005_data(dataset: dict, model_type: str = "random_forest", model_dir: str = None) -> dict:
+def train_model_with_2005_data(
+    dataset: dict, model_type: str = "random_forest", model_dir: str = None
+) -> dict:
     """
     Train ML models using the 2005 dataset
 
@@ -266,7 +298,8 @@ def train_model_with_2005_data(dataset: dict, model_type: str = "random_forest",
 
     # Get training bonds - we'll generate fresh bonds matching the dataset characteristics
     train_bonds = generator.generate_bonds_for_training(
-        num_bonds=min(2000, len(dataset["train"]["features"])), include_regimes=["normal", "bull", "bear"]
+        num_bonds=min(2000, len(dataset["train"]["features"])),
+        include_regimes=["normal", "bull", "bear"],
     )
 
     # Split for training
@@ -306,8 +339,14 @@ def train_model_with_2005_data(dataset: dict, model_type: str = "random_forest",
     print("-" * 70)
     try:
         enhanced_ml = EnhancedMLBondAdjuster(model_type=model_type)
-        metrics = enhanced_ml.train_with_tuning(train_set, test_size=0.2, random_state=42, tune_hyperparameters=True)
-        results["enhanced_ml_adjuster"] = {"model": enhanced_ml, "metrics": metrics, "status": "success"}
+        metrics = enhanced_ml.train_with_tuning(
+            train_set, test_size=0.2, random_state=42, tune_hyperparameters=True
+        )
+        results["enhanced_ml_adjuster"] = {
+            "model": enhanced_ml,
+            "metrics": metrics,
+            "status": "success",
+        }
 
         # Save model
         import joblib
@@ -334,7 +373,11 @@ def train_model_with_2005_data(dataset: dict, model_type: str = "random_forest",
         valuator = get_container().get_valuator()
         advanced_ml = AdvancedMLBondAdjuster(valuator)
         ensemble_metrics = advanced_ml.train_ensemble(train_set, test_size=0.2, random_state=42)
-        results["advanced_ml_adjuster"] = {"model": advanced_ml, "metrics": ensemble_metrics, "status": "success"}
+        results["advanced_ml_adjuster"] = {
+            "model": advanced_ml,
+            "metrics": ensemble_metrics,
+            "status": "success",
+        }
 
         # Save model
         import joblib
@@ -342,10 +385,16 @@ def train_model_with_2005_data(dataset: dict, model_type: str = "random_forest",
         model_path = os.path.join(model_dir, "advanced_ml_adjuster_2005.joblib")
         advanced_ml.save_model(model_path)
         print(f"✓ Trained and saved to {model_path}")
-        print(f"  Ensemble Test R²: {ensemble_metrics.get('ensemble_metrics', {}).get('test_r2', 0):.4f}")
-        print(f"  Ensemble Test RMSE: {ensemble_metrics.get('ensemble_metrics', {}).get('test_rmse', 0):.4f}")
+        print(
+            f"  Ensemble Test R²: {ensemble_metrics.get('ensemble_metrics', {}).get('test_r2', 0):.4f}"
+        )
+        print(
+            f"  Ensemble Test RMSE: {ensemble_metrics.get('ensemble_metrics', {}).get('test_rmse', 0):.4f}"
+        )
         if "improvement_over_best" in ensemble_metrics:
-            print(f"  Improvement over best individual: {ensemble_metrics['improvement_over_best']:.4f}")
+            print(
+                f"  Improvement over best individual: {ensemble_metrics['improvement_over_best']:.4f}"
+            )
     except Exception as e:
         print(f"✗ Failed: {e}")
         logger.error(f"Error training advanced ML adjuster: {e}", exc_info=True)
@@ -361,7 +410,9 @@ def train_model_with_2005_data(dataset: dict, model_type: str = "random_forest",
         valuator = get_container().get_valuator()
         automl = AutoMLBondAdjuster(valuator)
         automl_results = automl.automated_model_selection(
-            train_set, candidate_models=["random_forest", "gradient_boosting"], max_evaluation_time=300  # 5 minutes
+            train_set,
+            candidate_models=["random_forest", "gradient_boosting"],
+            max_evaluation_time=300,  # 5 minutes
         )
         results["automl"] = {"model": automl, "results": automl_results, "status": "success"}
 
@@ -402,12 +453,27 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Train ML model with 2005 historical data")
-    parser.add_argument("--total-bonds", type=int, default=5000, help="Total number of bonds to generate (default: 5000)")
     parser.add_argument(
-        "--time-periods", type=int, default=60, help="Number of time periods in months (default: 60 = 5 years)"
+        "--total-bonds",
+        type=int,
+        default=5000,
+        help="Total number of bonds to generate (default: 5000)",
     )
-    parser.add_argument("--bonds-per-period", type=int, default=100, help="Bonds per time period (default: 100)")
-    parser.add_argument("--start-year", type=int, default=2005, help="Starting year for data generation (default: 2005)")
+    parser.add_argument(
+        "--time-periods",
+        type=int,
+        default=60,
+        help="Number of time periods in months (default: 60 = 5 years)",
+    )
+    parser.add_argument(
+        "--bonds-per-period", type=int, default=100, help="Bonds per time period (default: 100)"
+    )
+    parser.add_argument(
+        "--start-year",
+        type=int,
+        default=2005,
+        help="Starting year for data generation (default: 2005)",
+    )
     parser.add_argument(
         "--model-type",
         type=str,
@@ -416,11 +482,19 @@ def main():
         help="Type of ML model to train (default: random_forest)",
     )
     parser.add_argument(
-        "--model-dir", type=str, default=None, help="Directory to save trained models (default: models/models_2005)"
+        "--model-dir",
+        type=str,
+        default=None,
+        help="Directory to save trained models (default: models/models_2005)",
     )
-    parser.add_argument("--save-dataset", action="store_true", help="Save the generated dataset to disk")
     parser.add_argument(
-        "--dataset-path", type=str, default=None, help="Path to save/load dataset (default: data/training_dataset_2005.joblib)"
+        "--save-dataset", action="store_true", help="Save the generated dataset to disk"
+    )
+    parser.add_argument(
+        "--dataset-path",
+        type=str,
+        default=None,
+        help="Path to save/load dataset (default: data/training_dataset_2005.joblib)",
     )
 
     args = parser.parse_args()
@@ -430,7 +504,9 @@ def main():
 
         # Determine dataset path
         if args.dataset_path is None:
-            dataset_path = os.path.join(config.data_dir, f"training_dataset_{args.start_year}.joblib")
+            dataset_path = os.path.join(
+                config.data_dir, f"training_dataset_{args.start_year}.joblib"
+            )
         else:
             dataset_path = args.dataset_path
 
@@ -456,7 +532,9 @@ def main():
                 print(f"\n✓ Dataset saved to {dataset_path}")
 
         # Train models
-        results = train_model_with_2005_data(dataset=dataset, model_type=args.model_type, model_dir=args.model_dir)
+        results = train_model_with_2005_data(
+            dataset=dataset, model_type=args.model_type, model_dir=args.model_dir
+        )
 
         print("\n✓ All operations complete!")
 

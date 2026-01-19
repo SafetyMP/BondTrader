@@ -18,7 +18,9 @@ class RateLimiter:
     Implements token bucket algorithm for rate limiting
     """
 
-    def __init__(self, max_requests: int = 100, time_window_seconds: int = 60, per_user: bool = True):
+    def __init__(
+        self, max_requests: int = 100, time_window_seconds: int = 60, per_user: bool = True
+    ):
         """
         Initialize rate limiter
 
@@ -99,7 +101,9 @@ def get_api_rate_limiter() -> RateLimiter:
     if _api_rate_limiter is None:
         max_requests = int(os.getenv("API_RATE_LIMIT", "100"))
         window = int(os.getenv("API_RATE_LIMIT_WINDOW", "60"))
-        _api_rate_limiter = RateLimiter(max_requests=max_requests, time_window_seconds=window, per_user=True)
+        _api_rate_limiter = RateLimiter(
+            max_requests=max_requests, time_window_seconds=window, per_user=True
+        )
     return _api_rate_limiter
 
 
@@ -109,7 +113,9 @@ def get_dashboard_rate_limiter() -> RateLimiter:
     if _dashboard_rate_limiter is None:
         max_requests = int(os.getenv("DASHBOARD_RATE_LIMIT", "200"))
         window = int(os.getenv("DASHBOARD_RATE_LIMIT_WINDOW", "60"))
-        _dashboard_rate_limiter = RateLimiter(max_requests=max_requests, time_window_seconds=window, per_user=True)
+        _dashboard_rate_limiter = RateLimiter(
+            max_requests=max_requests, time_window_seconds=window, per_user=True
+        )
     return _dashboard_rate_limiter
 
 
