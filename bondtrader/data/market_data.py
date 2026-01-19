@@ -10,12 +10,15 @@ import pandas as pd
 import requests
 
 # yfinance is optional - import only when needed to avoid Python 3.9 compatibility issues
-# (yfinance 0.2.0+ uses Python 3.10+ union syntax)
+# (yfinance 0.2.0+ uses Python 3.10+ union syntax which causes TypeError on Python 3.9)
+import sys
+
 try:
     import yfinance as yf
 
     HAS_YFINANCE = True
-except ImportError:
+except (ImportError, TypeError, SyntaxError):
+    # Catch ImportError, TypeError (Python 3.9 compatibility), or SyntaxError
     HAS_YFINANCE = False
     yf = None
 
