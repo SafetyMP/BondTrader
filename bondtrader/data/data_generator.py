@@ -150,14 +150,14 @@ class BondDataGenerator:
             List of bonds with adjusted prices
         """
         import copy
-        
+
         # Create deep copies to avoid modifying original bonds
         bonds_copy = [copy.deepcopy(bond) for bond in bonds]
-        
+
         # If noise level is zero, return copies without modification
         if noise_level == 0.0:
             return bonds_copy
-        
+
         from bondtrader.core.bond_valuation import BondValuator
         from bondtrader.core.container import get_container
 

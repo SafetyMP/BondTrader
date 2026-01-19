@@ -232,7 +232,7 @@ class EnhancedBondDatabase:
             existing = session.query(BondModel).filter(BondModel.bond_id == bond.bond_id).first()
             # Convert coupon_rate from percentage (e.g., 5.0) to decimal (e.g., 0.05) for database
             coupon_rate_decimal = bond.coupon_rate / 100.0
-            
+
             if existing:
                 # Update existing
                 existing.bond_type = bond.bond_type.value
@@ -398,7 +398,7 @@ class EnhancedBondDatabase:
         """Convert SQLAlchemy model to Bond object"""
         # Convert coupon_rate from decimal (e.g., 0.05) back to percentage (e.g., 5.0)
         coupon_rate_percentage = model.coupon_rate * 100.0
-        
+
         return Bond(
             bond_id=model.bond_id,
             bond_type=BondType(model.bond_type),

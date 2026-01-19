@@ -47,7 +47,7 @@ if _otel_available and BatchSpanProcessor:
 
         def force_flush(self, timeout_millis: int = 30000):
             """Override to catch export errors"""
-            if hasattr(self, '_shutdown_called') and self._shutdown_called:
+            if hasattr(self, "_shutdown_called") and self._shutdown_called:
                 return None
             try:
                 return super().force_flush(timeout_millis)
