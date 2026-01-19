@@ -179,7 +179,7 @@ for model_type in models_to_test:
 
 **Before:**
 ```python
-from bondtrader.data.data_persistence import BondDatabase
+from bondtrader.data.data_persistence_enhanced import EnhancedBondDatabase
 db = BondDatabase("bonds.db")
 ```
 

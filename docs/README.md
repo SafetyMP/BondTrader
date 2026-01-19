@@ -7,8 +7,6 @@ Welcome to the BondTrader documentation! This directory contains comprehensive d
 - [User Guides](#user-guides-guides)
 - [API Documentation](#api-documentation-api)
 - [Development Documentation](#development-documentation-development)
-- [Implementation Documentation](#implementation-documentation-implementation)
-- [Status Documentation](#status-documentation-status)
 - [Project Organization](#project-organization)
 
 ## 📚 Documentation Structure
@@ -37,35 +35,6 @@ Documentation for developers and contributors:
 - **[Architecture](development/ARCHITECTURE.md)** - System architecture and design overview
 - **[Competitive Analysis](development/COMPETITIVE_ANALYSIS.md)** - Comparison with industry leaders
 - **[Industry Comparison](development/INDUSTRY_COMPARISON.md)** - Best practices analysis
-- **[Implementation Summary](development/IMPLEMENTATION_SUMMARY.md)** - Recent implementations
-- **[Improvements](development/IMPROVEMENTS.md)** - Implemented improvements
-- **[Improvement Recommendations](development/IMPROVEMENT_RECOMMENDATIONS.md)** - Future improvements
-- **[Optimization Summary](development/OPTIMIZATION_SUMMARY.md)** - Performance optimizations
-- **[Organization Summary](development/ORGANIZATION_SUMMARY.md)** - Codebase organization history
-- **[Superiority Analysis](development/SUPERIORITY_ANALYSIS.md)** - Areas where we excel
-- **[Upgrade Summary](development/UPGRADE_SUMMARY.md)** - Algorithmic upgrades
-
-### Implementation Documentation (`implementation/`)
-
-Implementation guides and status reports:
-
-- **[Implementation Guide](implementation/IMPLEMENTATION_GUIDE.md)** - Module optimization implementation guide
-- **[Implementation Status](implementation/IMPLEMENTATION_STATUS.md)** - Current implementation status
-- **[Implementation Complete](implementation/IMPLEMENTATION_COMPLETE.md)** - Completion summary
-- **[Final Implementation Summary](implementation/FINAL_IMPLEMENTATION_SUMMARY.md)** - Comprehensive implementation summary
-- **[Module Optimization Review](implementation/MODULE_OPTIMIZATION_REVIEW.md)** - Module optimization details
-
-### Status Documentation (`status/`)
-
-Status tracking and improvement documentation:
-
-- **[Production Testing Readiness](status/PRODUCTION_TESTING_READINESS.md)** - Production readiness assessment
-- **[Production Testing Steps](status/PRODUCTION_TESTING_STEPS.md)** - Steps for production testing
-- **[Model Tuning Improvements](status/MODEL_TUNING_IMPROVEMENTS.md)** - Model tuning enhancements
-- **[Training Improvements](status/TRAINING_IMPROVEMENTS.md)** - Training process improvements
-- **[Training Improvements Implemented](status/TRAINING_IMPROVEMENTS_IMPLEMENTED.md)** - Implemented training enhancements
-- **[Evaluation Errors Summary](status/EVALUATION_ERRORS_SUMMARY.md)** - Evaluation error analysis
-- **[Evaluation Optimizations](status/EVALUATION_OPTIMIZATIONS.md)** - Evaluation process optimizations
 
 ## 📖 Getting Started
 
@@ -87,43 +56,11 @@ See [ORGANIZATION.md](ORGANIZATION.md) for details about the codebase structure,
 
 ## 🔗 Quick Links
 
-- **[Main README](../README.md)** - Project overview
-- **[Changelog](../CHANGELOG.md)** - Version history
-- **[Contributing](../CONTRIBUTING.md)** - Contribution guidelines
-- **[Code of Conduct](../CODE_OF_CONDUCT.md)** - Community standards
-- **[Security Policy](../SECURITY.md)** - Security reporting
-- **[Roadmap](../ROADMAP.md)** - Planned features
-- **[Evaluation Errors Summary](EVALUATION_ERRORS_SUMMARY.md)** - Known errors and fixes
-- **[Evaluation Failure Analysis](EVALUATION_FAILURE_ANALYSIS.md)** - Failure analysis
-- **[Evaluation Optimizations](EVALUATION_OPTIMIZATIONS.md)** - Performance optimizations
-
-## 🚀 Quick Links
-
 - **[Main README](../README.md)** - Project overview and quick start
 - **[Contributing Guide](../CONTRIBUTING.md)** - How to contribute
 - **[Changelog](../CHANGELOG.md)** - Version history and changes
-
-## 📖 Reading Guide
-
-### For Users
-
-1. Start with the [Main README](../README.md)
-2. Read relevant guides in `guides/`
-3. Check [Production Testing Readiness](PRODUCTION_TESTING_READINESS.md) for deployment
-
-### For Developers
-
-1. Read [Contributing Guide](../CONTRIBUTING.md)
-2. Review [Implementation Summary](development/IMPLEMENTATION_SUMMARY.md)
-3. Check [Improvement Recommendations](development/IMPROVEMENT_RECOMMENDATIONS.md)
-4. Study [Competitive Analysis](development/COMPETITIVE_ANALYSIS.md) for context
-
-### For Contributors
-
-1. Read [Contributing Guide](../CONTRIBUTING.md)
-2. Review [Organization Summary](development/ORGANIZATION_SUMMARY.md) for code structure
-3. Check [Optimization Summary](development/OPTIMIZATION_SUMMARY.md) for performance considerations
+- **[Roadmap](../ROADMAP.md)** - Planned features
 
 ---
 
-**Note**: Some documentation files may be technical or reference-specific implementations. For general usage, refer to the guides and main README.
+**Note**: For general usage, refer to the guides and main README. For development, see the Architecture and Competitive Analysis documents.

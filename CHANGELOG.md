@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Codebase Truncation**: Reduced codebase size by ~25.6% (7,933 lines) while maintaining full functionality
+  - Removed deprecated files: `data_persistence.py`, `bond_models_pydantic.py`, `config_pydantic.py`
+  - Consolidated documentation: Reduced from 45 markdown files to 18 essential files (~7,326 lines saved)
+  - Consolidated risk modules: Merged enhanced credit risk methods into `RiskManager` (80 lines saved)
+  - Removed unused `base_ml_adjuster.py` (231 lines saved)
+  - Updated all documentation references to reflect current structure
+- **Risk Module Consolidation**: Enhanced credit risk methods (Merton model, migration analysis, CVaR) now in `RiskManager`
+  - `CreditRiskEnhanced` is now a thin backward-compatible wrapper delegating to `RiskManager`
+  - All functionality preserved with improved code organization
+
 ### Added
 - **Input Validation**: Comprehensive validation module (`bondtrader/utils/validation.py`) with 9+ validators
   - Numeric validation (positive, range, percentage, probability)

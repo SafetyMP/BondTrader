@@ -28,6 +28,7 @@ except ImportError:
 
 from bondtrader.core.bond_models import Bond
 from bondtrader.core.bond_valuation import BondValuator
+from bondtrader.utils.utils import logger
 
 
 class RiskManager:
@@ -41,6 +42,8 @@ class RiskManager:
             valuator: Bond valuator instance
         """
         self.valuator = valuator if valuator else BondValuator()
+        # Credit migration matrix (annual transition probabilities) for enhanced credit risk
+        self.migration_matrix = self._get_default_migration_matrix()
 
     def calculate_var(
         self,
@@ -311,3 +314,241 @@ class RiskManager:
         results["portfolio_change_pct"] = ((total_value_after - total_value_before) / total_value_before) * 100
 
         return results
+
+    # Enhanced credit risk methods (from CreditRiskEnhanced)
+    def _get_default_migration_matrix(self) -> Dict:
+        """Get default credit migration matrix (annual transition probabilities)"""
+        return {
+            "AAA": {"AAA": 0.9360, "AA": 0.0600, "A": 0.0030, "BBB": 0.0010, "BB": 0.0000, "B": 0.0000, "CCC": 0.0000, "D": 0.0000},
+            "AA": {"AAA": 0.0070, "AA": 0.9250, "A": 0.0610, "BBB": 0.0050, "BB": 0.0010, "B": 0.0000, "CCC": 0.0000, "D": 0.0010},
+            "A": {"AAA": 0.0000, "AA": 0.0230, "A": 0.9150, "BBB": 0.0550, "BB": 0.0040, "B": 0.0020, "CCC": 0.0000, "D": 0.0010},
+            "BBB": {"AAA": 0.0000, "AA": 0.0020, "A": 0.0310, "BBB": 0.9040, "BB": 0.0520, "B": 0.0070, "CCC": 0.0020, "D": 0.0020},
+            "BB": {"AAA": 0.0000, "AA": 0.0000, "A": 0.0020, "BBB": 0.0480, "BB": 0.8250, "B": 0.1000, "CCC": 0.0150, "D": 0.0100},
+            "B": {"AAA": 0.0000, "AA": 0.0000, "A": 0.0010, "BBB": 0.0040, "BB": 0.0750, "B": 0.7750, "CCC": 0.1000, "D": 0.0450},
+            "CCC": {"AAA": 0.0000, "AA": 0.0000, "A": 0.0000, "BBB": 0.0020, "BB": 0.0100, "B": 0.0830, "CCC": 0.6250, "D": 0.2800},
+        }
+
+    def merton_structural_model(
+        self, bond: Bond, asset_value: Optional[float] = None, asset_volatility: float = 0.25, debt_value: Optional[float] = None
+    ) -> Dict:
+        """
+        Calculate default probability using Merton structural model
+
+        Merton model treats equity as a call option on firm assets
+        Default occurs when asset value falls below debt threshold
+
+        Args:
+            bond: Bond object
+            asset_value: Firm asset value (if None, estimated from bond)
+            asset_volatility: Asset value volatility (as decimal)
+            debt_value: Total debt value (if None, uses bond face value)
+
+        Returns:
+            Dictionary with default probability and distance to default
+        """
+        time_to_maturity = bond.time_to_maturity
+
+        if asset_value is None:
+            leverage_ratio = 2.0
+            asset_value = bond.face_value * leverage_ratio
+
+        if debt_value is None:
+            debt_value = bond.face_value
+
+        rf_rate = self.valuator.risk_free_rate
+
+        if time_to_maturity <= 0 or asset_volatility <= 0:
+            return {
+                "default_probability": 0.0 if bond.credit_rating in ["AAA", "AA"] else 0.05,
+                "distance_to_default": 5.0,
+                "error": "Invalid parameters",
+            }
+
+        ln_ratio = np.log(asset_value / debt_value)
+        drift = (rf_rate - 0.5 * asset_volatility**2) * time_to_maturity
+        denominator = asset_volatility * np.sqrt(time_to_maturity)
+        distance_to_default = (ln_ratio + drift) / denominator
+        default_probability = stats.norm.cdf(-distance_to_default)
+
+        from bondtrader.utils.constants import get_recovery_rate_enhanced
+
+        recovery_rate = get_recovery_rate_enhanced(bond.credit_rating)
+        expected_loss = default_probability * (1 - recovery_rate) * bond.current_price
+
+        return {
+            "default_probability": default_probability,
+            "distance_to_default": distance_to_default,
+            "asset_value": asset_value,
+            "debt_value": debt_value,
+            "asset_volatility": asset_volatility,
+            "recovery_rate": recovery_rate,
+            "expected_loss": expected_loss,
+            "loss_given_default": (1 - recovery_rate) * bond.current_price,
+            "model": "Merton",
+        }
+
+    def credit_migration_analysis(self, bond: Bond, time_horizon: float = 1.0, num_scenarios: int = 10000) -> Dict:
+        """
+        Analyze credit migration risk using migration matrix
+
+        Simulates rating transitions and impact on bond value
+
+        Args:
+            bond: Bond object
+            time_horizon: Analysis horizon in years
+            num_scenarios: Number of simulation scenarios
+
+        Returns:
+            Migration analysis results
+        """
+        current_rating = bond.credit_rating.upper()
+
+        if current_rating not in self.migration_matrix:
+            migration_probs = {"AAA": 0.01, "AA": 0.05, "A": 0.10, "BBB": 0.40, "BB": 0.30, "B": 0.10, "CCC": 0.03, "D": 0.01}
+        else:
+            migration_probs = self.migration_matrix[current_rating]
+
+        ratings = list(migration_probs.keys())
+        probs = list(migration_probs.values())
+
+        total_prob = sum(probs)
+        if total_prob > 0:
+            probs = [p / total_prob for p in probs]
+        else:
+            probs = [1.0 / len(ratings)] * len(ratings)
+
+        rating_outcomes = np.random.choice(ratings, size=num_scenarios, p=probs)
+
+        value_impacts = []
+        current_value = bond.current_price
+        current_ytm = self.valuator.calculate_yield_to_maturity(bond)
+
+        for rating in ratings:
+            new_spread = self.valuator._get_credit_spread(rating)
+            new_ytm = self.valuator.risk_free_rate + new_spread
+            duration = self.valuator.calculate_duration(bond, current_ytm)
+            spread_change = new_spread - self.valuator._get_credit_spread(current_rating)
+            price_change_pct = -duration * spread_change
+            new_value = current_value * (1 + price_change_pct)
+            value_impacts.append(new_value)
+
+        scenario_values = [value_impacts[ratings.index(outcome)] for outcome in rating_outcomes]
+        mean_value = np.mean(scenario_values)
+        std_value = np.std(scenario_values)
+
+        value_by_rating = {}
+        for i, rating in enumerate(ratings):
+            count = np.sum(rating_outcomes == rating)
+            value_by_rating[rating] = {
+                "probability": count / num_scenarios,
+                "expected_value": value_impacts[i],
+                "value_change": value_impacts[i] - current_value,
+                "value_change_pct": ((value_impacts[i] - current_value) / current_value) * 100,
+            }
+
+        return {
+            "current_rating": current_rating,
+            "current_value": current_value,
+            "mean_value": mean_value,
+            "std_value": std_value,
+            "value_distribution": value_by_rating,
+            "time_horizon": time_horizon,
+            "num_scenarios": num_scenarios,
+            "migration_probabilities": migration_probs,
+        }
+
+    def calculate_credit_var(
+        self, bonds: List[Bond], weights: Optional[List[float]] = None, confidence_level: float = 0.95, time_horizon: float = 1.0
+    ) -> Dict:
+        """
+        Calculate Credit Value at Risk (CVaR)
+
+        Measures potential loss due to credit events (downgrades, defaults)
+
+        Args:
+            bonds: List of bonds in portfolio
+            weights: Portfolio weights (if None, equal weights)
+            confidence_level: Confidence level (e.g., 0.95 for 95%)
+            time_horizon: Time horizon in years
+
+        Returns:
+            Credit VaR metrics
+        """
+        if weights is None:
+            weights = [1.0 / len(bonds)] * len(bonds)
+
+        if len(weights) != len(bonds):
+            raise ValueError("Weights must match bonds length")
+
+        portfolio_values = []
+        for _ in range(10000):
+            portfolio_value = 0
+            for bond, weight in zip(bonds, weights):
+                migration_result = self.credit_migration_analysis(bond, time_horizon=time_horizon, num_scenarios=1)
+                new_rating = np.random.choice(
+                    list(migration_result["value_distribution"].keys()),
+                    p=[v["probability"] for v in migration_result["value_distribution"].values()],
+                )
+                new_value = migration_result["value_distribution"][new_rating]["expected_value"]
+                portfolio_value += new_value * weight * bond.face_value
+            portfolio_values.append(portfolio_value)
+
+        portfolio_values = np.array(portfolio_values)
+        current_portfolio_value = sum(b.current_price * w * b.face_value for b, w in zip(bonds, weights))
+        var_percentile = (1 - confidence_level) * 100
+        cvar_value = current_portfolio_value - np.percentile(portfolio_values, var_percentile)
+        cvar_pct = (cvar_value / current_portfolio_value) * 100 if current_portfolio_value > 0 else 0
+
+        return {
+            "credit_var": cvar_value,
+            "credit_var_pct": cvar_pct,
+            "confidence_level": confidence_level,
+            "time_horizon": time_horizon,
+            "current_portfolio_value": current_portfolio_value,
+            "mean_portfolio_value": np.mean(portfolio_values),
+            "std_portfolio_value": np.std(portfolio_values),
+            "percentile_5": np.percentile(portfolio_values, 5),
+            "percentile_95": np.percentile(portfolio_values, 95),
+        }
+
+    def calculate_expected_credit_loss(self, bonds: List[Bond], weights: Optional[List[float]] = None) -> Dict:
+        """
+        Calculate expected credit loss across portfolio
+
+        Args:
+            bonds: List of bonds
+            weights: Portfolio weights
+
+        Returns:
+            Expected credit loss metrics
+        """
+        if weights is None:
+            weights = [1.0 / len(bonds)] * len(bonds)
+
+        total_expected_loss = 0
+        bond_losses = []
+
+        for bond, weight in zip(bonds, weights):
+            merton_result = self.merton_structural_model(bond)
+            expected_loss = merton_result["expected_loss"] * weight
+            total_expected_loss += expected_loss
+
+            bond_losses.append(
+                {
+                    "bond_id": bond.bond_id,
+                    "rating": bond.credit_rating,
+                    "default_probability": merton_result["default_probability"],
+                    "expected_loss": expected_loss,
+                    "expected_loss_pct": (expected_loss / (bond.current_price * weight)) * 100,
+                }
+            )
+
+        portfolio_value = sum(b.current_price * w for b, w in zip(bonds, weights))
+        expected_loss_pct = (total_expected_loss / portfolio_value) * 100 if portfolio_value > 0 else 0
+
+        return {
+            "total_expected_loss": total_expected_loss,
+            "expected_loss_pct": expected_loss_pct,
+            "portfolio_value": portfolio_value,
+            "bond_losses": bond_losses,
+        }

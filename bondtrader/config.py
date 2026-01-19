@@ -3,7 +3,6 @@ Configuration Management System
 Centralized configuration with environment variable support and validation
 
 NOTE: This is the standard configuration module used throughout the codebase.
-For Pydantic-validated configuration (optional), see bondtrader.config_pydantic.ConfigPydantic.
 """
 
 import os

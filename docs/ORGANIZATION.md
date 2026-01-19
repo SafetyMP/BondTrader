@@ -13,8 +13,7 @@ BondTrader/
 │   ├── analytics/          # Advanced analytics
 │   ├── data/               # Data handling
 │   ├── utils/              # Utilities
-│   ├── config.py           # Configuration
-│   └── config_pydantic.py  # Optional Pydantic config
+│   └── config.py           # Configuration
 │
 ├── scripts/                # Executable scripts
 ├── tests/                  # Test suite
@@ -32,9 +31,7 @@ BondTrader/
 └── docs/                   # Documentation
     ├── api/                # API documentation
     ├── development/        # Development docs
-    ├── guides/             # User guides
-    ├── implementation/     # Implementation docs
-    └── status/             # Status and status tracking docs
+    └── guides/             # User guides
 ```
 
 ## Root Directory
@@ -68,20 +65,6 @@ User-facing guides:
 - Evaluation dataset guide
 - Drift detection guide
 - User guide
-
-### docs/implementation/
-Implementation and status documentation:
-- Implementation guides
-- Status reports
-- Completion summaries
-- Module optimization reviews
-
-### docs/status/
-Status tracking documents:
-- Evaluation errors and optimizations
-- Model tuning improvements
-- Production testing readiness
-- Training improvements
 
 ## Test Organization
 
