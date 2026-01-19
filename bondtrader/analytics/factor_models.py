@@ -4,7 +4,7 @@ PCA-based factors, statistical factors, and risk attribution
 Industry-standard factor analysis for bond portfolios
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 from sklearn.decomposition import PCA
@@ -12,7 +12,6 @@ from sklearn.preprocessing import StandardScaler
 
 from bondtrader.core.bond_models import Bond
 from bondtrader.core.bond_valuation import BondValuator
-from bondtrader.utils.utils import logger
 
 
 class FactorModel:
@@ -140,7 +139,8 @@ class FactorModel:
         Returns:
             Factor exposure analysis
         """
-        if self.factors is None or self.factor_loadings is None:
+        # Always re-extract factors if they don't exist or if the number of bonds has changed
+        if self.factors is None or self.factor_loadings is None or (self.factors is not None and self.factors.shape[0] != len(bonds)):
             # Extract factors first
             self.extract_bond_factors(bonds)
 
@@ -150,7 +150,8 @@ class FactorModel:
             portfolio_weights = np.array(portfolio_weights)
 
         # Portfolio factor exposure = weighted sum of individual exposures
-        portfolio_exposure = np.dot(portfolio_weights, self.factor_loadings)
+        # self.factors has shape (n_bonds, n_factors), representing each bond's factor exposure
+        portfolio_exposure = np.dot(portfolio_weights, self.factors)
 
         # Factor contribution to portfolio risk
         factor_contributions = portfolio_exposure**2
