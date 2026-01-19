@@ -14,11 +14,16 @@ import requests
 import sys
 
 try:
-    import yfinance as yf
+    # Check Python version - yfinance 0.2.0+ requires Python 3.10+
+    if sys.version_info < (3, 10):
+        HAS_YFINANCE = False
+        yf = None
+    else:
+        import yfinance as yf
 
-    HAS_YFINANCE = True
-except (ImportError, TypeError, SyntaxError):
-    # Catch ImportError, TypeError (Python 3.9 compatibility), or SyntaxError
+        HAS_YFINANCE = True
+except (ImportError, TypeError, SyntaxError, Exception):
+    # Catch all exceptions during import (yfinance may fail during module init)
     HAS_YFINANCE = False
     yf = None
 
