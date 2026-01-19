@@ -96,8 +96,8 @@ class DistributedTracer:
     def _initialize_tracer(self, endpoint: Optional[str] = None):
         """Initialize OpenTelemetry tracer"""
         try:
-            import os
             import logging
+            import os
 
             # Suppress gRPC connection errors when collector is unavailable
             grpc_logger = logging.getLogger("grpc")
