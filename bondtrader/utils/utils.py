@@ -96,7 +96,7 @@ def memoize(func: Callable) -> Callable:
 def handle_exceptions(func: Callable) -> Callable:
     """
     Decorator to handle exceptions gracefully with specific exception types
-    
+
     Catches and logs specific exceptions, re-raises critical errors.
     Use for functions that need error logging but should propagate errors.
     """

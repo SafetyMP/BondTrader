@@ -867,7 +867,7 @@ class ModelTrainer:
 def main() -> None:
     """
     Main training function
-    
+
     Trains all models in the codebase and saves results.
     """
     print("=" * 60)

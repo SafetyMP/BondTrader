@@ -798,7 +798,7 @@ class ModelEvaluator:
 def main() -> tuple:
     """
     Main evaluation function
-    
+
     Returns:
         Tuple of (results dictionary, report dictionary)
     """

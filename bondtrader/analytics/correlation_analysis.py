@@ -23,7 +23,7 @@ class CorrelationAnalyzer:
     def __init__(self, valuator: Optional[BondValuator] = None) -> None:
         """
         Initialize correlation analyzer
-        
+
         Args:
             valuator: Bond valuator instance (optional, creates default if None)
         """

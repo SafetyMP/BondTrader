@@ -18,7 +18,7 @@ class BondDataGenerator:
     def __init__(self, seed: Optional[int] = None) -> None:
         """
         Initialize generator with optional seed
-        
+
         Args:
             seed: Random seed for reproducibility (optional)
         """

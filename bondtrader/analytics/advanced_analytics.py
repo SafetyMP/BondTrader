@@ -27,7 +27,7 @@ class AdvancedAnalytics:
     def __init__(self, valuator: Optional[BondValuator] = None) -> None:
         """
         Initialize advanced analytics
-        
+
         Args:
             valuator: Bond valuator instance (optional, creates default if None)
         """

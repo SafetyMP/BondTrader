@@ -61,7 +61,7 @@ class TrainingDataGenerator:
     def __init__(self, seed: int = 42) -> None:
         """
         Initialize generator with seed for reproducibility
-        
+
         Args:
             seed: Random seed for reproducibility (default: 42)
         """
@@ -747,7 +747,7 @@ class TrainingDataGenerator:
 def save_training_dataset(dataset: Dict, filepath: str) -> None:
     """
     Save training dataset to disk
-    
+
     Args:
         dataset: Training dataset dictionary
         filepath: Path to save dataset

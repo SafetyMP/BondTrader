@@ -331,10 +331,10 @@ class EnhancedMLBondAdjuster:
     def load_model(self, filepath: str):
         """
         Load trained model
-        
+
         Args:
             filepath: Path to saved model file
-            
+
         Raises:
             FileNotFoundError: If model file doesn't exist
             ValueError: If model file is corrupted or missing required keys
@@ -342,18 +342,18 @@ class EnhancedMLBondAdjuster:
         """
         if not os.path.exists(filepath):
             raise FileNotFoundError(f"Model file not found: {filepath}")
-        
+
         try:
             data = joblib.load(filepath)
         except Exception as e:
             raise ValueError(f"Failed to load model from {filepath}: {e}") from e
-        
+
         # Validate required keys
         required_keys = ["model", "scaler"]
         missing_keys = [key for key in required_keys if key not in data]
         if missing_keys:
             raise ValueError(f"Model file missing required keys: {missing_keys}")
-        
+
         try:
             self.model = data["model"]
             self.scaler = data["scaler"]

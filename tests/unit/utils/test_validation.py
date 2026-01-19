@@ -149,7 +149,7 @@ class TestFilePathValidation:
         # Create a temp file
         test_file = tmp_path / "test_file.txt"
         test_file.write_text("test")
-        
+
         # Should not raise
         validate_file_path(str(test_file), must_exist=True, name="filepath")
 

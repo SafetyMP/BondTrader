@@ -32,7 +32,7 @@ class PortfolioOptimizer:
     def __init__(self, valuator: Optional[BondValuator] = None) -> None:
         """
         Initialize portfolio optimizer
-        
+
         Args:
             valuator: Bond valuator instance (optional, creates default if None)
         """

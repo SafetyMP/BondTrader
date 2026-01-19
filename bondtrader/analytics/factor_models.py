@@ -24,7 +24,7 @@ class FactorModel:
     def __init__(self, valuator: Optional[BondValuator] = None) -> None:
         """
         Initialize factor model
-        
+
         Args:
             valuator: Bond valuator instance (optional, creates default if None)
         """
