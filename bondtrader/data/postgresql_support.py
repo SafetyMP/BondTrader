@@ -130,6 +130,59 @@ def get_database_type() -> str:
     return os.getenv("DATABASE_TYPE", "sqlite").lower()
 
 
+def get_connection_string(
+    host: str = "localhost",
+    port: int = 5432,
+    database: str = "bondtrader",
+    username: str = "bondtrader",
+    password: str = "",
+    ssl_mode: Optional[str] = None,
+) -> str:
+    """
+    Generate PostgreSQL connection string.
+
+    Args:
+        host: Database host
+        port: Database port
+        database: Database name
+        username: Database username
+        password: Database password
+        ssl_mode: SSL mode (e.g., 'require', 'prefer', 'disable')
+
+    Returns:
+        PostgreSQL connection string
+    """
+    connection_string = f"postgresql://{username}:{password}@{host}:{port}/{database}"
+    if ssl_mode:
+        connection_string += f"?sslmode={ssl_mode}"
+    return connection_string
+
+
+def check_connection(connection_string: Optional[str] = None) -> bool:
+    """
+    Check if PostgreSQL connection is valid.
+
+    Args:
+        connection_string: Optional connection string. If None, uses environment variables.
+
+    Returns:
+        True if connection is valid, False otherwise
+    """
+    if not _sqlalchemy_available:
+        return False
+
+    try:
+        if connection_string is None:
+            connection_string = get_connection_string()
+        engine = create_engine(connection_string, pool_pre_ping=True)
+        with engine.connect() as conn:
+            conn.execute("SELECT 1")
+        return True
+    except Exception as e:
+        logger.error(f"PostgreSQL connection check failed: {e}")
+        return False
+
+
 def create_database_instance():
     """
     Create appropriate database instance based on configuration.

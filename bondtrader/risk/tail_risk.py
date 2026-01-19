@@ -148,11 +148,36 @@ class TailRiskAnalyzer:
 
         return es_results
 
+    def calculate_expected_shortfall(
+        self,
+        bonds: List[Bond],
+        weights: Optional[List[float]] = None,
+        confidence_level: float = 0.95,
+    ) -> Dict:
+        """
+        Calculate Expected Shortfall (ES) - alias for CVaR
+
+        Args:
+            bonds: List of bonds
+            weights: Portfolio weights
+            confidence_level: Confidence level (default 0.95)
+
+        Returns:
+            Expected Shortfall metrics
+        """
+        cvar_result = self.calculate_cvar(bonds, weights, confidence_level=confidence_level)
+        return {
+            "expected_shortfall": cvar_result["cvar_value"],
+            "es_pct": cvar_result["cvar_pct"],
+            "var_value": cvar_result["var_value"],
+        }
+
     def calculate_tail_expectation(
         self,
         bonds: List[Bond],
         weights: Optional[List[float]] = None,
         tail_probability: float = 0.05,
+        tail_threshold: Optional[float] = None,
     ) -> Dict:
         """
         Calculate tail expectation
@@ -164,10 +189,15 @@ class TailRiskAnalyzer:
             bonds: List of bonds
             weights: Portfolio weights
             tail_probability: Probability of tail event (e.g., 0.05 for worst 5%)
+            tail_threshold: Alternative to tail_probability - if provided, uses this instead
 
         Returns:
             Tail expectation metrics
         """
+        # Use tail_threshold if provided, otherwise use tail_probability
+        if tail_threshold is not None:
+            tail_probability = tail_threshold
+
         if weights is None:
             weights = [1.0 / len(bonds)] * len(bonds)
 

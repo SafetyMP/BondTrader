@@ -59,8 +59,28 @@ def hash_password(password: str, salt: Optional[bytes] = None) -> Tuple[str, str
             return hashed.decode("utf-8"), ""  # bcrypt includes salt in hash
         else:
             # Use provided salt (for migration scenarios)
-            hashed = bcrypt.hashpw(password.encode("utf-8"), salt.encode("utf-8"))
-            return hashed.decode("utf-8"), ""
+            # Handle both bytes and string salt
+            if isinstance(salt, bytes):
+                salt_bytes = salt
+            elif isinstance(salt, str):
+                # If it's a string, try to use it as bcrypt salt (must be valid bcrypt salt format)
+                # If not valid format, treat as custom salt and hash with SHA-256 instead
+                if salt.startswith("$2"):
+                    salt_bytes = salt.encode("utf-8")
+                    hashed = bcrypt.hashpw(password.encode("utf-8"), salt_bytes)
+                    return hashed.decode("utf-8"), ""
+                else:
+                    # Invalid bcrypt salt format, fall through to SHA-256
+                    pass
+            else:
+                salt_bytes = str(salt).encode("utf-8")
+            
+            # If we get here, salt wasn't valid bcrypt format, use SHA-256 fallback
+            if not isinstance(salt, str):
+                salt = salt_bytes.decode("utf-8", errors="ignore") if isinstance(salt_bytes, bytes) else str(salt_bytes)
+            password_salt = f"{password}{salt}".encode("utf-8")
+            hashed = hashlib.sha256(password_salt).hexdigest()
+            return hashed, salt if isinstance(salt, str) else salt_bytes.decode("utf-8", errors="ignore")
     else:
         # Fallback to SHA-256 (less secure, but backward compatible)
         if salt is None:

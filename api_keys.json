@@ -527,6 +527,72 @@
       "usage_count": 0,
       "revoked": false,
       "description": null
+    },
+    {
+      "key_id": "Epf-1JcPIJCTHghohm58jg",
+      "key_hash": "a06b93e49b4bf22dda1b2462c39ea06c54760a410031b13273ef38abca99bc33",
+      "user_id": "user1",
+      "created_at": "2026-01-19T14:29:59.298410",
+      "expires_at": "2026-04-19T14:29:59.298404",
+      "last_used": null,
+      "usage_count": 0,
+      "revoked": false,
+      "description": "Test key"
+    },
+    {
+      "key_id": "y7dQrXriUIJI6RGybe5Sxw",
+      "key_hash": "3787c6b778019c9dd7b09840980f240aea2144e94ffe75670f9f1556815546b1",
+      "user_id": "user1",
+      "created_at": "2026-01-19T14:29:59.299986",
+      "expires_at": "2026-04-19T14:29:59.299984",
+      "last_used": null,
+      "usage_count": 0,
+      "revoked": false,
+      "description": null
+    },
+    {
+      "key_id": "9Od30KxiSLERAchl-8RxCA",
+      "key_hash": "5618725c775f049cab46fd6acb17c3c6774a897a74e57ab43fca05c75663307b",
+      "user_id": "user1",
+      "created_at": "2026-01-19T14:29:59.302771",
+      "expires_at": "2026-04-19T14:29:59.302768",
+      "last_used": null,
+      "usage_count": 0,
+      "revoked": true,
+      "description": null
+    },
+    {
+      "key_id": "YjUAAL9DHone1RI7eifiJg",
+      "key_hash": "d2a4dd2cf95bbaacacfd1ee4a9e66112f437f063885a220d828505def879055f",
+      "user_id": "user1",
+      "created_at": "2026-01-19T14:29:59.306039",
+      "expires_at": "2026-04-19T14:29:59.306032",
+      "last_used": null,
+      "usage_count": 0,
+      "revoked": false,
+      "description": null
+    },
+    {
+      "key_id": "PxYgEwRFBl5_dDPWozQQkw",
+      "key_hash": "8148ebd599ab412035c47aa33ba1a364ea1b8405b1737a6972c55349eb91b9e6",
+      "user_id": "user1",
+      "created_at": "2026-01-19T14:29:59.306933",
+      "expires_at": "2026-04-19T14:29:59.306931",
+      "last_used": null,
+      "usage_count": 0,
+      "revoked": false,
+      "description": null
+    },
+    {
+      "key_id": "uauspZew7iAPJ6PTmf5EtA",
+      "key_hash": "d61cf14901d36978ef25377b24c00db64ae44cbee559b4c31e322466792c3ca3",
+      "user_id": "user2",
+      "created_at": "2026-01-19T14:29:59.307546",
+      "expires_at": "2026-04-19T14:29:59.307545",
+      "last_used": null,
+      "usage_count": 0,
+      "revoked": false,
+      "description": null
     }
   ]
 }

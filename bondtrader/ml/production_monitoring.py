@@ -421,15 +421,15 @@ def create_email_alert_callback(email_address: str, smtp_server: str = None, smt
             # Create email body
             body = f"""
             Model Monitoring Alert
-            
+
             Model: {alert['model_name']}
             Alert Type: {alert['alert_type']}
             Severity: {alert.get('severity', 'medium')}
             Timestamp: {alert['timestamp']}
-            
+
             Alert Data:
             {json.dumps(alert.get('alert_data', {}), indent=2)}
-            
+
             Please review the model performance and take appropriate action.
             """
 

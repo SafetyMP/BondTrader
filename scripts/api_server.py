@@ -22,23 +22,23 @@ app = FastAPI(
     title="BondTrader API",
     description="""
     ## BondTrader RESTful API
-    
+
     Comprehensive API for bond trading, valuation, arbitrage detection, and risk management.
-    
+
     ### Features
-    
+
     * **Bond Management**: Create, retrieve, and list bonds
     * **Valuation**: Calculate fair value, YTM, duration, and convexity
     * **Arbitrage Detection**: Identify mispriced bonds and profit opportunities
     * **Machine Learning**: ML-enhanced bond price predictions
     * **Risk Management**: VaR calculations and credit risk analysis
-    
+
     ### Authentication
-    
+
     API keys may be required for certain endpoints. Contact your administrator for access.
-    
+
     ### Rate Limiting
-    
+
     API requests are rate-limited to ensure fair usage. Check response headers for rate limit information.
     """,
     version="1.0.0",

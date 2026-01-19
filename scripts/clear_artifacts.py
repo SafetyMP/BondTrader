@@ -194,10 +194,10 @@ def main():
 Examples:
   # Dry run (see what would be deleted)
   python scripts/clear_artifacts.py --dry-run
-  
+
   # Actually clear artifacts
   python scripts/clear_artifacts.py
-  
+
   # Clear and show verbose output
   python scripts/clear_artifacts.py --verbose
         """,

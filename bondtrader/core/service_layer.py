@@ -247,12 +247,12 @@ class BondService:
         """
         """
         Predict ML-adjusted fair value for a bond
-        
+
         Args:
             bond_id: Bond identifier
             ml_model: Optional pre-instantiated ML model. If None, creates one.
             model_type: Type of ML model to use if ml_model not provided ('basic', 'enhanced', 'advanced')
-            
+
         Returns:
             Result containing ML prediction with adjusted fair value
         """

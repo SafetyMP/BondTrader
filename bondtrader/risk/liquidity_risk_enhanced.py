@@ -176,11 +176,14 @@ class LiquidityRiskEnhanced:
 
         return {
             "estimated_depth": estimated_depth,
+            "depth_notional": estimated_depth,  # Alias for estimated_depth
+            "depth_bonds": estimated_depth / bond.face_value if bond.face_value > 0 else 0,
             "trade_size": trade_size,
             "depth_coverage": estimated_depth / trade_size if trade_size > 0 else 0,
             "price_impact_pct": price_impact_pct * 100,
             "liquidation_time_days": liquidation_time_days,
             "liquidity_rating": self._get_liquidity_rating(estimated_depth / trade_size if trade_size > 0 else 0),
+            "liquidity_score": min(1.0, estimated_depth / trade_size / 10) if trade_size > 0 else 0,  # Normalized score
         }
 
     def _get_liquidity_rating(self, depth_ratio: float) -> str:
@@ -341,6 +344,20 @@ class LiquidityRiskEnhanced:
         avg_spread = np.mean([m["spread_bps"] for m in portfolio_liquidity_metrics])
         avg_depth_ratio = np.mean([m["depth_ratio"] for m in portfolio_liquidity_metrics])
 
+        # Calculate LVaR for risk level
+        lvar_result = self.calculate_lvar(bonds, weights)
+        liquidity_score = 1.0 - min(1.0, (total_spread_cost + total_impact_cost) / portfolio_value) if portfolio_value > 0 else 0.5
+
+        # Determine risk level
+        if liquidity_score >= 0.8:
+            risk_level = "Low"
+        elif liquidity_score >= 0.6:
+            risk_level = "Medium"
+        elif liquidity_score >= 0.4:
+            risk_level = "High"
+        else:
+            risk_level = "Very High"
+
         return {
             "portfolio_value": portfolio_value,
             "total_spread_cost": total_spread_cost,
@@ -352,4 +369,13 @@ class LiquidityRiskEnhanced:
             "avg_spread_bps": avg_spread,
             "avg_depth_ratio": avg_depth_ratio,
             "bond_metrics": portfolio_liquidity_metrics,
+            "lvar_value": lvar_result.get("lvar_value", 0),
+            "liquidity_score": liquidity_score,
+            "risk_level": risk_level,
         }
+
+    def assess_liquidity_risk(self, bonds: List[Bond], weights: Optional[List[float]] = None) -> Dict:
+        """
+        Alias for analyze_liquidity_risk for backward compatibility
+        """
+        return self.analyze_liquidity_risk(bonds, weights)

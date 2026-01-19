@@ -153,13 +153,13 @@ def main():
 Examples:
   # Full refresh (datasets + models)
   python scripts/refresh_models.py
-  
+
   # Only refresh models (use existing datasets)
   python scripts/refresh_models.py --skip-training-data
-  
+
   # Only generate datasets (don't train models)
   python scripts/refresh_models.py --datasets-only
-  
+
   # Use specific dataset path
   python scripts/refresh_models.py --dataset training_data/my_dataset.joblib
         """,

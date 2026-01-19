@@ -138,10 +138,22 @@ class BondClassifier:
         if bond.coupon_rate == 0:
             return BondType.ZERO_COUPON
 
-        # Check other types
-        for bond_type, condition in self.bond_type_map.items():
-            if condition(bond):
-                return bond_type
+        # Check more specific types first (TREASURY, HIGH_YIELD) before general FIXED_RATE
+        # Check TREASURY
+        if "treasury" in bond.issuer.lower() or bond.credit_rating in ["AAA", "AA+"]:
+            return BondType.TREASURY
+
+        # Check HIGH_YIELD
+        if bond.credit_rating in ["BB", "BB+", "BB-", "B", "B+", "B-", "CCC"]:
+            return BondType.HIGH_YIELD
+
+        # Check CORPORATE
+        if bond.bond_type == BondType.CORPORATE or ("corp" in bond.issuer.lower()):
+            return BondType.CORPORATE
+
+        # Check FIXED_RATE (general case)
+        if bond.coupon_rate > 0 and bond.bond_type != BondType.FLOATING_RATE:
+            return BondType.FIXED_RATE
 
         # Default classification
         return BondType.FIXED_RATE

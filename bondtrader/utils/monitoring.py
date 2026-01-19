@@ -174,16 +174,25 @@ def track_api_request(method: str, endpoint: str):
     return decorator
 
 
-def track_valuation(bond_type: str):
+def track_valuation(bond_type: str, duration: Optional[float] = None):
     """
-    Decorator to track bond valuations
+    Decorator or function to track bond valuations
 
-    Usage:
+    Usage as decorator:
         @track_valuation("CORPORATE")
         def calculate_value(bond):
             ...
-    """
 
+    Usage as function:
+        track_valuation("CORPORATE", duration=0.05)
+    """
+    if duration is not None:
+        # Called as function, not decorator
+        bond_valuations_total.labels(bond_type=bond_type).inc()
+        valuation_duration.labels(bond_type=bond_type).observe(duration)
+        return
+
+    # Used as decorator
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):

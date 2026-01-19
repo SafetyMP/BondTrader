@@ -413,9 +413,12 @@ class BondValuator:
                 "fair_value": fair_value,
                 "market_price": market_price,
                 "mismatch_absolute": mismatch,
+                "mismatch_amount": mismatch,  # Alias for mismatch_absolute
                 "mismatch_percentage": mismatch_pct,
                 "overvalued": mismatch_pct > 0,
                 "undervalued": mismatch_pct < 0,
+                "is_overvalued": mismatch_pct > 0,  # Alias for overvalued
+                "is_undervalued": mismatch_pct < 0,  # Alias for undervalued
             }
         except (ValueError, TypeError) as e:
             from bondtrader.utils.utils import logger

@@ -26,8 +26,19 @@ class BondDataGenerator:
             random.seed(seed)
             np.random.seed(seed)
 
-    def generate_bonds(self, num_bonds: int = 50) -> List[Bond]:
-        """Generate a list of synthetic bonds"""
+    def generate_bonds(self, num_bonds: int = 50, seed: Optional[int] = None) -> List[Bond]:
+        """
+        Generate a list of synthetic bonds
+
+        Args:
+            num_bonds: Number of bonds to generate
+            seed: Optional random seed for reproducibility (overrides instance seed for this call)
+        """
+        # Set seed for this call if provided
+        if seed is not None:
+            random.seed(seed)
+            np.random.seed(seed)
+
         bonds = []
 
         # Bond type probabilities

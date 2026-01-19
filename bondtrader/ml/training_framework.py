@@ -22,6 +22,7 @@ from bondtrader.data.training_data_generator import (
     save_training_dataset,
 )
 from bondtrader.utils import logger
+from bondtrader.core.container import get_container
 
 try:
     from tqdm import tqdm
@@ -83,7 +84,6 @@ class UnifiedTrainingFramework:
             generate_new_dataset: Force generation of new dataset
         """
         from bondtrader.config import get_config
-        from bondtrader.core.container import get_container
 
         self.config = get_config()
         self.valuator = get_container().get_valuator()

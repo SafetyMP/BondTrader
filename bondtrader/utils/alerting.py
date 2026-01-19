@@ -46,6 +46,9 @@ class Alert:
         source: str = "bondtrader",
         metadata: Optional[Dict[str, Any]] = None,
     ):
+        import uuid
+
+        self.alert_id = str(uuid.uuid4())
         self.title = title
         self.message = message
         self.severity = severity
@@ -109,26 +112,34 @@ class AlertManager:
 
     def send_alert(
         self,
-        title: str,
-        message: str,
+        title_or_alert: Any,
+        message: Optional[str] = None,
         severity: AlertSeverity = AlertSeverity.INFO,
         channels: Optional[List[AlertChannel]] = None,
         metadata: Optional[Dict[str, Any]] = None,
-    ) -> bool:
+    ) -> str:
         """
         Send alert to configured channels.
 
         Args:
-            title: Alert title
-            message: Alert message
-            severity: Alert severity
+            title_or_alert: Alert title (str) or Alert object
+            message: Alert message (required if title_or_alert is str)
+            severity: Alert severity (ignored if title_or_alert is Alert)
             channels: Optional list of channels to send to (defaults to all configured)
-            metadata: Optional metadata
+            metadata: Optional metadata (ignored if title_or_alert is Alert)
 
         Returns:
-            True if at least one channel succeeded
+            Alert ID (str)
         """
-        alert = Alert(title, message, severity, metadata=metadata)
+        # Support both Alert object and individual parameters
+        if isinstance(title_or_alert, Alert):
+            alert = title_or_alert
+        else:
+            if message is None:
+                raise ValueError("message is required when title_or_alert is a string")
+            alert = Alert(title_or_alert, message, severity, metadata=metadata)
+
+        alert_id = alert.alert_id
         self.alerts.append(alert)
 
         # Keep only last 1000 alerts
@@ -147,14 +158,8 @@ class AlertManager:
                 continue
 
             try:
-                if channel == AlertChannel.PAGERDUTY:
-                    success = self._send_pagerduty(alert) or success
-                elif channel == AlertChannel.OPSGENIE:
-                    success = self._send_opsgenie(alert) or success
-                elif channel == AlertChannel.SLACK:
-                    success = self._send_slack(alert) or success
-                elif channel == AlertChannel.WEBHOOK:
-                    success = self._send_webhook(alert) or success
+                self._send_to_channel(alert, channel)
+                success = True
             except Exception as e:
                 logger.error(f"Failed to send alert to {channel.value}: {e}")
 
@@ -164,14 +169,43 @@ class AlertManager:
             "system",
             "alert_sent",
             details={
-                "title": title,
-                "severity": severity.value,
+                "title": alert.title,
+                "severity": alert.severity.value,
                 "channels": [c.value for c in channels],
                 "success": success,
             },
         )
 
-        return success
+        return alert_id
+
+    def _send_to_channel(self, alert: Alert, channel: AlertChannel) -> bool:
+        """
+        Send alert to a specific channel.
+
+        Args:
+            alert: Alert object
+            channel: Channel to send to
+
+        Returns:
+            True if successful
+        """
+        if channel not in self.channels:
+            return False
+
+        try:
+            if channel == AlertChannel.PAGERDUTY:
+                return self._send_pagerduty(alert)
+            elif channel == AlertChannel.OPSGENIE:
+                return self._send_opsgenie(alert)
+            elif channel == AlertChannel.SLACK:
+                return self._send_slack(alert)
+            elif channel == AlertChannel.WEBHOOK:
+                return self._send_webhook(alert)
+        except Exception as e:
+            logger.error(f"Failed to send alert to {channel.value}: {e}")
+            return False
+
+        return False
 
     def _send_pagerduty(self, alert: Alert) -> bool:
         """Send alert to PagerDuty"""
@@ -321,11 +355,24 @@ class AlertManager:
         """Get recent alerts"""
         return self.alerts[-limit:]
 
-    def acknowledge_alert(self, alert_index: int) -> bool:
-        """Acknowledge an alert"""
-        if 0 <= alert_index < len(self.alerts):
-            self.alerts[alert_index].acknowledged = True
-            return True
+    def get_active_alerts(self) -> List[Alert]:
+        """Get active (unresolved) alerts"""
+        return [alert for alert in self.alerts if not alert.resolved]
+
+    def acknowledge_alert(self, alert_id: str) -> bool:
+        """Acknowledge an alert by ID"""
+        for alert in self.alerts:
+            if alert.alert_id == alert_id:
+                alert.acknowledged = True
+                return True
+        return False
+
+    def resolve_alert(self, alert_id: str) -> bool:
+        """Resolve an alert by ID"""
+        for alert in self.alerts:
+            if alert.alert_id == alert_id:
+                alert.resolved = True
+                return True
         return False
 
 

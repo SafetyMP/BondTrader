@@ -359,7 +359,7 @@ def main():
         - Enhanced ML Adjuster
         - Advanced ML Adjuster (Ensemble)
         - AutoML
-        
+
         **Training Data:** 2016-2017
         **Fine-tuning Data:** 2018
         **Prediction Data:** 2025

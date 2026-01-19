@@ -238,6 +238,18 @@ class APIKeyManager:
 
         return api_key_obj
 
+    def validate_key(self, api_key: str) -> bool:
+        """
+        Validate an API key (alias for verify_key that returns bool).
+
+        Args:
+            api_key: Plain text API key
+
+        Returns:
+            True if key is valid, False otherwise
+        """
+        return self.verify_key(api_key) is not None
+
     def revoke_key(self, key_id: str, user_id: Optional[str] = None) -> bool:
         """
         Revoke an API key.
