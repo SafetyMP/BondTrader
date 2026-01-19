@@ -92,6 +92,7 @@ class DistributedTracer:
             Span context manager
         """
         if self._initialized and self.tracer:
+
             @contextmanager
             def span_with_attributes():
                 with self.tracer.start_as_current_span(name) as span:
@@ -105,6 +106,7 @@ class DistributedTracer:
                                 if current_span and hasattr(current_span, "set_attribute"):
                                     current_span.set_attribute(key, str(value))
                     yield span
+
             return span_with_attributes()
         else:
             # Fallback: return no-op context manager

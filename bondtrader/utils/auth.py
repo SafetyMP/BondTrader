@@ -74,7 +74,7 @@ def hash_password(password: str, salt: Optional[bytes] = None) -> Tuple[str, str
                     pass
             else:
                 salt_bytes = str(salt).encode("utf-8")
-            
+
             # If we get here, salt wasn't valid bcrypt format, use SHA-256 fallback
             if not isinstance(salt, str):
                 salt = salt_bytes.decode("utf-8", errors="ignore") if isinstance(salt_bytes, bytes) else str(salt_bytes)

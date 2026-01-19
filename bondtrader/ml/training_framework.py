@@ -12,6 +12,7 @@ import joblib
 import numpy as np
 
 from bondtrader.core.bond_models import Bond
+from bondtrader.core.container import get_container
 from bondtrader.data.evaluation_dataset_generator import (
     EvaluationDatasetGenerator,
     load_evaluation_dataset,
@@ -22,7 +23,6 @@ from bondtrader.data.training_data_generator import (
     save_training_dataset,
 )
 from bondtrader.utils import logger
-from bondtrader.core.container import get_container
 
 try:
     from tqdm import tqdm

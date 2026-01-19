@@ -346,7 +346,9 @@ class LiquidityRiskEnhanced:
 
         # Calculate LVaR for risk level
         lvar_result = self.calculate_lvar(bonds, weights)
-        liquidity_score = 1.0 - min(1.0, (total_spread_cost + total_impact_cost) / portfolio_value) if portfolio_value > 0 else 0.5
+        liquidity_score = (
+            1.0 - min(1.0, (total_spread_cost + total_impact_cost) / portfolio_value) if portfolio_value > 0 else 0.5
+        )
 
         # Determine risk level
         if liquidity_score >= 0.8:
