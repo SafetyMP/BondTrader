@@ -17,7 +17,9 @@ from bondtrader.utils.validation import (
     validate_file_path,
     validate_list_not_empty,
     validate_numeric_range,
-    validate_percentage as validate_percentage_value,
+)
+from bondtrader.utils.validation import validate_percentage as validate_percentage_value
+from bondtrader.utils.validation import (
     validate_positive,
     validate_probability,
     validate_weights_sum,

@@ -3,9 +3,10 @@ Unit tests for validation utilities
 """
 
 import os
-import pytest
 from pathlib import Path
 from typing import List
+
+import pytest
 
 from bondtrader.core.bond_models import Bond, BondType
 from bondtrader.utils.validation import (

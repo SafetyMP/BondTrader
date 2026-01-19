@@ -14,11 +14,10 @@ pytestmark = pytest.mark.performance
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from tests.fixtures.bond_factory import create_multiple_bonds
-
 from bondtrader.core.bond_models import Bond, BondType
 from bondtrader.core.bond_valuation import BondValuator
 from bondtrader.ml.ml_adjuster import MLBondAdjuster
+from tests.fixtures.bond_factory import create_multiple_bonds
 
 
 class TestPerformanceBenchmarks:
