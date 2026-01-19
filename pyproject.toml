@@ -129,6 +129,10 @@ source = ["bondtrader"]
 omit = [
     "*/tests/*",
     "*/__pycache__/*",
+    # Test utilities (not meant to be tested themselves)
+    "*/utils/hypothesis_helpers.py",
+    # Optional dependencies that require system libraries
+    "*/core/quantlib_integration.py",
 ]
 
 [tool.coverage.report]

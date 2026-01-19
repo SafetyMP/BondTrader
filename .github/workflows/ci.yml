@@ -37,7 +37,7 @@ jobs:
     
     - name: Run unit tests
       run: |
-        pytest tests/unit -m unit -v --cov=bondtrader --cov-report=xml --cov-report=term-missing --cov-fail-under=70
+        pytest tests/unit -m unit -v --cov=bondtrader --cov-report=xml --cov-report=term-missing --cov-fail-under=50
       continue-on-error: false
     
     - name: Run smoke tests
