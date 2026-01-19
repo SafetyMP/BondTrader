@@ -47,7 +47,7 @@ def reconstruct_bonds_from_metadata(metadata_list):
             issue_date = datetime.fromisoformat(meta["issue_date"])
         else:
             issue_date = meta["issue_date"]
-        
+
         bond = Bond(
             bond_id=meta["bond_id"],
             bond_type=BondType(meta["bond_type"]),
