@@ -33,6 +33,7 @@ except ImportError:
 
 
 if _otel_available and BatchSpanProcessor:
+
     class ErrorHandlingSpanProcessor(BatchSpanProcessor):
         """
         Span processor that handles export errors gracefully.
@@ -63,6 +64,7 @@ if _otel_available and BatchSpanProcessor:
             except Exception:
                 # Silently ignore shutdown errors
                 return None
+
 else:
     ErrorHandlingSpanProcessor = None  # type: ignore
 
@@ -118,10 +120,10 @@ class DistributedTracer:
 
             # Add exporter - prefer console exporter if OTLP endpoint not explicitly set
             from opentelemetry.sdk.trace.export import ConsoleSpanExporter
-            
+
             use_console = os.getenv("OTEL_USE_CONSOLE_EXPORTER", "false").lower() == "true"
             endpoint_explicit = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT") is not None
-            
+
             if use_console or (not endpoint_explicit and endpoint == "http://localhost:4317"):
                 # Use console exporter (default when no explicit OTLP endpoint configured)
                 console_exporter = ConsoleSpanExporter()
