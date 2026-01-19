@@ -3,15 +3,14 @@ Market Data Integration Module
 Provides interfaces for fetching real market data from various sources
 """
 
+# yfinance is optional - import only when needed to avoid Python 3.9 compatibility issues
+# (yfinance 0.2.0+ uses Python 3.10+ union syntax which causes TypeError on Python 3.9)
+import sys
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
 import pandas as pd
 import requests
-
-# yfinance is optional - import only when needed to avoid Python 3.9 compatibility issues
-# (yfinance 0.2.0+ uses Python 3.10+ union syntax which causes TypeError on Python 3.9)
-import sys
 
 try:
     # Check Python version - yfinance 0.2.0+ requires Python 3.10+
