@@ -58,8 +58,13 @@ class TrainingDataGenerator:
     10. Multiple bond types and credit ratings
     """
 
-    def __init__(self, seed: int = 42):
-        """Initialize generator with seed for reproducibility"""
+    def __init__(self, seed: int = 42) -> None:
+        """
+        Initialize generator with seed for reproducibility
+        
+        Args:
+            seed: Random seed for reproducibility (default: 42)
+        """
         self.seed = seed
         np.random.seed(seed)
         random.seed(seed)
@@ -739,8 +744,14 @@ class TrainingDataGenerator:
         return training_bonds
 
 
-def save_training_dataset(dataset: Dict, filepath: str):
-    """Save training dataset to disk"""
+def save_training_dataset(dataset: Dict, filepath: str) -> None:
+    """
+    Save training dataset to disk
+    
+    Args:
+        dataset: Training dataset dictionary
+        filepath: Path to save dataset
+    """
     import joblib
 
     os.makedirs(os.path.dirname(filepath) if os.path.dirname(filepath) else ".", exist_ok=True)

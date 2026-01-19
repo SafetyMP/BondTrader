@@ -29,8 +29,13 @@ class PortfolioOptimizer:
     Implements Markowitz, Black-Litterman, risk parity, and other strategies
     """
 
-    def __init__(self, valuator: BondValuator = None):
-        """Initialize portfolio optimizer"""
+    def __init__(self, valuator: Optional[BondValuator] = None) -> None:
+        """
+        Initialize portfolio optimizer
+        
+        Args:
+            valuator: Bond valuator instance (optional, creates default if None)
+        """
         self.valuator = valuator if valuator else BondValuator()
 
     def calculate_returns_and_covariance(

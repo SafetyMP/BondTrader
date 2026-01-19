@@ -20,8 +20,13 @@ class CorrelationAnalyzer:
     Correlation and covariance analysis for bond portfolios
     """
 
-    def __init__(self, valuator: BondValuator = None):
-        """Initialize correlation analyzer"""
+    def __init__(self, valuator: Optional[BondValuator] = None) -> None:
+        """
+        Initialize correlation analyzer
+        
+        Args:
+            valuator: Bond valuator instance (optional, creates default if None)
+        """
         self.valuator = valuator if valuator else BondValuator()
 
     def calculate_correlation_matrix(self, bonds: List[Bond], method: str = "characteristics") -> Dict:

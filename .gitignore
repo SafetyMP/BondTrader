@@ -197,3 +197,42 @@ dmypy.json
 # Test databases
 test.db
 *.db
+
+# Documentation build artifacts
+docs/_build/
+site/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor/IDE - Keep common settings but ignore user-specific
+.vscode/settings.json
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries/
+
+# Python cache
+*.py[cod]
+__pycache__/
+*.pyc
+
+# Distribution / packaging (keep setup.py but ignore build artifacts)
+build/
+dist/
+*.egg-info/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Performance profiling
+*.prof
+*.pstats
+
+# Memory profiling
+*.mprof
+
+# Coverage reports (keep .coverage but ignore HTML reports)
+htmlcov/
+.coverage.*

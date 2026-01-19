@@ -21,8 +21,13 @@ class FactorModel:
     Decomposes returns into systematic factors and idiosyncratic risk
     """
 
-    def __init__(self, valuator: BondValuator = None):
-        """Initialize factor model"""
+    def __init__(self, valuator: Optional[BondValuator] = None) -> None:
+        """
+        Initialize factor model
+        
+        Args:
+            valuator: Bond valuator instance (optional, creates default if None)
+        """
         self.valuator = valuator if valuator else BondValuator()
         self.factors = None
         self.factor_loadings = None

@@ -795,8 +795,13 @@ class ModelEvaluator:
             return "F (Failing)"
 
 
-def main():
-    """Main evaluation function"""
+def main() -> tuple:
+    """
+    Main evaluation function
+    
+    Returns:
+        Tuple of (results dictionary, report dictionary)
+    """
     print("=" * 80)
     print("COMPREHENSIVE MODEL EVALUATION AND SCORING SYSTEM")
     print("=" * 80)

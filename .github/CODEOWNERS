@@ -1,0 +1,28 @@
+# Code owners for automatic PR review requests
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for all files
+* @SafetyMP
+
+# Core modules
+/bondtrader/core/ @SafetyMP
+/bondtrader/ml/ @SafetyMP
+/bondtrader/risk/ @SafetyMP
+
+# Configuration and setup
+/setup.py @SafetyMP
+/requirements.txt @SafetyMP
+/setup.cfg @SafetyMP
+/pytest.ini @SafetyMP
+
+# CI/CD and workflows
+/.github/ @SafetyMP
+
+# Documentation
+/docs/ @SafetyMP
+/README.md @SafetyMP
+/CONTRIBUTING.md @SafetyMP
+/SECURITY.md @SafetyMP
+
+# Tests
+/tests/ @SafetyMP

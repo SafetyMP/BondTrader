@@ -864,8 +864,12 @@ class ModelTrainer:
         return tuning_results
 
 
-def main():
-    """Main training function"""
+def main() -> None:
+    """
+    Main training function
+    
+    Trains all models in the codebase and saves results.
+    """
     print("=" * 60)
     print("COMPREHENSIVE MODEL TRAINING")
     print("Following Financial Industry Best Practices")

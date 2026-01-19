@@ -24,8 +24,13 @@ from bondtrader.core.bond_valuation import BondValuator
 class AdvancedAnalytics:
     """Advanced bond analytics including term structure and scenario analysis"""
 
-    def __init__(self, valuator: BondValuator = None):
-        """Initialize advanced analytics"""
+    def __init__(self, valuator: Optional[BondValuator] = None) -> None:
+        """
+        Initialize advanced analytics
+        
+        Args:
+            valuator: Bond valuator instance (optional, creates default if None)
+        """
         self.valuator = valuator if valuator else BondValuator()
 
     def fit_yield_curve(self, bonds: List[Bond], method: str = "nelson_siegel", use_statsmodels: bool = False) -> Dict:

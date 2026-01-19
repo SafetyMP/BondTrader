@@ -5,7 +5,7 @@ Generates synthetic bond data for testing and demonstration
 
 import random
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 
@@ -15,8 +15,13 @@ from bondtrader.core.bond_models import Bond, BondType
 class BondDataGenerator:
     """Generates synthetic bond data with realistic characteristics"""
 
-    def __init__(self, seed: int = None):
-        """Initialize generator with optional seed"""
+    def __init__(self, seed: Optional[int] = None) -> None:
+        """
+        Initialize generator with optional seed
+        
+        Args:
+            seed: Random seed for reproducibility (optional)
+        """
         if seed is not None:
             random.seed(seed)
             np.random.seed(seed)
