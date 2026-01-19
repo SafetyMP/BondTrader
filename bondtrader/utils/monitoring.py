@@ -24,12 +24,18 @@ except ImportError:
         def inc(self, *args, **kwargs):
             pass
 
+        def labels(self, *args, **kwargs):
+            return self
+
     class Histogram:
         def __init__(self, *args, **kwargs):
             pass
 
         def observe(self, *args, **kwargs):
             pass
+
+        def labels(self, *args, **kwargs):
+            return self
 
         def time(self):
             return self
