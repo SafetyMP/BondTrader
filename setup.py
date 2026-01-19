@@ -13,7 +13,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 setup(
     name="bondtrader",
     version="1.0.0",
-    author="BondTrader Contributors",
+    author="Sage Hart",
     description="Comprehensive Bond Trading & Arbitrage Detection System",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -23,7 +23,7 @@ setup(
         "Development Status :: 4 - Beta",
         "Intended Audience :: Financial and Insurance Industry",
         "Topic :: Office/Business :: Financial :: Investment",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",

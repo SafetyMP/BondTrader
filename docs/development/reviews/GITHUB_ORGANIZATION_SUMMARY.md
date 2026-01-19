@@ -61,7 +61,7 @@ BondTrader/
 ├── CODE_OF_CONDUCT.md     # Community standards
 ├── SECURITY.md            # Security policy
 ├── ROADMAP.md             # Project roadmap
-├── LICENSE                # MIT License
+├── LICENSE                # Apache License 2.0
 ├── setup.py               # Package setup
 ├── requirements.txt       # Dependencies
 ├── pytest.ini             # Test configuration
