@@ -26,9 +26,45 @@ try:
     _otel_available = True
 except ImportError:
     _otel_available = False
+    BatchSpanProcessor = None  # type: ignore
     logger.warning(
         "OpenTelemetry not available. Install with: pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp"
     )
+
+
+if _otel_available and BatchSpanProcessor:
+    class ErrorHandlingSpanProcessor(BatchSpanProcessor):
+        """
+        Span processor that handles export errors gracefully.
+        Suppresses connection errors when OTLP collector is unavailable.
+        """
+
+        def __init__(self, span_exporter, *args, **kwargs):
+            super().__init__(span_exporter, *args, **kwargs)
+            self._export_error_logged = False
+
+        def force_flush(self, timeout_millis: int = 30000):
+            """Override to catch export errors"""
+            try:
+                return super().force_flush(timeout_millis)
+            except Exception as e:
+                if not self._export_error_logged:
+                    logger.debug(
+                        f"Trace export failed (collector may be unavailable): {e}. "
+                        "Set OTEL_USE_CONSOLE_EXPORTER=true or OTEL_TRACING_DISABLED=true to avoid this."
+                    )
+                    self._export_error_logged = True
+                return None
+
+        def shutdown(self, timeout_millis: int = 30000):
+            """Override to catch export errors during shutdown"""
+            try:
+                return super().shutdown(timeout_millis)
+            except Exception:
+                # Silently ignore shutdown errors
+                return None
+else:
+    ErrorHandlingSpanProcessor = None  # type: ignore
 
 
 class DistributedTracer:
@@ -58,26 +94,70 @@ class DistributedTracer:
     def _initialize_tracer(self, endpoint: Optional[str] = None):
         """Initialize OpenTelemetry tracer"""
         try:
+            import os
+            import logging
+
+            # Suppress gRPC connection errors when collector is unavailable
+            grpc_logger = logging.getLogger("grpc")
+            grpc_logger.setLevel(logging.ERROR)  # Only show errors, not warnings about connection failures
+
             resource = Resource.create({"service.name": self.service_name})
             provider = TracerProvider(resource=resource)
 
             # Use endpoint from parameter or environment
             if endpoint is None:
-                import os
-
                 endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317")
 
-            # Add OTLP exporter if endpoint is configured
-            if endpoint and endpoint != "disabled":
-                exporter = OTLPSpanExporter(endpoint=endpoint)
-                provider.add_span_processor(BatchSpanProcessor(exporter))
+            # Check if tracing is explicitly disabled
+            if endpoint == "disabled" or os.getenv("OTEL_TRACING_DISABLED", "false").lower() == "true":
+                logger.info("OpenTelemetry tracing is disabled")
+                trace.set_tracer_provider(provider)
+                self.tracer = trace.get_tracer(self.service_name)
+                self._initialized = True
+                return
+
+            # Add exporter - prefer console exporter if OTLP endpoint not explicitly set
+            from opentelemetry.sdk.trace.export import ConsoleSpanExporter
+            
+            use_console = os.getenv("OTEL_USE_CONSOLE_EXPORTER", "false").lower() == "true"
+            endpoint_explicit = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT") is not None
+            
+            if use_console or (not endpoint_explicit and endpoint == "http://localhost:4317"):
+                # Use console exporter (default when no explicit OTLP endpoint configured)
+                console_exporter = ConsoleSpanExporter()
+                provider.add_span_processor(BatchSpanProcessor(console_exporter))
+                logger.info(f"Distributed tracing initialized for {self.service_name} with console exporter")
+            elif endpoint:
+                # Try OTLP exporter with error handling
+                try:
+                    exporter = OTLPSpanExporter(endpoint=endpoint)
+                    # Use custom processor that handles export errors gracefully if available
+                    if ErrorHandlingSpanProcessor:
+                        span_processor = ErrorHandlingSpanProcessor(exporter)
+                    else:
+                        span_processor = BatchSpanProcessor(exporter)
+                    provider.add_span_processor(span_processor)
+                    logger.info(f"Distributed tracing initialized for {self.service_name} with OTLP endpoint: {endpoint}")
+                    logger.debug(
+                        "If OTLP collector is unavailable, export errors will be suppressed. "
+                        "Set OTEL_USE_CONSOLE_EXPORTER=true for console output."
+                    )
+                except Exception as exporter_error:
+                    logger.warning(
+                        f"Failed to initialize OTLP exporter for {endpoint}: {exporter_error}. "
+                        "Falling back to console exporter. Set OTEL_TRACING_DISABLED=true to disable tracing."
+                    )
+                    # Fallback to console exporter
+                    console_exporter = ConsoleSpanExporter()
+                    provider.add_span_processor(BatchSpanProcessor(console_exporter))
 
             trace.set_tracer_provider(provider)
             self.tracer = trace.get_tracer(self.service_name)
             self._initialized = True
-            logger.info(f"Distributed tracing initialized for {self.service_name}")
+            if not endpoint:
+                logger.info(f"Distributed tracing initialized for {self.service_name} (no exporter configured)")
         except Exception as e:
-            logger.error(f"Failed to initialize OpenTelemetry tracer: {e}")
+            logger.warning(f"Failed to initialize OpenTelemetry tracer: {e}. Tracing disabled.")
             self._initialized = False
 
     def start_span(self, name: str, attributes: Optional[Dict[str, Any]] = None):

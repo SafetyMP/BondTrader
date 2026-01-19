@@ -5,6 +5,7 @@ Provides authentication for dashboard and API endpoints
 CRITICAL: Uses bcrypt for secure password hashing (industry standard for financial systems)
 """
 
+import hashlib
 import os
 import time
 from functools import wraps
@@ -21,8 +22,9 @@ try:
     HAS_BCRYPT = True
 except ImportError:
     HAS_BCRYPT = False
-    import hashlib
-    import hmac
+
+# Import hmac for HMAC-based operations (used in fallback)
+import hmac
 
 
 class AuthenticationError(Exception):

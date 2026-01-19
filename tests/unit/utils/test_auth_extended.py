@@ -2,6 +2,7 @@
 Extended tests for authentication utilities
 """
 
+import hashlib
 import os
 import tempfile
 
@@ -202,8 +203,6 @@ class TestPasswordHashingExtended:
 
     def test_verify_password_sha256_format(self):
         """Test verifying password with SHA-256 format"""
-        import hashlib
-
         # Create SHA-256 hash manually (only works if bcrypt not available)
         password = "testpassword"
         salt = "test_salt_string"

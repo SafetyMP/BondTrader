@@ -6,6 +6,12 @@ import pytest
 
 from bondtrader.utils.retry import circuit_breaker, retry_with_backoff
 
+# Import CircuitBreakerError if circuitbreaker library is available
+try:
+    from circuitbreaker import CircuitBreakerError
+except ImportError:
+    CircuitBreakerError = RuntimeError  # Fallback to RuntimeError for simple implementation
+
 
 @pytest.mark.unit
 class TestRetryWithBackoff:
@@ -91,5 +97,5 @@ class TestCircuitBreaker:
             failing_func()
 
         # Third call - circuit should be open
-        with pytest.raises((ValueError, RuntimeError)):
+        with pytest.raises((ValueError, RuntimeError, CircuitBreakerError)):
             failing_func()
