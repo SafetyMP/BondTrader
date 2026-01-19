@@ -105,7 +105,7 @@ def create_prediction_comparison_chart(df: pd.DataFrame):
     # Create comparison data
     comparison_data = []
     for _, row in df.iterrows():
-        base_value = row.get("theoretical_fair_value", row.get("current_price", 1000))
+        base_value = row.get("theoretical_fair_value") or row.get("current_price") or 1000
         for col in prediction_cols:
             if pd.notna(row[col]):
                 model_name = col.replace("_predicted_value", "").replace("_", " ").title()
