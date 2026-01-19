@@ -2,8 +2,8 @@
 Tests for numba helpers
 """
 
-import pytest
 import numpy as np
+import pytest
 
 from bondtrader.utils.numba_helpers import (
     binomial_tree_backward_step,

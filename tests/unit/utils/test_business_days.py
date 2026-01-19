@@ -2,8 +2,9 @@
 Tests for business days utilities
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 
 from bondtrader.utils.business_days import (
     BusinessDayCalculator,

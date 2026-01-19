@@ -2,8 +2,9 @@
 Tests for drift detection module
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 
 from bondtrader.core.bond_models import Bond, BondType
 from bondtrader.ml.drift_detection import DriftDetector

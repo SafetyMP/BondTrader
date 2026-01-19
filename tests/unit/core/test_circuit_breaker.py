@@ -2,15 +2,16 @@
 Tests for circuit breaker pattern
 """
 
-import pytest
 import time
+
+import pytest
 
 from bondtrader.core.circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerConfig,
     CircuitState,
-    get_circuit_breaker,
     circuit_breaker,
+    get_circuit_breaker,
 )
 from bondtrader.core.exceptions import ExternalServiceError
 

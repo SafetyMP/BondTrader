@@ -2,14 +2,15 @@
 Tests for service layer pattern
 """
 
+from datetime import datetime, timedelta
+
 import pytest
 
 from bondtrader.core.bond_models import Bond, BondType
+from bondtrader.core.bond_valuation import BondValuator
 from bondtrader.core.exceptions import BusinessRuleViolation, InvalidBondError
 from bondtrader.core.repository import InMemoryBondRepository
 from bondtrader.core.service_layer import BondService
-from bondtrader.core.bond_valuation import BondValuator
-from datetime import datetime, timedelta
 
 
 @pytest.mark.unit

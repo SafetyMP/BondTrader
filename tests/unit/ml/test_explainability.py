@@ -2,8 +2,9 @@
 Tests for explainability module
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 
 from bondtrader.core.bond_models import Bond, BondType
 from bondtrader.ml.explainability import ModelExplainer

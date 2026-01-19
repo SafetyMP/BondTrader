@@ -2,11 +2,12 @@
 Tests for repository pattern implementation
 """
 
+from datetime import datetime, timedelta
+
 import pytest
 
 from bondtrader.core.bond_models import Bond, BondType
-from bondtrader.core.repository import BondRepository, InMemoryBondRepository, IBondRepository
-from datetime import datetime, timedelta
+from bondtrader.core.repository import BondRepository, IBondRepository, InMemoryBondRepository
 
 
 @pytest.mark.unit

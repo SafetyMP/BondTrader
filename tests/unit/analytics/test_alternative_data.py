@@ -2,8 +2,9 @@
 Tests for alternative data analytics
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 
 from bondtrader.analytics.alternative_data import AlternativeDataAnalyzer
 from bondtrader.core.bond_models import Bond, BondType

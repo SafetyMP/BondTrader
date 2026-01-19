@@ -4,7 +4,7 @@ Tests for A/B testing module
 
 import pytest
 
-from bondtrader.ml.ab_testing import ABTestFramework, ABTestConfig, Variant
+from bondtrader.ml.ab_testing import ABTestConfig, ABTestFramework, Variant
 
 
 @pytest.mark.unit

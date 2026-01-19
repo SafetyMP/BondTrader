@@ -2,11 +2,12 @@
 Tests for execution strategies
 """
 
+from datetime import datetime, timedelta
+
 import pytest
 
 from bondtrader.analytics.execution_strategies import ExecutionStrategy
 from bondtrader.core.bond_models import Bond, BondType
-from datetime import datetime, timedelta
 
 
 @pytest.mark.unit

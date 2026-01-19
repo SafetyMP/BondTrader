@@ -2,8 +2,9 @@
 Tests for multi-curve framework
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 
 from bondtrader.analytics.multi_curve import MultiCurveFramework
 from bondtrader.core.bond_models import Bond, BondType

@@ -14,6 +14,10 @@ pytestmark = pytest.mark.integration
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Import from fixtures
+import sys
+from pathlib import Path
+
 from bondtrader.core.bond_models import Bond, BondType
 from bondtrader.data.training_data_generator import (
     TrainingDataGenerator,
@@ -22,10 +26,6 @@ from bondtrader.data.training_data_generator import (
 )
 from bondtrader.ml.ml_adjuster import MLBondAdjuster
 from bondtrader.ml.ml_adjuster_enhanced import EnhancedMLBondAdjuster
-
-# Import from fixtures
-import sys
-from pathlib import Path
 
 fixtures_path = Path(__file__).parent.parent / "fixtures"
 sys.path.insert(0, str(fixtures_path))

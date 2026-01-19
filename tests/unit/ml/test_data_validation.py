@@ -2,9 +2,9 @@
 Tests for data validation module
 """
 
-import pytest
 import numpy as np
 import pandas as pd
+import pytest
 
 from bondtrader.ml.data_validation import DataValidator
 

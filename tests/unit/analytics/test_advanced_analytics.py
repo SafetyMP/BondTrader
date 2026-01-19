@@ -2,8 +2,9 @@
 Tests for advanced analytics module
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 
 from bondtrader.analytics.advanced_analytics import AdvancedAnalytics
 from bondtrader.core.bond_models import Bond, BondType

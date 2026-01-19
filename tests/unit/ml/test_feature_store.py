@@ -2,8 +2,8 @@
 Tests for feature store module
 """
 
-import pytest
 import numpy as np
+import pytest
 
 from bondtrader.ml.feature_store import FeatureStore
 

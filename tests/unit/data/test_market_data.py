@@ -2,11 +2,12 @@
 Tests for market data module
 """
 
-import pytest
 from datetime import datetime, timedelta
 
-from bondtrader.data.market_data import FINRADataProvider, FREDDataProvider
+import pytest
+
 from bondtrader.core.bond_models import Bond, BondType
+from bondtrader.data.market_data import FINRADataProvider, FREDDataProvider
 
 
 @pytest.mark.unit

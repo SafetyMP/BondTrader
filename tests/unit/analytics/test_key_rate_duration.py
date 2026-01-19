@@ -2,8 +2,9 @@
 Tests for key rate duration
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 
 from bondtrader.analytics.key_rate_duration import KeyRateDuration
 from bondtrader.core.bond_models import Bond, BondType
