@@ -396,8 +396,7 @@ def main():
 
     # Model Information
     st.sidebar.header("Model Information")
-    st.sidebar.info(
-        """
+    st.sidebar.info("""
         **Models Used:**
         - Basic ML Adjuster
         - Enhanced ML Adjuster
@@ -407,8 +406,7 @@ def main():
         **Training Data:** 2016-2017
         **Fine-tuning Data:** 2018
         **Prediction Data:** 2025
-        """
-    )
+        """)
 
 
 if __name__ == "__main__":
