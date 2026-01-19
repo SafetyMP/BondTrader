@@ -59,16 +59,19 @@ def test_arbitrage_detection(bonds):
 
 def test_ml_adjuster(bonds):
     """Test ML adjuster"""
+    from bondtrader.config import get_config
+
     print("Testing ML adjuster...")
 
     if len(bonds) < 10:
         print("⚠ Not enough bonds for ML training (need at least 10)")
         return
 
-    ml_adjuster = MLBondAdjuster(model_type="random_forest")
+    config = get_config()
+    ml_adjuster = MLBondAdjuster(model_type=config.ml_model_type)
 
     try:
-        metrics = ml_adjuster.train(bonds, test_size=0.2)
+        metrics = ml_adjuster.train(bonds, test_size=config.ml_test_size, random_state=config.ml_random_state)
         print(f"Train R²: {metrics['train_r2']:.4f}")
         print(f"Test R²: {metrics['test_r2']:.4f}")
         print("✓ ML adjuster works!\n")

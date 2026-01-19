@@ -18,6 +18,14 @@ from bondtrader.core.bond_models import Bond
 from bondtrader.core.bond_valuation import BondValuator
 from bondtrader.utils.utils import logger
 
+# MLflow tracking (optional)
+try:
+    from bondtrader.ml.mlflow_tracking import MLflowTracker
+
+    HAS_MLFLOW_TRACKING = True
+except ImportError:
+    HAS_MLFLOW_TRACKING = False
+
 
 class EnhancedMLBondAdjuster:
     """
@@ -50,7 +58,7 @@ class EnhancedMLBondAdjuster:
             "ytm",
             "duration",
             "convexity",
-            "price_to_fair_ratio",
+            # Note: price_to_fair_ratio removed to prevent data leakage
             "face_value",
             "modified_duration",
             "spread_over_rf",
@@ -61,18 +69,26 @@ class EnhancedMLBondAdjuster:
 
         current_date = datetime.now()
 
-        for bond, fv in zip(bonds, fair_values):
+        # OPTIMIZED: Batch calculate YTM, duration, and convexity to leverage caching
+        # Calculate YTM for all bonds first (cached)
+        ytms = [self.valuator.calculate_yield_to_maturity(bond) for bond in bonds]
+        # Calculate durations using cached YTMs
+        durations = [self.valuator.calculate_duration(bond, ytm) for bond, ytm in zip(bonds, ytms)]
+        # Calculate convexities using cached YTMs
+        convexities = [self.valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds, ytms)]
+
+        for bond, fv, ytm, duration, convexity in zip(bonds, fair_values, ytms, durations, convexities):
             char = bond.get_bond_characteristics()
-            ytm = self.valuator.calculate_yield_to_maturity(bond)
-            duration = self.valuator.calculate_duration(bond, ytm)
-            convexity = self.valuator.calculate_convexity(bond, ytm)
 
             # Base features
+            # Note: We do NOT include price_to_fair_ratio as a feature because
+            # it would be data leakage (it's the same as our target variable).
+            # The model should learn adjustments from bond characteristics alone.
             feature_vector = [
                 char["coupon_rate"],
                 char["time_to_maturity"],
                 char["credit_rating_numeric"],
-                char["current_price"] / char["face_value"],
+                char["current_price"] / char["face_value"],  # price_to_par_ratio (OK - different from target)
                 char["years_since_issue"],
                 char["frequency"],
                 char["callable"],
@@ -80,7 +96,7 @@ class EnhancedMLBondAdjuster:
                 ytm * 100,
                 duration,
                 convexity,
-                bond.current_price / fv if fv > 0 else 1.0,
+                # price_to_fair_ratio removed - would be data leakage
                 bond.face_value,
             ]
 
@@ -115,90 +131,167 @@ class EnhancedMLBondAdjuster:
         return np.array(targets)
 
     def train_with_tuning(
-        self, bonds: List[Bond], test_size: float = 0.2, random_state: int = 42, tune_hyperparameters: bool = True
+        self,
+        bonds: List[Bond],
+        test_size: float = 0.2,
+        random_state: int = 42,
+        tune_hyperparameters: bool = True,
+        use_mlflow: bool = True,
+        mlflow_run_name: str = None,
     ) -> Dict:
-        """Train model with optional hyperparameter tuning"""
+        """Train model with optional hyperparameter tuning and MLflow tracking"""
         if len(bonds) < 10:
             raise ValueError("Need at least 10 bonds for training")
 
-        # Calculate fair values
-        fair_values = [self.valuator.calculate_fair_value(bond) for bond in bonds]
+        # Initialize MLflow tracking
+        mlflow_tracker = None
+        if use_mlflow and HAS_MLFLOW_TRACKING:
+            try:
+                mlflow_tracker = MLflowTracker()
+                run_name = mlflow_run_name or f"enhanced_ml_{self.model_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                mlflow_tracker.start_run(run_name=run_name, tags={"model_type": self.model_type})
+            except Exception as e:
+                logger.warning(f"Failed to initialize MLflow tracking: {e}")
+                mlflow_tracker = None
 
-        # Create features and targets
-        X, feature_names = self._create_enhanced_features(bonds, fair_values)
-        self.feature_names = feature_names
-        y = self._create_targets(bonds, fair_values)
+        try:
+            # Calculate fair values
+            fair_values = [self.valuator.calculate_fair_value(bond) for bond in bonds]
 
-        # Split data
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+            # Create features and targets
+            X, feature_names = self._create_enhanced_features(bonds, fair_values)
+            self.feature_names = feature_names
+            y = self._create_targets(bonds, fair_values)
 
-        # Scale features
-        X_train_scaled = self.scaler.fit_transform(X_train)
-        X_test_scaled = self.scaler.transform(X_test)
+            # Split data
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
 
-        # Hyperparameter tuning
-        if tune_hyperparameters:
-            best_params = self._tune_hyperparameters(X_train_scaled, y_train, random_state)
-            self.best_params = best_params
-        else:
-            # Use default parameters
-            if self.model_type == "random_forest":
-                best_params = {"n_estimators": 100, "max_depth": 10, "min_samples_split": 5}
+            # Scale features
+            X_train_scaled = self.scaler.fit_transform(X_train)
+            X_test_scaled = self.scaler.transform(X_test)
+
+            # Log parameters to MLflow
+            if mlflow_tracker:
+                mlflow_tracker.log_params(
+                    {
+                        "model_type": self.model_type,
+                        "test_size": test_size,
+                        "random_state": random_state,
+                        "tune_hyperparameters": tune_hyperparameters,
+                        "n_samples": len(bonds),
+                        "n_features": len(feature_names),
+                    }
+                )
+
+            # Hyperparameter tuning
+            if tune_hyperparameters:
+                best_params = self._tune_hyperparameters(X_train_scaled, y_train, random_state)
+                self.best_params = best_params
             else:
-                best_params = {"n_estimators": 100, "max_depth": 5, "learning_rate": 0.1}
+                # Use default parameters
+                if self.model_type == "random_forest":
+                    best_params = {"n_estimators": 100, "max_depth": 10, "min_samples_split": 5}
+                else:
+                    best_params = {"n_estimators": 100, "max_depth": 5, "learning_rate": 0.1}
 
-        # Train model with best parameters
-        if self.model_type == "random_forest":
-            self.model = RandomForestRegressor(
-                n_estimators=best_params["n_estimators"],
-                max_depth=best_params.get("max_depth", 10),
-                min_samples_split=best_params.get("min_samples_split", 5),
-                random_state=random_state,
-                n_jobs=-1,
-            )
-        elif self.model_type == "gradient_boosting":
-            self.model = GradientBoostingRegressor(
-                n_estimators=best_params["n_estimators"],
-                max_depth=best_params.get("max_depth", 5),
-                learning_rate=best_params.get("learning_rate", 0.1),
-                random_state=random_state,
-            )
+            # Log hyperparameters to MLflow
+            if mlflow_tracker:
+                mlflow_tracker.log_params({f"param_{k}": v for k, v in best_params.items()})
 
-        self.model.fit(X_train_scaled, y_train)
+            # Train model with best parameters
+            if self.model_type == "random_forest":
+                self.model = RandomForestRegressor(
+                    n_estimators=best_params["n_estimators"],
+                    max_depth=best_params.get("max_depth", 10),
+                    min_samples_split=best_params.get("min_samples_split", 5),
+                    random_state=random_state,
+                    n_jobs=-1,
+                )
+            elif self.model_type == "gradient_boosting":
+                self.model = GradientBoostingRegressor(
+                    n_estimators=best_params["n_estimators"],
+                    max_depth=best_params.get("max_depth", 5),
+                    learning_rate=best_params.get("learning_rate", 0.1),
+                    min_samples_split=best_params.get("min_samples_split", 5),
+                    min_samples_leaf=best_params.get("min_samples_leaf", 2),
+                    subsample=best_params.get("subsample", 0.9),
+                    random_state=random_state,
+                    # Early stopping to prevent overfitting
+                    validation_fraction=0.1,
+                    n_iter_no_change=10,
+                    tol=1e-4,
+                )
 
-        # Evaluate
-        train_pred = self.model.predict(X_train_scaled)
-        test_pred = self.model.predict(X_test_scaled)
+            self.model.fit(X_train_scaled, y_train)
 
-        # Cross-validation
-        cv_scores = cross_val_score(self.model, X_train_scaled, y_train, cv=5, scoring="r2")
+            # Evaluate
+            train_pred = self.model.predict(X_train_scaled)
+            test_pred = self.model.predict(X_test_scaled)
 
-        # Metrics
-        metrics = {
-            "train_mse": mean_squared_error(y_train, train_pred),
-            "test_mse": mean_squared_error(y_test, test_pred),
-            "train_rmse": np.sqrt(mean_squared_error(y_train, train_pred)),
-            "test_rmse": np.sqrt(mean_squared_error(y_test, test_pred)),
-            "train_mae": mean_absolute_error(y_train, train_pred),
-            "test_mae": mean_absolute_error(y_test, test_pred),
-            "train_r2": r2_score(y_train, train_pred),
-            "test_r2": r2_score(y_test, test_pred),
-            "cv_r2_mean": cv_scores.mean(),
-            "cv_r2_std": cv_scores.std(),
-            "n_samples": len(bonds),
-            "n_train": len(X_train),
-            "n_test": len(X_test),
-            "best_params": best_params,
-        }
+            # Cross-validation with TimeSeriesSplit for financial data
+            from sklearn.model_selection import TimeSeriesSplit
 
-        self.training_metrics = metrics
-        self.is_trained = True
+            tscv = TimeSeriesSplit(n_splits=5)
+            cv_scores = cross_val_score(self.model, X_train_scaled, y_train, cv=tscv, scoring="r2")
 
-        return metrics
+            # Metrics
+            metrics = {
+                "train_mse": mean_squared_error(y_train, train_pred),
+                "test_mse": mean_squared_error(y_test, test_pred),
+                "train_rmse": np.sqrt(mean_squared_error(y_train, train_pred)),
+                "test_rmse": np.sqrt(mean_squared_error(y_test, test_pred)),
+                "train_mae": mean_absolute_error(y_train, train_pred),
+                "test_mae": mean_absolute_error(y_test, test_pred),
+                "train_r2": r2_score(y_train, train_pred),
+                "test_r2": r2_score(y_test, test_pred),
+                "cv_r2_mean": cv_scores.mean(),
+                "cv_r2_std": cv_scores.std(),
+                "n_samples": len(bonds),
+                "n_train": len(X_train),
+                "n_test": len(X_test),
+                "best_params": best_params,
+            }
+
+            self.training_metrics = metrics
+            self.is_trained = True
+
+            # Log metrics and model to MLflow
+            if mlflow_tracker:
+                mlflow_tracker.log_metrics(
+                    {
+                        "train_mse": metrics["train_mse"],
+                        "test_mse": metrics["test_mse"],
+                        "train_rmse": metrics["train_rmse"],
+                        "test_rmse": metrics["test_rmse"],
+                        "train_mae": metrics["train_mae"],
+                        "test_mae": metrics["test_mae"],
+                        "train_r2": metrics["train_r2"],
+                        "test_r2": metrics["test_r2"],
+                        "cv_r2_mean": metrics["cv_r2_mean"],
+                        "cv_r2_std": metrics["cv_r2_std"],
+                    }
+                )
+
+                # Log model with input example
+                input_example = X_test_scaled[:1] if len(X_test_scaled) > 0 else None
+                mlflow_tracker.log_model(
+                    model=self.model,
+                    artifact_path="model",
+                    input_example=input_example,
+                )
+
+                mlflow_tracker.end_run()
+
+            return metrics
+
+        except Exception as e:
+            if mlflow_tracker:
+                mlflow_tracker.end_run()
+            raise
 
     def _tune_hyperparameters(self, X_train: np.ndarray, y_train: np.ndarray, random_state: int = 42) -> Dict:
-        """Tune hyperparameters using randomized search for better exploration"""
-        from sklearn.model_selection import RandomizedSearchCV
+        """Tune hyperparameters using randomized search with time series cross-validation"""
+        from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
         if self.model_type == "random_forest":
             # Expanded parameter space for better performance
@@ -221,12 +314,25 @@ class EnhancedMLBondAdjuster:
                 "min_samples_leaf": [1, 2, 4],
                 "subsample": [0.8, 0.85, 0.9, 0.95, 1.0],
             }
-            base_model = GradientBoostingRegressor(random_state=random_state)
+            # Add early stopping for gradient boosting
+            base_model = GradientBoostingRegressor(
+                random_state=random_state, validation_fraction=0.1, n_iter_no_change=10, tol=1e-4
+            )
             n_iter = 25  # Balance between exploration and speed
+
+        # Use TimeSeriesSplit for financial time series data (prevents look-ahead bias)
+        tscv = TimeSeriesSplit(n_splits=5)
 
         # Use RandomizedSearchCV for more efficient search over larger space
         random_search = RandomizedSearchCV(
-            base_model, param_distributions, n_iter=n_iter, cv=5, scoring="r2", n_jobs=-1, verbose=0, random_state=random_state
+            base_model,
+            param_distributions,
+            n_iter=n_iter,
+            cv=tscv,
+            scoring="r2",
+            n_jobs=-1,
+            verbose=0,
+            random_state=random_state,
         )
 
         random_search.fit(X_train, y_train)

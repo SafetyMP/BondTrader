@@ -72,6 +72,11 @@ class AutoMLBondAdjuster:
         # Evaluate candidate models
         model_results = {}
 
+        # Use TimeSeriesSplit for financial time series data
+        from sklearn.model_selection import TimeSeriesSplit
+
+        tscv = TimeSeriesSplit(n_splits=5)
+
         # Random Forest
         if "random_forest" in candidate_models:
             from sklearn.model_selection import RandomizedSearchCV
@@ -85,7 +90,7 @@ class AutoMLBondAdjuster:
             }
             rf_base = RandomForestRegressor(random_state=42, n_jobs=-1)
             rf_search = RandomizedSearchCV(
-                rf_base, param_distributions, n_iter=25, cv=5, scoring="r2", n_jobs=-1, random_state=42
+                rf_base, param_distributions, n_iter=25, cv=tscv, scoring="r2", n_jobs=-1, random_state=42
             )
             rf_search.fit(X_scaled, y)
             model_results["random_forest"] = {
@@ -106,9 +111,10 @@ class AutoMLBondAdjuster:
                 "min_samples_leaf": [1, 2, 4],
                 "subsample": [0.8, 0.85, 0.9, 0.95, 1.0],
             }
-            gb_base = GradientBoostingRegressor(random_state=42)
+            # Add early stopping for gradient boosting
+            gb_base = GradientBoostingRegressor(random_state=42, validation_fraction=0.1, n_iter_no_change=10, tol=1e-4)
             gb_search = RandomizedSearchCV(
-                gb_base, param_distributions, n_iter=25, cv=5, scoring="r2", n_jobs=-1, random_state=42
+                gb_base, param_distributions, n_iter=25, cv=tscv, scoring="r2", n_jobs=-1, random_state=42
             )
             gb_search.fit(X_scaled, y)
             model_results["gradient_boosting"] = {
@@ -129,7 +135,7 @@ class AutoMLBondAdjuster:
             }
             nn_base = MLPRegressor(max_iter=1000, random_state=42, early_stopping=True, validation_fraction=0.1)
             nn_search = RandomizedSearchCV(
-                nn_base, param_distributions, n_iter=20, cv=5, scoring="r2", n_jobs=-1, random_state=42
+                nn_base, param_distributions, n_iter=20, cv=tscv, scoring="r2", n_jobs=-1, random_state=42
             )
             nn_search.fit(X_scaled, y)
             model_results["neural_network"] = {
@@ -147,7 +153,12 @@ class AutoMLBondAdjuster:
                 "model": advanced_ml.ensemble_model,
                 "advanced_ml": advanced_ml,
             }
-        except:
+        except (ValueError, AttributeError, KeyError) as e:
+            # Ensemble model creation failed - log and continue with other models
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Ensemble model creation failed: {e}")
             pass
 
         # Select best model

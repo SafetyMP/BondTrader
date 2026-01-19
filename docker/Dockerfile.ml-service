@@ -1,0 +1,29 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    make \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY bondtrader/ ./bondtrader/
+COPY scripts/train_all_models.py ./scripts/train_all_models.py
+
+# Create necessary directories
+RUN mkdir -p trained_models training_data evaluation_data logs
+
+# Expose service port (optional, for health checks)
+EXPOSE 8001
+
+# Run ML training service (can be run as one-off or scheduled)
+CMD ["python", "-m", "bondtrader.ml.automated_retraining"]

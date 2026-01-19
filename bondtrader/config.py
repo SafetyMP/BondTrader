@@ -42,6 +42,8 @@ class Config:
 
     # API keys (optional)
     fred_api_key: Optional[str] = os.getenv("FRED_API_KEY", None)
+    finra_api_key: Optional[str] = os.getenv("FINRA_API_KEY", None)
+    finra_api_password: Optional[str] = os.getenv("FINRA_API_PASSWORD", None)
 
     # Performance settings
     max_workers: Optional[int] = int(os.getenv("MAX_WORKERS")) if os.getenv("MAX_WORKERS") else None

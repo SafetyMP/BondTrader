@@ -59,15 +59,33 @@ class Bond:
         delta = datetime.now() - self.issue_date
         return delta.days / 365.25
 
-    def get_bond_characteristics(self) -> Dict[str, Any]:
-        """Extract characteristics for ML classification"""
+    def get_bond_characteristics(self, current_time: Optional[datetime] = None) -> Dict[str, Any]:
+        """
+        Extract characteristics for ML classification
+
+        Args:
+            current_time: Optional datetime to use for calculations (for consistency in batches)
+                         If None, uses datetime.now()
+
+        Returns:
+            Dictionary of bond characteristics
+        """
+        # OPTIMIZED: Use provided current_time or calculate once
+        # This avoids multiple datetime.now() calls when processing batches
+        if current_time is None:
+            current_time = datetime.now()
+
+        # Calculate time-based metrics once
+        time_to_maturity = max(0, (self.maturity_date - current_time).days / 365.25)
+        years_since_issue = (current_time - self.issue_date).days / 365.25
+
         return {
             "coupon_rate": self.coupon_rate,
-            "time_to_maturity": self.time_to_maturity,
+            "time_to_maturity": time_to_maturity,
             "credit_rating_numeric": self._rating_to_numeric(self.credit_rating),
             "current_price": self.current_price,
             "face_value": self.face_value,
-            "years_since_issue": self.years_since_issue,
+            "years_since_issue": years_since_issue,
             "frequency": self.frequency,
             "callable": 1 if self.callable else 0,
             "convertible": 1 if self.convertible else 0,

@@ -1,0 +1,19 @@
+version: '3.8'
+
+# Development override for docker-compose.yml
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  api:
+    volumes:
+      - ../bondtrader:/app/bondtrader:ro  # Mount source code for development
+      - ../scripts:/app/scripts:ro
+    environment:
+      - LOG_LEVEL=DEBUG
+
+  dashboard:
+    volumes:
+      - ../bondtrader:/app/bondtrader:ro  # Mount source code for development
+      - ../scripts:/app/scripts:ro
+    environment:
+      - LOG_LEVEL=DEBUG

@@ -15,25 +15,32 @@ from bondtrader.utils.utils import logger
 
 
 class BondValuator:
-    """Core bond valuation engine"""
+    """Core bond valuation engine with calculation caching for performance"""
 
-    def __init__(self, risk_free_rate: float = 0.03, use_quantlib: bool = False):
+    def __init__(self, risk_free_rate: float = 0.03, use_quantlib: bool = False, enable_caching: bool = True):
         """
         Initialize valuator with risk-free rate (default 3%)
 
         Args:
             risk_free_rate: Annual risk-free rate as decimal (e.g., 0.03 for 3%)
             use_quantlib: Use QuantLib for calculations if available (default: False)
+            enable_caching: Enable caching for expensive calculations (default: True)
         """
         self.risk_free_rate = risk_free_rate
         self.use_quantlib = use_quantlib and is_quantlib_available()
         self.quantlib = get_quantlib_integration() if self.use_quantlib else None
+        self.enable_caching = enable_caching
+        # Cache for calculations - using dict for manual cache management
+        self._calculation_cache = {} if enable_caching else None
+        # Cache size limit to prevent memory issues
+        self._cache_size_limit = 10000
 
     def calculate_yield_to_maturity(
         self, bond: Bond, market_price: Optional[float] = None, tolerance: float = 1e-6, max_iterations: int = 100
     ) -> float:
         """
         Calculate Yield to Maturity using Newton-Raphson method
+        Caches results for performance optimization
 
         Args:
             bond: Bond object to calculate YTM for
@@ -56,6 +63,12 @@ class BondValuator:
         if price <= 0:
             raise ValueError(f"Market price must be positive, got {price}")
 
+        # Check cache if enabled
+        if self.enable_caching and self._calculation_cache is not None:
+            cache_key = (bond.bond_id, price, "ytm")
+            if cache_key in self._calculation_cache:
+                return self._calculation_cache[cache_key]
+
         time_to_maturity = bond.time_to_maturity
 
         if time_to_maturity <= 0:
@@ -64,7 +77,11 @@ class BondValuator:
         if bond.bond_type == BondType.ZERO_COUPON:
             # Zero coupon: Price = Face / (1 + ytm)^T
             ytm = (bond.face_value / price) ** (1 / time_to_maturity) - 1
-            return max(0, ytm)
+            result = max(0, ytm)
+            # Cache result
+            if self.enable_caching and self._calculation_cache is not None:
+                self._update_cache(cache_key, result)
+            return result
 
         # Initial guess for YTM
         ytm = self.risk_free_rate + bond.coupon_rate / 100
@@ -107,6 +124,10 @@ class BondValuator:
 
             # Ensure YTM is positive
             ytm = max(0.001, ytm)
+
+        # Cache result
+        if self.enable_caching and self._calculation_cache is not None:
+            self._update_cache((bond.bond_id, price, "ytm"), ytm)
 
         return ytm
 
@@ -218,16 +239,26 @@ class BondValuator:
         return self._CREDIT_SPREADS.get(rating.upper(), 0.040)  # Default to BBB spread
 
     def calculate_duration(self, bond: Bond, ytm: Optional[float] = None) -> float:
-        """Calculate Macaulay Duration"""
+        """Calculate Macaulay Duration with caching"""
         if ytm is None:
             ytm = self.calculate_yield_to_maturity(bond)
+
+        # Check cache if enabled
+        if self.enable_caching and self._calculation_cache is not None:
+            cache_key = (bond.bond_id, ytm, "duration")
+            if cache_key in self._calculation_cache:
+                return self._calculation_cache[cache_key]
 
         time_to_maturity = bond.time_to_maturity
         if time_to_maturity <= 0:
             return 0
 
         if bond.bond_type == BondType.ZERO_COUPON:
-            return time_to_maturity
+            result = time_to_maturity
+            # Cache result
+            if self.enable_caching and self._calculation_cache is not None:
+                self._update_cache(cache_key, result)
+            return result
 
         periods = int(time_to_maturity * bond.frequency)
         coupon_payment = (bond.coupon_rate / 100) * bond.face_value / bond.frequency
@@ -249,12 +280,23 @@ class BondValuator:
         pv_sum += pv_face
 
         duration = weighted_sum / pv_sum if pv_sum > 0 else 0
+
+        # Cache result
+        if self.enable_caching and self._calculation_cache is not None:
+            self._update_cache((bond.bond_id, ytm, "duration"), duration)
+
         return duration
 
     def calculate_convexity(self, bond: Bond, ytm: Optional[float] = None) -> float:
-        """Calculate convexity"""
+        """Calculate convexity with caching"""
         if ytm is None:
             ytm = self.calculate_yield_to_maturity(bond)
+
+        # Check cache if enabled
+        if self.enable_caching and self._calculation_cache is not None:
+            cache_key = (bond.bond_id, ytm, "convexity")
+            if cache_key in self._calculation_cache:
+                return self._calculation_cache[cache_key]
 
         time_to_maturity = bond.time_to_maturity
         if time_to_maturity <= 0:
@@ -281,6 +323,11 @@ class BondValuator:
         pv_sum += pv_face
 
         convexity = convexity_sum / (pv_sum * (bond.frequency**2)) if pv_sum > 0 else 0
+
+        # Cache result
+        if self.enable_caching and self._calculation_cache is not None:
+            self._update_cache((bond.bond_id, ytm, "convexity"), convexity)
+
         return convexity
 
     def calculate_price_mismatch(self, bond: Bond) -> Dict[str, Any]:
@@ -331,3 +378,56 @@ class BondValuator:
 
             logger.error(f"Error calculating price mismatch for bond {bond.bond_id}: {e}")
             raise
+
+    def _update_cache(self, key: tuple, value: float) -> None:
+        """Update calculation cache with size limit management"""
+        if not self.enable_caching or self._calculation_cache is None:
+            return
+
+        # Clear cache if it's too large (simple FIFO eviction)
+        if len(self._calculation_cache) >= self._cache_size_limit:
+            # Remove oldest 20% of entries (simple approach)
+            keys_to_remove = list(self._calculation_cache.keys())[: self._cache_size_limit // 5]
+            for k in keys_to_remove:
+                del self._calculation_cache[k]
+
+        self._calculation_cache[key] = value
+
+    def clear_cache(self) -> None:
+        """Clear calculation cache"""
+        if self._calculation_cache is not None:
+            self._calculation_cache.clear()
+
+    def batch_calculate_ytm(self, bonds: List[Bond], market_prices: Optional[List[float]] = None) -> np.ndarray:
+        """
+        Batch calculate YTM for multiple bonds (vectorized where possible)
+
+        Args:
+            bonds: List of bonds
+            market_prices: Optional list of market prices (uses bond.current_price if None)
+
+        Returns:
+            Array of YTM values
+        """
+        if market_prices is None:
+            market_prices = [b.current_price for b in bonds]
+
+        ytms = np.array([self.calculate_yield_to_maturity(bond, price) for bond, price in zip(bonds, market_prices)])
+        return ytms
+
+    def batch_calculate_duration(self, bonds: List[Bond], ytms: Optional[np.ndarray] = None) -> np.ndarray:
+        """
+        Batch calculate duration for multiple bonds
+
+        Args:
+            bonds: List of bonds
+            ytms: Optional array of YTM values (calculated if None)
+
+        Returns:
+            Array of duration values
+        """
+        if ytms is None:
+            ytms = self.batch_calculate_ytm(bonds)
+
+        durations = np.array([self.calculate_duration(bond, ytm) for bond, ytm in zip(bonds, ytms)])
+        return durations

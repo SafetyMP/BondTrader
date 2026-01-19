@@ -71,15 +71,20 @@ class AdvancedMLBondAdjuster:
         self.scaler_var_ = None
 
     def _create_advanced_features(self, bonds: List[Bond], fair_values: List[float]) -> Tuple[np.ndarray, List[str]]:
-        """Create advanced feature set with polynomial and interaction features"""
+        """Create advanced feature set with polynomial and interaction features (optimized)"""
         features = []
         feature_names = []
 
-        for bond, fv in zip(bonds, fair_values):
+        # OPTIMIZED: Batch calculate YTM, duration, and convexity to leverage caching
+        # Calculate YTM for all bonds first (cached)
+        ytms = [self.valuator.calculate_yield_to_maturity(bond) for bond in bonds]
+        # Calculate durations using cached YTMs
+        durations = [self.valuator.calculate_duration(bond, ytm) for bond, ytm in zip(bonds, ytms)]
+        # Calculate convexities using cached YTMs
+        convexities = [self.valuator.calculate_convexity(bond, ytm) for bond, ytm in zip(bonds, ytms)]
+
+        for bond, fv, ytm, duration, convexity in zip(bonds, fair_values, ytms, durations, convexities):
             char = bond.get_bond_characteristics()
-            ytm = self.valuator.calculate_yield_to_maturity(bond)
-            duration = self.valuator.calculate_duration(bond, ytm)
-            convexity = self.valuator.calculate_convexity(bond, ytm)
 
             # Base features
             coupon_rate = char["coupon_rate"]
@@ -91,11 +96,14 @@ class AdvancedMLBondAdjuster:
             callable_flag = char["callable"]
             convertible_flag = char["convertible"]
 
+            # Note: We do NOT include price_to_fair_ratio as a feature because
+            # it would be data leakage (it's the same as our target variable).
+            # The model should learn adjustments from bond characteristics alone.
             feature_vector = [
                 coupon_rate,
                 ttm,
                 rating_num,
-                price_to_par,
+                price_to_par,  # OK - this is price/par, not price/fair_value
                 years_issue,
                 freq,
                 callable_flag,
@@ -103,7 +111,7 @@ class AdvancedMLBondAdjuster:
                 ytm * 100,
                 duration,
                 convexity,
-                bond.current_price / fv if fv > 0 else 1.0,
+                # price_to_fair_ratio removed - would be data leakage
                 bond.face_value,
                 duration / (1 + ytm) if ytm > 0 else duration,  # Modified duration
                 ytm - self.valuator.risk_free_rate,  # Spread over RF
@@ -132,7 +140,7 @@ class AdvancedMLBondAdjuster:
             "ytm",
             "duration",
             "convexity",
-            "price_to_fair_ratio",
+            # Note: price_to_fair_ratio removed to prevent data leakage
             "face_value",
             "modified_duration",
             "spread_over_rf",
@@ -640,8 +648,12 @@ class AdvancedMLBondAdjuster:
             if os.path.exists(temp_filepath):
                 try:
                     os.remove(temp_filepath)
-                except:
-                    pass
+                except (OSError, PermissionError) as cleanup_error:
+                    # Log but don't fail on cleanup errors
+                    import logging
+
+                    logger = logging.getLogger(__name__)
+                    logger.warning(f"Failed to cleanup temp file {temp_filepath}: {cleanup_error}")
             raise e
 
     def load_model(self, filepath: str):

@@ -79,4 +79,17 @@ bondtrader/
 
 ---
 
+## Architecture Evolution
+
+This document describes the original architecture. For the latest architecture following industry best practices, see [Architecture v2.0](ARCHITECTURE_V2.md).
+
+**Key improvements in v2.0:**
+- Domain-specific exception hierarchy
+- Result pattern for explicit error handling
+- Repository pattern for data access
+- Service layer for business logic orchestration
+- Audit logging for compliance
+- Circuit breaker for resilience
+- Observability (metrics and tracing)
+
 For detailed implementation, see source code and [Organization Summary](ORGANIZATION_SUMMARY.md).

@@ -43,6 +43,7 @@ except ImportError:
 from bondtrader.analytics.factor_models import FactorModel
 
 # Import all models
+from bondtrader.config import get_config
 from bondtrader.core.bond_models import Bond, BondType
 from bondtrader.core.bond_valuation import BondValuator
 from bondtrader.data.training_data_generator import TrainingDataGenerator, load_training_dataset, save_training_dataset
@@ -72,7 +73,7 @@ class ModelTrainer:
         self,
         dataset_path: str = None,
         generate_new: bool = False,
-        checkpoint_dir: str = "training_checkpoints",
+        checkpoint_dir: str = None,
         use_parallel: bool = True,
         max_workers: Optional[int] = None,
     ):
@@ -82,29 +83,37 @@ class ModelTrainer:
         Args:
             dataset_path: Path to saved dataset (if None, generates new)
             generate_new: Force generation of new dataset
-            checkpoint_dir: Directory for saving checkpoints
+            checkpoint_dir: Directory for saving checkpoints (defaults to config.checkpoint_dir)
             use_parallel: Whether to use parallel training
-            max_workers: Maximum parallel workers (None = auto-detect)
+            max_workers: Maximum parallel workers (None = auto-detect from config or CPU count)
         """
+        # Get centralized configuration
+        self.config = get_config()
+
         self.valuator = BondValuator()
-        self.checkpoint_dir = checkpoint_dir
+        self.checkpoint_dir = checkpoint_dir or self.config.checkpoint_dir
         self.use_parallel = use_parallel
-        self.max_workers = max_workers or min(mp.cpu_count(), 8)
+        self.max_workers = max_workers or self.config.max_workers or min(mp.cpu_count(), 8)
 
         # Create checkpoint directory
-        os.makedirs(checkpoint_dir, exist_ok=True)
+        os.makedirs(self.checkpoint_dir, exist_ok=True)
 
         # Caching for bond conversion
         self._bond_cache = {}
 
         if generate_new or dataset_path is None or not os.path.exists(dataset_path):
             print("Generating new training dataset...")
-            generator = TrainingDataGenerator(seed=42)
-            self.dataset = generator.generate_comprehensive_dataset(total_bonds=5000, time_periods=60, bonds_per_period=100)
+            generator = TrainingDataGenerator(seed=self.config.ml_random_state)
+            self.dataset = generator.generate_comprehensive_dataset(
+                total_bonds=self.config.training_num_bonds,
+                time_periods=self.config.training_time_periods,
+                bonds_per_period=self.config.training_batch_size,
+            )
 
-            # Save dataset
-            os.makedirs("training_data", exist_ok=True)
-            save_training_dataset(self.dataset, "training_data/training_dataset.joblib")
+            # Save dataset using config path
+            os.makedirs(self.config.data_dir, exist_ok=True)
+            default_dataset_path = os.path.join(self.config.data_dir, "training_dataset.joblib")
+            save_training_dataset(self.dataset, default_dataset_path)
         else:
             print(f"Loading dataset from {dataset_path}...")
             self.dataset = load_training_dataset(dataset_path)
@@ -294,7 +303,8 @@ class ModelTrainer:
                 if os.path.exists(temp_path):
                     try:
                         os.remove(temp_path)
-                    except:
+                    except (OSError, PermissionError) as cleanup_error:
+                        # Log but don't fail on cleanup errors
                         pass
                 raise e
 
@@ -438,7 +448,8 @@ class ModelTrainer:
                                 pred.get("ml_adjusted_value", pred.get("ml_adjusted_fair_value", bond.current_price))
                             )
                             validation_actuals.append(bond.current_price)
-                    except:
+                    except (ValueError, KeyError, AttributeError) as e:
+                        # Skip invalid bonds
                         continue
 
                 if len(validation_predictions) > 10:  # Need sufficient samples
@@ -457,9 +468,9 @@ class ModelTrainer:
         print("\n[1/9] Training Basic ML Adjuster...")
 
         def train_ml_adjuster():
-            ml_adjuster = MLBondAdjuster(model_type="random_forest")
+            ml_adjuster = MLBondAdjuster(model_type=self.config.ml_model_type)
             ml_metrics = ml_adjuster.train(
-                self.train_bonds, test_size=0.2, random_state=42  # Fixed random_state for reproducibility
+                self.train_bonds, test_size=self.config.ml_test_size, random_state=self.config.ml_random_state
             )
             result = {"metrics": ml_metrics, "model": ml_adjuster, "status": "success"}
             print(f"  ✓ Train R²: {ml_metrics['train_r2']:.4f}")
@@ -471,11 +482,11 @@ class ModelTrainer:
         # 2. Enhanced ML Adjuster
         print("\n[2/9] Training Enhanced ML Adjuster...")
         try:
-            enhanced_ml = EnhancedMLBondAdjuster(model_type="random_forest")
+            enhanced_ml = EnhancedMLBondAdjuster(model_type=self.config.ml_model_type)
             enhanced_metrics = enhanced_ml.train_with_tuning(
                 self.train_bonds,
-                test_size=0.2,
-                random_state=42,  # Fixed random_state for reproducibility
+                test_size=self.config.ml_test_size,
+                random_state=self.config.ml_random_state,
                 tune_hyperparameters=True,
             )
             results["enhanced_ml_adjuster"] = {"metrics": enhanced_metrics, "model": enhanced_ml, "status": "success"}
@@ -491,7 +502,7 @@ class ModelTrainer:
         try:
             advanced_ml = AdvancedMLBondAdjuster(self.valuator)
             ensemble_metrics = advanced_ml.train_ensemble(
-                self.train_bonds, test_size=0.2, random_state=42  # Fixed random_state for reproducibility
+                self.train_bonds, test_size=self.config.ml_test_size, random_state=self.config.ml_random_state
             )
             results["advanced_ml_adjuster"] = {"metrics": ensemble_metrics, "model": advanced_ml, "status": "success"}
             print(f"  ✓ Ensemble Test R²: {ensemble_metrics['ensemble_metrics']['test_r2']:.4f}")
@@ -634,7 +645,8 @@ class ModelTrainer:
                                     continue
 
                                 test_actuals.append(bond.current_price)
-                            except:
+                            except (ValueError, KeyError, AttributeError) as e:
+                                # Skip invalid bonds
                                 continue
 
                         if len(test_predictions) > 0:
@@ -658,12 +670,18 @@ class ModelTrainer:
 
         return evaluations
 
-    def save_models(self, results: Dict, model_dir: str = "trained_models"):
+    def save_models(self, results: Dict, model_dir: str = None):
         """
         Save all trained models with atomic writes
 
         FIXED: Uses atomic writes to prevent corruption
+
+        Args:
+            results: Dictionary of training results
+            model_dir: Directory to save models (defaults to config.model_dir)
         """
+        if model_dir is None:
+            model_dir = self.config.model_dir
         os.makedirs(model_dir, exist_ok=True)
 
         print(f"\nSaving models to {model_dir}/...")
@@ -695,7 +713,8 @@ class ModelTrainer:
                             if os.path.exists(temp_filepath):
                                 try:
                                     os.remove(temp_filepath)
-                                except:
+                                except (OSError, PermissionError) as cleanup_error:
+                                    # Log but don't fail on cleanup errors
                                     pass
                             raise e
 
@@ -818,7 +837,8 @@ class ModelTrainer:
                             pred = model.predict_adjusted_value(bond)
                             value = pred.get("ml_adjusted_value", pred.get("ml_adjusted_fair_value", bond.current_price))
                             predictions.append(value)
-                        except:
+                        except (ValueError, AttributeError, KeyError) as e:
+                            # Fallback to current price if prediction fails
                             predictions.append(bond.current_price)
 
                     current_drift = self.drift_detector.calculate_drift(
@@ -842,7 +862,8 @@ class ModelTrainer:
                             pred = model.predict_adjusted_value(bond)
                             value = pred.get("ml_adjusted_value", pred.get("ml_adjusted_fair_value", bond.current_price))
                             predictions.append(value)
-                        except:
+                        except (ValueError, AttributeError, KeyError) as e:
+                            # Fallback to current price if prediction fails
                             predictions.append(bond.current_price)
 
                     current_drift = self.drift_detector.calculate_drift(
@@ -875,15 +896,17 @@ def main() -> None:
     print("Following Financial Industry Best Practices")
     print("=" * 60)
 
+    # Get configuration
+    config = get_config()
+
     # Initialize trainer
-    trainer = ModelTrainer(
-        dataset_path="training_data/training_dataset.joblib", generate_new=False  # Set to True to generate new dataset
-    )
+    default_dataset_path = os.path.join(config.data_dir, "training_dataset.joblib")
+    trainer = ModelTrainer(dataset_path=default_dataset_path, generate_new=False)  # Set to True to generate new dataset
 
     # Train all models
     results = trainer.train_all_models()
 
-    # Save models
+    # Save models (uses config.model_dir by default)
     trainer.save_models(results)
 
     # Print summary

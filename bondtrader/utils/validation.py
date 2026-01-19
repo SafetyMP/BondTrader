@@ -80,7 +80,9 @@ def validate_positive(value: float, name: str = "value") -> None:
     Raises:
         ValueError: If value is not positive
     """
-    validate_numeric_range(value, min_val=0.0, name=name, max_val=None)
+    if not isinstance(value, (int, float)):
+        raise TypeError(f"{name} must be numeric, got {type(value)}")
+
     if value <= 0:
         raise ValueError(f"{name} must be positive (greater than 0), got {value}")
 
