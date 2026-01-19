@@ -105,19 +105,32 @@ def create_prediction_comparison_chart(df: pd.DataFrame):
     # Create comparison data
     comparison_data = []
     for _, row in df.iterrows():
-        tv = row.get("theoretical_fair_value")
-        cp = row.get("current_price")
-        base_value = tv if tv is not None else (cp if cp is not None else 1000)
+        theoretical_val = row.get("theoretical_fair_value")
+        current_price_val = row.get("current_price")
+
+        if theoretical_val is not None:
+            base_value = theoretical_val
+        elif current_price_val is not None:
+            base_value = current_price_val
+        else:
+            base_value = 1000
+
         for col in prediction_cols:
             if pd.notna(row[col]):
                 model_name = col.replace("_predicted_value", "").replace("_", " ").title()
-                difference = row[col] - base_value
-                diff_percentage = (difference / base_value * 100) if base_value > 0 else 0
+                predicted_val = row[col]
+                difference = predicted_val - base_value
+
+                if base_value > 0:
+                    diff_percentage = (difference / base_value) * 100
+                else:
+                    diff_percentage = 0
+
                 comparison_data.append(
                     {
                         "Bond ID": row["bond_id"],
                         "Model": model_name,
-                        "Predicted Value": row[col],
+                        "Predicted Value": predicted_val,
                         "Theoretical Value": base_value,
                         "Difference": difference,
                         "Difference %": diff_percentage,
