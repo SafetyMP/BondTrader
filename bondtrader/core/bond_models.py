@@ -6,7 +6,7 @@ Supports various bond types with different characteristics
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -59,7 +59,7 @@ class Bond:
         delta = datetime.now() - self.issue_date
         return delta.days / 365.25
 
-    def get_bond_characteristics(self) -> dict:
+    def get_bond_characteristics(self) -> Dict[str, Any]:
         """Extract characteristics for ML classification"""
         return {
             "coupon_rate": self.coupon_rate,

@@ -11,6 +11,17 @@ from bondtrader.utils.utils import (
     memoize,
     validate_bond_data,
 )
+from bondtrader.utils.validation import (
+    validate_bond_input,
+    validate_credit_rating,
+    validate_file_path,
+    validate_list_not_empty,
+    validate_numeric_range,
+    validate_percentage as validate_percentage_value,
+    validate_positive,
+    validate_probability,
+    validate_weights_sum,
+)
 
 __all__ = [
     "logger",
@@ -22,4 +33,14 @@ __all__ = [
     "format_currency",
     "format_percentage",
     "format_date",
+    # Validation functions
+    "validate_bond_input",
+    "validate_credit_rating",
+    "validate_file_path",
+    "validate_list_not_empty",
+    "validate_numeric_range",
+    "validate_percentage_value",
+    "validate_positive",
+    "validate_probability",
+    "validate_weights_sum",
 ]

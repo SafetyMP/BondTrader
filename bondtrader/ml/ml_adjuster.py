@@ -37,6 +37,8 @@ except ImportError:
 
 from bondtrader.core.bond_models import Bond
 from bondtrader.core.bond_valuation import BondValuator
+from bondtrader.utils.utils import logger
+from bondtrader.utils.validation import validate_file_path
 
 
 class MLBondAdjuster:
@@ -281,9 +283,18 @@ class MLBondAdjuster:
         Save trained model and scaler with atomic writes
 
         FIXED: Uses atomic writes (temp file + rename) to prevent corruption
+        
+        Args:
+            filepath: Path to save model (relative path recommended)
+            
+        Raises:
+            ValueError: If model not trained or filepath is invalid
         """
         if not self.is_trained:
             raise ValueError("Model not trained yet")
+
+        # Validate and sanitize file path
+        validate_file_path(filepath, allow_absolute=False, allowed_extensions=['.joblib', '.pkl', '.model'], name="filepath")
 
         # Create directory if needed
         dir_path = os.path.dirname(filepath) if os.path.dirname(filepath) else "."
@@ -303,19 +314,54 @@ class MLBondAdjuster:
             else:  # Unix/Linux/Mac
                 os.rename(temp_filepath, filepath)
 
-        except Exception as e:
-            # Clean up temp file on error
+        except (OSError, IOError, PermissionError) as e:
+            # Clean up temp file on file I/O errors
             if os.path.exists(temp_filepath):
                 try:
                     os.remove(temp_filepath)
-                except:
-                    pass
-            raise e
+                except OSError:
+                    pass  # Ignore cleanup errors
+            raise
+        except Exception as e:
+            # Clean up temp file on unexpected errors
+            if os.path.exists(temp_filepath):
+                try:
+                    os.remove(temp_filepath)
+                except OSError:
+                    pass  # Ignore cleanup errors
+            logger.error(f"Unexpected error saving model to {filepath}: {e}", exc_info=True)
+            raise
 
     def load_model(self, filepath: str):
-        """Load trained model and scaler"""
-        data = joblib.load(filepath)
-        self.model = data["model"]
-        self.scaler = data["scaler"]
-        self.model_type = data.get("model_type", "random_forest")
-        self.is_trained = True
+        """
+        Load trained model and scaler
+        
+        Args:
+            filepath: Path to saved model file
+            
+        Raises:
+            FileNotFoundError: If model file doesn't exist
+            ValueError: If model file is corrupted or missing required keys
+            TypeError: If model file contains invalid data types
+        """
+        # Validate and sanitize file path
+        validate_file_path(filepath, must_exist=True, allow_absolute=False, allowed_extensions=['.joblib', '.pkl', '.model'], name="filepath")
+        
+        try:
+            data = joblib.load(filepath)
+        except Exception as e:
+            raise ValueError(f"Failed to load model from {filepath}: {e}") from e
+        
+        # Validate required keys
+        required_keys = ["model", "scaler"]
+        missing_keys = [key for key in required_keys if key not in data]
+        if missing_keys:
+            raise ValueError(f"Model file missing required keys: {missing_keys}")
+        
+        try:
+            self.model = data["model"]
+            self.scaler = data["scaler"]
+            self.model_type = data.get("model_type", "random_forest")
+            self.is_trained = True
+        except (KeyError, TypeError, AttributeError) as e:
+            raise ValueError(f"Invalid model data structure: {e}") from e

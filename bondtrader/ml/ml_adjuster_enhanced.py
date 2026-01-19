@@ -16,6 +16,7 @@ from sklearn.preprocessing import StandardScaler
 
 from bondtrader.core.bond_models import Bond
 from bondtrader.core.bond_valuation import BondValuator
+from bondtrader.utils.utils import logger
 
 
 class EnhancedMLBondAdjuster:
@@ -309,22 +310,57 @@ class EnhancedMLBondAdjuster:
             else:  # Unix/Linux/Mac
                 os.rename(temp_filepath, filepath)
 
-        except Exception as e:
-            # Clean up temp file on error
+        except (OSError, IOError, PermissionError) as e:
+            # Clean up temp file on file I/O errors
             if os.path.exists(temp_filepath):
                 try:
                     os.remove(temp_filepath)
-                except:
-                    pass
-            raise e
+                except OSError:
+                    pass  # Ignore cleanup errors
+            raise
+        except Exception as e:
+            # Clean up temp file on unexpected errors
+            if os.path.exists(temp_filepath):
+                try:
+                    os.remove(temp_filepath)
+                except OSError:
+                    pass  # Ignore cleanup errors
+            logger.error(f"Unexpected error saving model to {filepath}: {e}", exc_info=True)
+            raise
 
     def load_model(self, filepath: str):
-        """Load trained model"""
-        data = joblib.load(filepath)
-        self.model = data["model"]
-        self.scaler = data["scaler"]
-        self.model_type = data.get("model_type", "random_forest")
-        self.best_params = data.get("best_params")
-        self.feature_names = data.get("feature_names", [])
-        self.training_metrics = data.get("training_metrics", {})
-        self.is_trained = True
+        """
+        Load trained model
+        
+        Args:
+            filepath: Path to saved model file
+            
+        Raises:
+            FileNotFoundError: If model file doesn't exist
+            ValueError: If model file is corrupted or missing required keys
+            TypeError: If model file contains invalid data types
+        """
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"Model file not found: {filepath}")
+        
+        try:
+            data = joblib.load(filepath)
+        except Exception as e:
+            raise ValueError(f"Failed to load model from {filepath}: {e}") from e
+        
+        # Validate required keys
+        required_keys = ["model", "scaler"]
+        missing_keys = [key for key in required_keys if key not in data]
+        if missing_keys:
+            raise ValueError(f"Model file missing required keys: {missing_keys}")
+        
+        try:
+            self.model = data["model"]
+            self.scaler = data["scaler"]
+            self.model_type = data.get("model_type", "random_forest")
+            self.best_params = data.get("best_params")
+            self.feature_names = data.get("feature_names", [])
+            self.training_metrics = data.get("training_metrics", {})
+            self.is_trained = True
+        except (KeyError, TypeError, AttributeError) as e:
+            raise ValueError(f"Invalid model data structure: {e}") from e

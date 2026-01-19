@@ -37,15 +37,18 @@ jobs:
     
     - name: Run unit tests
       run: |
-        pytest tests/unit -m unit -v --cov=bondtrader --cov-report=xml --cov-report=term-missing --cov-fail-under=10 || echo "Coverage below target - continuing"
+        pytest tests/unit -m unit -v --cov=bondtrader --cov-report=xml --cov-report=term-missing --cov-fail-under=50
+      continue-on-error: false
     
     - name: Run smoke tests
       run: |
         pytest tests/smoke -m smoke -v
+      continue-on-error: false
     
     - name: Run integration tests
       run: |
         pytest tests/integration -m integration -v || echo "No integration tests found"
+      continue-on-error: true
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -78,13 +81,19 @@ jobs:
       run: |
         isort --check-only bondtrader/ scripts/ tests/ --profile=black --line-length=127
     
-    - name: Lint with flake8
+    - name: Lint with flake8 (critical errors)
       run: |
         # Check for critical errors only (syntax errors, undefined names, etc.)
-        flake8 bondtrader/ scripts/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics || true
-        # Run full linting with configuration (warnings only, don't fail build)
-        flake8 bondtrader/ scripts/ tests/ --config=.flake8 --exit-zero || true
+        flake8 bondtrader/ scripts/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
+      continue-on-error: false
+    
+    - name: Lint with flake8 (full check)
+      run: |
+        # Run full linting with configuration (warnings, non-critical)
+        flake8 bondtrader/ scripts/ tests/ --config=.flake8
+      continue-on-error: true  # Don't fail build, but show warnings
     
     - name: Type check with mypy
       run: |
-        mypy bondtrader/ --ignore-missing-imports --no-strict-optional || true
+        mypy bondtrader/ --ignore-missing-imports --no-strict-optional
+      continue-on-error: true  # Don't fail build yet, gradually improve type coverage

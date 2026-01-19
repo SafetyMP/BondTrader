@@ -94,13 +94,27 @@ def memoize(func: Callable) -> Callable:
 
 
 def handle_exceptions(func: Callable) -> Callable:
-    """Decorator to handle exceptions gracefully"""
+    """
+    Decorator to handle exceptions gracefully with specific exception types
+    
+    Catches and logs specific exceptions, re-raises critical errors.
+    Use for functions that need error logging but should propagate errors.
+    """
 
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
+        except (ValueError, TypeError, AttributeError) as e:
+            # Input validation errors - log and re-raise
+            logger.warning(f"Input error in {func.__name__}: {e}", exc_info=False)
+            raise
+        except (FileNotFoundError, PermissionError, OSError) as e:
+            # File I/O errors - log and re-raise
+            logger.error(f"File error in {func.__name__}: {e}", exc_info=True)
+            raise
         except Exception as e:
-            logger.error(f"Error in {func.__name__}: {str(e)}", exc_info=True)
+            # Unexpected errors - log with full traceback and re-raise
+            logger.error(f"Unexpected error in {func.__name__}: {e}", exc_info=True)
             raise
 
     return wrapper

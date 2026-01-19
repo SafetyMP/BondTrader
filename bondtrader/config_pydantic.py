@@ -2,10 +2,20 @@
 Pydantic-Enhanced Configuration (OPTIONAL)
 Optional Pydantic validation for configuration management
 
-NOTE: This module is optional and currently not used in the codebase.
-The standard config.py module (using dataclasses) is the default.
-This module is provided for users who want Pydantic validation.
-To use it, you would need to manually import and use ConfigPydantic instead of Config.
+⚠️ DEPRECATED/OPTIONAL: This module is optional and not used by default in the codebase.
+The standard bondtrader.config.Config (using dataclasses) is the default implementation.
+
+This module is provided for advanced users who want Pydantic validation features:
+- Automatic validation on field access
+- Rich validation error messages
+- JSON schema generation
+
+To use ConfigPydantic instead of Config:
+  1. Install pydantic: pip install pydantic>=2.5.0
+  2. Manually import: from bondtrader.config_pydantic import ConfigPydantic as Config
+  3. Note: Not compatible with singleton pattern (get_config/set_config use Config)
+
+For most users, bondtrader.config.Config is recommended.
 """
 
 import os
