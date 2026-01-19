@@ -8,7 +8,16 @@ from typing import Dict, List, Optional
 
 import pandas as pd
 import requests
-import yfinance as yf
+
+# yfinance is optional - import only when needed to avoid Python 3.9 compatibility issues
+# (yfinance 0.2.0+ uses Python 3.10+ union syntax)
+try:
+    import yfinance as yf
+
+    HAS_YFINANCE = True
+except ImportError:
+    HAS_YFINANCE = False
+    yf = None
 
 from bondtrader.core.bond_models import Bond, BondType
 from bondtrader.utils.utils import logger
