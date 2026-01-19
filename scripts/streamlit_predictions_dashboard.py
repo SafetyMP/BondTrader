@@ -33,7 +33,7 @@ from bondtrader.utils import format_percentage as _format_percentage
 # Page configuration
 st.set_page_config(
     page_title="2025 Bond Predictions Dashboard",
-    page_icon="📊",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded",
 )
