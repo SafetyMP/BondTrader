@@ -21,7 +21,7 @@ tqdm>=4.66.0
 numba>=0.58.0
 
 # Financial & quantitative libraries
-pandas-market-calendars>=4.1.0,<4.2.0  # 4.2.1+ may use Python 3.10+ syntax (| union), pin to 4.1.x for Python 3.9 compatibility
+pandas-market-calendars>=4.1.0,<5.3.0  # 4.2.1+ may use Python 3.10+ syntax (| union), pin to 4.1.x for Python 3.9 compatibility
 arch>=6.2.0
 statsmodels>=0.14.0
 Riskfolio-Lib>=5.0.0
